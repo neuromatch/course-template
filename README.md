@@ -24,7 +24,7 @@ Requires **Node.js >= 20** (use `nvm use` if you have `.nvmrc` support) and Pyth
 Install dependencies (choose one):
 
 ```bash
-# with uv (recommended)
+# with uv (recommended — creates .venv automatically)
 uv pip install -r requirements.txt
 
 # with pip
