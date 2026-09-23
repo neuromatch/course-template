@@ -9,6 +9,8 @@ kernelspec:
 
 
 
+
+
 # Tutorial 1: Writing Content in MyST Markdown
 
 MyST (Markedly Structured Text) is the markup language powering this book.

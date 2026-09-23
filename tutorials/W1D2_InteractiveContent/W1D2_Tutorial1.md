@@ -9,6 +9,8 @@ kernelspec:
 
 
 
+
+
 # Tutorial 1: In-Browser Execution with JupyterLite
 
 This book uses **JupyterLite** to run Python directly in your browser.
@@ -73,9 +75,21 @@ Pages without `kernelspec` (like `further_reading.md`) show no power button —
 the JupyterLite kernel is only activated for pages that declare a `kernelspec`.
 
 ```{note}
-JupyterLite supports most pure-Python packages. Packages with compiled C extensions
-(like `scipy` or `torch`) may load slowly or not be available.
-For compute-heavy days, point students to Colab or Kaggle instead —
+JupyterLite runs Python via Pyodide (WebAssembly). Core scientific packages —
+`numpy`, `matplotlib`, `pandas`, `altair` — are bundled and work out of the box.
+
+Packages not bundled in Pyodide (like `ipywidgets`) must be installed at runtime
+using `micropip`. Add a hidden setup cell at the top of your tutorial:
+
+    ```python
+    import sys
+    if sys.platform == "emscripten":  # only runs in JupyterLite/Pyodide
+        import micropip
+        await micropip.install(["ipywidgets"])
+    ```
+
+Packages with compiled C extensions (like `scipy` or `torch`) are not available
+in Pyodide. For compute-heavy days, point students to Colab or Kaggle instead —
 badges are injected automatically by CI. See Day 3, Tutorial 2.
 ```
 

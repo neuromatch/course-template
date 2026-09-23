@@ -9,6 +9,8 @@ kernelspec:
 
 
 
+
+
 # Tutorial 2: Rich Interactive Outputs
 
 MyST renders interactive outputs from Altair, Plotly, and ipywidgets natively.
@@ -44,7 +46,20 @@ points & bars
 
 ## ipywidgets slider
 
-With the JupyterLite kernel active, this slider is live and interactive:
+With the JupyterLite kernel active, this slider is live and interactive.
+
+JupyterLite uses Pyodide (Python in WebAssembly), which requires packages to be
+loaded via `micropip` before importing. The setup cell below handles this — it is
+hidden from students but runs automatically when the kernel starts.
+
+```{code-cell} python
+:tags: [remove-cell]
+# JupyterLite/Pyodide setup — installs packages not bundled in the default WASM environment
+import sys
+if sys.platform == "emscripten":
+    import micropip
+    await micropip.install(["ipywidgets"])
+```
 
 ```{code-cell} python
 import ipywidgets as widgets

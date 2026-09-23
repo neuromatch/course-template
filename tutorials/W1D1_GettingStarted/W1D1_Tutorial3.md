@@ -9,6 +9,8 @@ kernelspec:
 
 
 
+
+
 # Tutorial 3: Rich Outputs
 
 MyST supports a full range of scientific publishing features natively.

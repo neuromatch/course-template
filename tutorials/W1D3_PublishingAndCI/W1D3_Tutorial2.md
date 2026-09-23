@@ -9,6 +9,8 @@ kernelspec:
 
 
 
+
+
 # Tutorial 2: Colab and Kaggle Badges
 
 This tutorial is itself an example of a page that gets converted to `.ipynb` by CI
