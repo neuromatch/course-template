@@ -4,6 +4,10 @@ kernelspec:
   name: python3
   display_name: Python 3
 ---
+<a href="https://colab.research.google.com/github/neuromatch/course-template/blob/main/notebooks/W1D1_GettingStarted/W1D1_Tutorial1.ipynb" target="_blank"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> <a href="https://kaggle.com/kernels/welcome?src=https://raw.githubusercontent.com/neuromatch/course-template/main/notebooks/W1D1_GettingStarted/W1D1_Tutorial1.ipynb" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg" alt="Open In Kaggle"/></a>
+
+
+
 
 # Tutorial 1: Writing Content in MyST Markdown
 

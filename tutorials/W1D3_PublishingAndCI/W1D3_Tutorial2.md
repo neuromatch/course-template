@@ -4,6 +4,10 @@ kernelspec:
   name: python3
   display_name: Python 3
 ---
+<a href="https://colab.research.google.com/github/neuromatch/course-template/blob/main/notebooks/W1D3_PublishingAndCI/W1D3_Tutorial2.ipynb" target="_blank"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> <a href="https://kaggle.com/kernels/welcome?src=https://raw.githubusercontent.com/neuromatch/course-template/main/notebooks/W1D3_PublishingAndCI/W1D3_Tutorial2.ipynb" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg" alt="Open In Kaggle"/></a>
+
+
+
 
 # Tutorial 2: Colab and Kaggle Badges
 
@@ -61,12 +65,6 @@ print(result.stderr or "")
 The first cell of every generated notebook contains HTML like this:
 
 ```html
-<a href="https://colab.research.google.com/github/neuromatch/course-template/blob/main/notebooks/W1D3_PublishingAndCI/W1D3_Tutorial2.ipynb" target="_blank">
-  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
-</a>
-<a href="https://kaggle.com/kernels/welcome?src=https://raw.githubusercontent.com/neuromatch/course-template/main/notebooks/W1D3_PublishingAndCI/W1D3_Tutorial2.ipynb" target="_blank">
-  <img src="https://kaggle.com/static/images/open-in-kaggle.svg" alt="Open In Kaggle"/>
-</a>
 ```
 
 ## Which pages get notebooks generated?
