@@ -19,14 +19,16 @@ Update these three things before adding content:
 
 ## Local preview
 
+Requires **Node.js >= 20** (use `nvm use` if you have `.nvmrc` support) and Python 3.10+.
+
 Install dependencies (choose one):
 
 ```bash
+# with uv (recommended)
+uv pip install -r requirements.txt
+
 # with pip
 pip install -r requirements.txt
-
-# with uv
-uv pip install -r requirements.txt
 ```
 
 Then start the local preview server:
