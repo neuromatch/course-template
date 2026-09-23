@@ -8,6 +8,8 @@ on:
       - "scripts/convert_to_notebooks.py"
       - "myst.yml"
       - "requirements.txt"
+  # Allow manual trigger from the Actions tab
+  workflow_dispatch:
 
 jobs:
   generate:

@@ -1,12 +1,21 @@
 name: Publish Book
 
 on:
+  # Rebuild when non-tutorial files change (theme, config, static assets)
   push:
     branches: [main]
+    paths:
+      - "myst.yml"
+      - "requirements.txt"
+      - "_static/**"
+      - "projects/**"
+  # Rebuild after notebook generation completes (tutorial content changes)
   workflow_run:
     workflows: ["Generate Notebooks"]
     types: [completed]
     branches: [main]
+  # Allow manual trigger from the Actions tab
+  workflow_dispatch:
 
 permissions:
   contents: read
