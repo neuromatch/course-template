@@ -65,8 +65,8 @@ project:
     lite: true
 ```
 
-Pages without `kernelspec` (like `further_reading.md`) set `jupyter: false` in
-their own frontmatter to suppress the power button.
+Pages without `kernelspec` (like `further_reading.md`) show no power button —
+the JupyterLite kernel is only activated for pages that declare a `kernelspec`.
 
 ```{note}
 JupyterLite supports most pure-Python packages. Packages with compiled C extensions

@@ -81,5 +81,5 @@ kernelspec:
 ---
 ```
 
-Pages with `jupyter: false` (like `further_reading.md` and `chapter_intro.md`)
+Pages without a `kernelspec` (like `further_reading.md` and `chapter_intro.md`)
 are skipped — no notebook is generated for them.

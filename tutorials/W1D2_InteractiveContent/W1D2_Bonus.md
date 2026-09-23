@@ -60,14 +60,8 @@ jupyter:
 ---
 ```
 
-Or disable in-browser execution entirely on a specific page:
-
-```yaml
----
-title: "Static reference page"
-jupyter: false
----
-```
+Or make a page entirely static by simply not including a `kernelspec` in its
+frontmatter — pages without `kernelspec` get no power button and no notebook generated.
 
 ## Adding a Binder badge
 
