@@ -9,6 +9,14 @@ A course template built with [JupyterBook v2 (MyST)](https://mystmd.org).
 Fork this repository and follow the instructions in the book itself.
 Each day of this template teaches you how to build and publish your course.
 
+## After forking
+
+Update these three things before adding content:
+
+1. In `myst.yml`: change `project.title`, `project.authors`, and `project.github`
+2. In `README.md`: change the **Live book** URL to match your GitHub Pages URL
+3. In GitHub: go to **Settings → Pages** and set Source to **GitHub Actions**
+
 ## Local preview
 
 Install dependencies (choose one):

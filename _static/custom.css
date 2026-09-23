@@ -1,1 +1,10 @@
-/* Neuromatch course template custom styles */
+/* Neuromatch course template custom styles
+ *
+ * This file is loaded on every page of the book.
+ * Add CSS here to customise colours, fonts, spacing, etc.
+ *
+ * Example: change the primary colour
+ * :root {
+ *   --color-primary: #FF6B6B;
+ * }
+ */
