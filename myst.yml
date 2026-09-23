@@ -1,0 +1,47 @@
+version: 1
+project:
+  title: Neuromatch Course Template
+  authors:
+    - name: Neuromatch
+      github: neuromatch
+  github: https://github.com/neuromatch/course-template
+  license:
+    code: BSD-3-Clause
+    content: CC-BY-4.0
+  jupyter:
+    lite: true
+  toc:
+    - file: tutorials/intro.md
+    - title: "Day 1: Getting Started with MyST"
+      children:
+        - file: tutorials/W1D1_GettingStarted/chapter_intro.md
+          children:
+            - file: tutorials/W1D1_GettingStarted/W1D1_Tutorial1.md
+            - file: tutorials/W1D1_GettingStarted/W1D1_Tutorial2.md
+            - file: tutorials/W1D1_GettingStarted/W1D1_Tutorial3.md
+            - file: tutorials/W1D1_GettingStarted/W1D1_Bonus.md
+            - file: tutorials/W1D1_GettingStarted/further_reading.md
+    - title: "Day 2: Interactive Content"
+      children:
+        - file: tutorials/W1D2_InteractiveContent/chapter_intro.md
+          children:
+            - file: tutorials/W1D2_InteractiveContent/W1D2_Tutorial1.md
+            - file: tutorials/W1D2_InteractiveContent/W1D2_Tutorial2.md
+            - file: tutorials/W1D2_InteractiveContent/W1D2_Tutorial3.md
+            - file: tutorials/W1D2_InteractiveContent/W1D2_Bonus.md
+            - file: tutorials/W1D2_InteractiveContent/further_reading.md
+    - title: "Day 3: Publishing and CI"
+      children:
+        - file: tutorials/W1D3_PublishingAndCI/chapter_intro.md
+          children:
+            - file: tutorials/W1D3_PublishingAndCI/W1D3_Tutorial1.md
+            - file: tutorials/W1D3_PublishingAndCI/W1D3_Tutorial2.md
+            - file: tutorials/W1D3_PublishingAndCI/W1D3_Tutorial3.md
+            - file: tutorials/W1D3_PublishingAndCI/W1D3_Bonus.md
+            - file: tutorials/W1D3_PublishingAndCI/further_reading.md
+    - file: projects/README.md
+
+site:
+  template: book-theme
+  options:
+    folders: true

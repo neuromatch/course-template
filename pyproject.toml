@@ -1,0 +1,22 @@
+[project]
+name = "neuromatch-course-template"
+version = "0.1.0"
+description = "Neuromatch course template built with JupyterBook v2 (MyST)"
+requires-python = ">=3.10"
+dependencies = [
+    "mystmd>=1.3",
+    "jupytext>=1.16",
+    "altair>=5",
+    "vega_datasets",
+    "matplotlib",
+    "numpy",
+    "pandas",
+    "ipywidgets",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = []
