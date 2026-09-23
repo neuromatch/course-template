@@ -24,17 +24,20 @@ Requires **Node.js >= 20** (use `nvm use` if you have `.nvmrc` support) and Pyth
 Install dependencies (choose one):
 
 ```bash
-# with uv (recommended — creates .venv automatically)
+# with uv (recommended)
+uv venv
 uv pip install -r requirements.txt
 
 # with pip
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
 Then start the local preview server:
 
 ```bash
-myst start
+uv run myst start
 ```
 
 The book will be available at http://localhost:3000.
