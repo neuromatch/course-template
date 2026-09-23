@@ -3,10 +3,8 @@ title: Welcome to the Neuromatch Course Template
 jupyter: false
 ---
 
-# Welcome to the Neuromatch Course Template
-
-This book is both a **working example** of a Neuromatch course and a **guide for course authors**.
-Every page you see here demonstrates a real authoring pattern — the content explains the pattern
+A working example of a Neuromatch course and a guide for course authors.
+Every page demonstrates a real authoring pattern — the content explains the pattern
 while the page itself demonstrates it.
 
 ## How to use this template
@@ -41,8 +39,10 @@ Benefits:
 - A GitHub account with Pages enabled
 - Basic familiarity with Markdown
 - Python 3.10+ (for local preview)
+- See [Day 3, Tutorial 1](W1D3_PublishingAndCI/W1D3_Tutorial1.md) for the full GitHub Actions setup guide.
 
 ## Licensing
 
+When you fork this template, update these licenses to match your institution's requirements.
 Content is licensed [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).
 Code is licensed [BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause).
