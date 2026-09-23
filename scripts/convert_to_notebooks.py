@@ -34,6 +34,7 @@ import yaml
 TUTORIALS_DIR = Path("tutorials")
 NOTEBOOKS_DIR = Path("notebooks")
 MYST_CONFIG = Path("myst.yml")
+NOTEBOOKS_BRANCH = "notebooks-branch"
 
 
 def load_github_repo(myst_config: Path) -> str:
@@ -86,11 +87,11 @@ def make_badge_html(notebook_rel_path: str, github_repo: str) -> str:
     """
     colab_url = (
         f"https://colab.research.google.com/github/{github_repo}"
-        f"/blob/main/{notebook_rel_path}"
+        f"/blob/{NOTEBOOKS_BRANCH}/{notebook_rel_path}"
     )
     kaggle_url = (
         f"https://kaggle.com/kernels/welcome?src="
-        f"https://raw.githubusercontent.com/{github_repo}/main/{notebook_rel_path}"
+        f"https://raw.githubusercontent.com/{github_repo}/{NOTEBOOKS_BRANCH}/{notebook_rel_path}"
     )
 
     return (
