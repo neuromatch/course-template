@@ -47,4 +47,3 @@ site:
   options:
     folders: true
     style: _static/custom.css
-  base_url: /course-template

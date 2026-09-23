@@ -43,6 +43,8 @@ jobs:
 
       - name: Build MyST book
         run: uv run myst build --html
+        env:
+          BASE_URL: /${{ github.event.repository.name }}
 
       - name: Upload pages artifact
         uses: actions/upload-pages-artifact@v3
