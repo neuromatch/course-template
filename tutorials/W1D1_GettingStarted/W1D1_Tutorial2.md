@@ -1,6 +1,5 @@
 ---
 title: "Tutorial 2: Structuring Your Table of Contents"
-jupyter: false
 ---
 
 # Tutorial 2: Structuring Your Table of Contents

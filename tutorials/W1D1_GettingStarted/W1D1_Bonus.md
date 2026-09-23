@@ -1,6 +1,5 @@
 ---
 title: "Bonus: Advanced MyST — Tabs, Dropdowns, Proofs"
-jupyter: false
 ---
 
 # Bonus: Advanced MyST

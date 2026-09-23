@@ -1,6 +1,5 @@
 ---
 title: "Bonus: Binder and Remote Kernel Options"
-jupyter: false
 ---
 
 # Bonus: Binder and Remote Kernel Options

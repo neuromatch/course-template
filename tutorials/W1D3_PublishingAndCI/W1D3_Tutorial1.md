@@ -1,6 +1,5 @@
 ---
 title: "Tutorial 1: GitHub Actions — Build and Publish Pipeline"
-jupyter: false
 ---
 
 # Tutorial 1: GitHub Actions — Build and Publish Pipeline

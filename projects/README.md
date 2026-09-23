@@ -1,6 +1,5 @@
 ---
 title: Project Booklet
-jupyter: false
 ---
 
 # Project Booklet

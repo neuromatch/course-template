@@ -1,6 +1,5 @@
 ---
 title: "Day 2: Interactive Content"
-jupyter: false
 ---
 
 # Day 2: Interactive Content

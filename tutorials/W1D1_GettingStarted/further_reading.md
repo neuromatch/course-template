@@ -1,6 +1,5 @@
 ---
 title: Further Reading
-jupyter: false
 ---
 
 # Further Reading

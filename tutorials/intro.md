@@ -1,6 +1,5 @@
 ---
 title: Welcome to the Neuromatch Course Template
-jupyter: false
 ---
 
 A working example of a Neuromatch course and a guide for course authors.

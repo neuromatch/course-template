@@ -2,7 +2,8 @@ version: 1
 project:
   title: Neuromatch Course Template
   authors:
-    - name: Neuromatch
+    - name:
+        literal: Neuromatch
       github: neuromatch
   github: https://github.com/neuromatch/course-template
   license:
@@ -46,3 +47,4 @@ site:
   options:
     folders: true
     style: _static/custom.css
+  base_url: /course-template

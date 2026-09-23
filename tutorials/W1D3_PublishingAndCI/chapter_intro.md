@@ -1,6 +1,5 @@
 ---
 title: "Day 3: Publishing and CI"
-jupyter: false
 ---
 
 # Day 3: Publishing and CI

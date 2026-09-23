@@ -1,6 +1,5 @@
 ---
 title: "Day 1: Getting Started with MyST"
-jupyter: false
 ---
 
 # Day 1: Getting Started with MyST

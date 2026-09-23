@@ -1,6 +1,5 @@
 ---
 title: "Tutorial 3: When to Use .ipynb vs .md"
-jupyter: false
 ---
 
 # Tutorial 3: When to Use `.ipynb` vs `.md`

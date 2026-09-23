@@ -1,6 +1,5 @@
 ---
 title: "Bonus: Scaling to Multi-Week Courses"
-jupyter: false
 ---
 
 # Bonus: Scaling to Multi-Week Courses

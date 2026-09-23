@@ -1,6 +1,5 @@
 ---
 title: "Tutorial 3: Customising Your Book"
-jupyter: false
 ---
 
 # Tutorial 3: Customising Your Book
