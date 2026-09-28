@@ -66,9 +66,7 @@ IFrame(src=f"https://mfr.ca-1.osf.io/render?url=https://osf.io/{link_id}/?direct
 
 ```{code-cell} python
 :tags: [hide-input]
-# @title Install and import feedback gadget
-
-!pip3 install vibecheck datatops --quiet
+# @title Import feedback gadget
 
 from vibecheck import DatatopsContentReviewContainer
 def content_review(notebook_section: str):
