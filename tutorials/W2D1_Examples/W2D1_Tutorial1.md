@@ -6,12 +6,11 @@ kernelspec:
 ---
 
 ```{code-cell} python
-:tags: [remove-cell]
 # Pyodide compatibility — install packages not bundled by default
 import sys
 if sys.platform == "emscripten":
     import micropip
-    await micropip.install(["ipywidgets"])
+    await micropip.install(["ipywidgets", "vibecheck", "datatops"])
 ```
 
 # Tutorial 1: Linear dynamical systems
