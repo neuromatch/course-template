@@ -1,0 +1,55 @@
+name: Build Pyodide Wheels
+
+# Build pure-Python wheels for packages that only publish source distributions
+# on PyPI. Uploads them as GitHub Release assets so micropip can install them
+# in JupyterLite/Pyodide.
+#
+# Temporary workaround until upstream maintainers publish wheels to PyPI.
+# Once they do, update the micropip.install() call in the tutorial to use
+# package names instead of URLs, and delete this workflow.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    env:
+      TAG: pyodide-wheels
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Download and build wheels
+        run: |
+          uv venv
+          uv pip install build pip
+
+          mkdir -p dist /tmp/sdists
+
+          for pkg in vibecheck datatops; do
+            uv run pip download "$pkg" --no-deps --no-binary :all: -d /tmp/sdists
+            tarball=$(ls /tmp/sdists/${pkg}-*.tar.gz)
+            uv run python -m build --wheel "$tarball" --outdir dist
+          done
+
+          ls -la dist/
+
+      - name: Create or update release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Delete existing release if it exists (idempotent)
+          gh release delete "$TAG" --yes 2>/dev/null || true
+          git push origin --delete "$TAG" 2>/dev/null || true
+
+          # Create new release with wheel files
+          gh release create "$TAG" dist/*.whl \
+            --title "Pyodide Wheels" \
+            --notes "Pure-Python wheels for packages that lack wheels on PyPI. Used by micropip in JupyterLite tutorials. This release is updated automatically — do not edit manually."
