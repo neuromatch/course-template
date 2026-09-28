@@ -10,8 +10,8 @@ kernelspec:
 import sys
 if sys.platform == "emscripten":
     import micropip
-    # vibecheck and datatops lack wheels on PyPI; install from GitHub Release
-    _whl = "https://github.com/neuromatch/course-template/releases/download/pyodide-wheels"
+    # vibecheck and datatops lack wheels on PyPI; serve from repo (CORS-friendly)
+    _whl = "https://raw.githubusercontent.com/neuromatch/course-template/main/_wheels"
     await micropip.install([
         "ipywidgets",
         f"{_whl}/vibecheck-0.0.5-py3-none-any.whl",
