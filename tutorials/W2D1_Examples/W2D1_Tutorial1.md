@@ -4,6 +4,8 @@ kernelspec:
   name: python3
   display_name: Python 3
 ---
+<a href="https://colab.research.google.com/github/neuromatch/course-template/blob/notebooks-branch/notebooks/W2D1_Examples/W2D1_Tutorial1.ipynb" target="_blank"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> <a href="https://kaggle.com/kernels/welcome?src=https://raw.githubusercontent.com/neuromatch/course-template/notebooks-branch/notebooks/W2D1_Examples/W2D1_Tutorial1.ipynb" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg" alt="Open In Kaggle"/></a>
+
 
 ```{code-cell} python
 :tags: [remove-cell]
@@ -344,10 +346,12 @@ where $x_0$ is the **initial condition** of the equation -- that is, the value o
 
 To gain further intuition, let's explore the behavior of such systems with a simple simulation. We can simulate an ordinary differential equation by approximating or modeling time as a discrete list of time steps $t_0, t_1, t_2, \dots$, such that $t_{i+1}=t_i+dt$. We can get the small change $dx$ over a small duration $dt$ of time from the definition of the differential:
 
-\begin{eqnarray}
-\dot x &=& \frac{dx}{dt} \\
-dx &=& \dot x\, dt
-\end{eqnarray}
+$$
+\begin{aligned}
+\dot x &= \frac{dx}{dt} \\
+dx &= \dot x\, dt
+\end{aligned}
+$$
 
 So, at each time step $t_i$, we compute a value of $x$, $x(t_i)$, as the sum of the value of $x$ at the previous time step, $x(t_{i-1})$ and a small change $dx=\dot x\,dt$:
 
@@ -719,23 +723,27 @@ This video serves as an introduction to two-dimensional, deterministic dynamical
 
 Adding one additional variable (or _dimension_) adds more variety of behaviors. Additional variables are useful in modeling the dynamics of more complex systems with richer behaviors, such as systems of multiple neurons. We can write such a system using two linear ordinary differential equations:
 
-\begin{eqnarray}
-  \dot{x}_1 &=& {a}_{11} x_1 \\
-  \dot{x}_2 &=& {a}_{22} x_2 \\
-\end{eqnarray}
+$$
+\begin{aligned}
+  \dot{x}_1 &= {a}_{11} x_1 \\
+  \dot{x}_2 &= {a}_{22} x_2
+\end{aligned}
+$$
 
 So far, this system consists of two variables (e.g. neurons) in isolation. To make things interesting, we can add interaction terms:
 
-\begin{eqnarray}
-  \dot{x}_1 &=& {a}_{11} x_1 + {a}_{12} x_2 \\
-  \dot{x}_2 &=& {a}_{21} x_1 + {a}_{22} x_2 \\
-\end{eqnarray}
+$$
+\begin{aligned}
+  \dot{x}_1 &= {a}_{11} x_1 + {a}_{12} x_2 \\
+  \dot{x}_2 &= {a}_{21} x_1 + {a}_{22} x_2
+\end{aligned}
+$$
 
 We can write the two equations that describe our system as one (vector-valued) linear ordinary differential equation:
 
 $$\dot{\mathbf{x}} = \mathbf{A} \mathbf{x}$$
 
-For two-dimensional systems, $\mathbf{x}$ is a vector with 2 elements ($x_1$ and $x_2$) and $\mathbf{A}$ is a $2 \times 2$ matrix with $\mathbf{A}=\bigg[\begin{array} & a_{11} & a_{12} \\ a_{21} & a_{22} \end{array} \bigg]$.
+For two-dimensional systems, $\mathbf{x}$ is a vector with 2 elements ($x_1$ and $x_2$) and $\mathbf{A}$ is a $2 \times 2$ matrix with $\mathbf{A}=\begin{bmatrix} a_{11} & a_{12} \\ a_{21} & a_{22} \end{bmatrix}$.
 
 </details>
 
@@ -746,7 +754,7 @@ For two-dimensional systems, $\mathbf{x}$ is a vector with 2 elements ($x_1$ and
 We want to simulate some **trajectories** of a given system and plot how  $x_1$  and  $x_2$  evolve in time. We will begin with this example system:
 
 \begin{equation}
-\dot{\mathbf{x}} = \bigg[\begin{array} & 2 & -5 \\ 1 & -2 \end{array} \bigg] \mathbf{x}
+\dot{\mathbf{x}} = \begin{bmatrix} 2 & -5 \\ 1 & -2 \end{bmatrix} \mathbf{x}
 \end{equation}
 
 We will use an integrator from scipy, so we won't have to solve the system ourselves. We have a helper function, ``plot_trajectory``, that plots these trajectories given a system function. In this exercise, we will write the system function for a linear system with two variables.
@@ -882,7 +890,7 @@ content_review(f"{feedback_prefix}_Varying_A_Interactive_Demo_Discussion")
 We will now vary the initial conditions for a given $\mathbf{A}$:
 
 \begin{equation}
-\dot{\mathbf{x}} = \bigg[\begin{array} & 2 & -5 \\ 1 & -2 \end{array} \bigg] \mathbf{x}
+\dot{\mathbf{x}} = \begin{bmatrix} 2 & -5 \\ 1 & -2 \end{bmatrix} \mathbf{x}
 \end{equation}
 
 What kinds of qualitatively different dynamics do you observe? Hint: Keep an eye on the x-axis and y-axis!
