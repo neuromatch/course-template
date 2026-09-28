@@ -10,7 +10,7 @@ kernelspec:
 import sys
 if sys.platform == "emscripten":
     import micropip
-    await micropip.install(["ipywidgets", "vibecheck", "datatops"])
+    await micropip.install(["ipywidgets", "vibecheck", "datatops"], keep_going=True)
 ```
 
 # Tutorial 1: Linear dynamical systems
