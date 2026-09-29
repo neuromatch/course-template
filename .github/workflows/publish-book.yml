@@ -9,6 +9,7 @@ on:
       - "requirements.txt"
       - "_static/**"
       - "projects/**"
+      - "CNAME"
   # Rebuild after notebook generation completes (tutorial content changes)
   workflow_run:
     workflows: ["Generate Notebooks"]
@@ -43,25 +44,9 @@ jobs:
 
       - name: Build MyST book
         run: uv run myst build --html
-        env:
-          BASE_URL: /${{ github.event.repository.name }}
 
-      - name: Fix thebe-core publicPath for subpath deployment
-        # Workaround: thebe-core.min.js hardcodes __webpack_require__.p="/"
-        # which breaks chunk loading on GitHub Pages subpath deployments.
-        # thebe-lite.min.js uses publicPath:"auto" and works correctly.
-        # Remove this step once upstream fix ships:
-        # https://github.com/jupyter-book/thebe/issues/TBD
-        run: |
-          THEBE_FILE="_build/html/thebe-core.min.js"
-          if [ -f "$THEBE_FILE" ]; then
-            sed -i 's|__webpack_require__\.p="/"|__webpack_require__.p="/'"$REPO_NAME"'/"|' "$THEBE_FILE"
-            echo "Patched thebe-core.min.js publicPath to /$REPO_NAME/"
-          else
-            echo "Warning: thebe-core.min.js not found, skipping patch"
-          fi
-        env:
-          REPO_NAME: ${{ github.event.repository.name }}
+      - name: Add CNAME for custom domain
+        run: cp CNAME _build/html/CNAME
 
       - name: Upload pages artifact
         uses: actions/upload-pages-artifact@v3
