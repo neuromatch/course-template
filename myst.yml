@@ -13,39 +13,31 @@ project:
     lite: true
   toc:
     - file: tutorials/intro.md
-    - title: "Day 1: Getting Started with MyST"
+    - file: tutorials/W1D1_GettingStarted/chapter_intro.md
       children:
-        - file: tutorials/W1D1_GettingStarted/chapter_intro.md
-          children:
-            - file: tutorials/W1D1_GettingStarted/W1D1_Tutorial1.md
-            - file: tutorials/W1D1_GettingStarted/W1D1_Tutorial2.md
-            - file: tutorials/W1D1_GettingStarted/W1D1_Tutorial3.md
-            - file: tutorials/W1D1_GettingStarted/W1D1_Bonus.md
-            - file: tutorials/W1D1_GettingStarted/further_reading.md
-    - title: "Day 2: Interactive Content"
+        - file: tutorials/W1D1_GettingStarted/W1D1_Tutorial1.md
+        - file: tutorials/W1D1_GettingStarted/W1D1_Tutorial2.md
+        - file: tutorials/W1D1_GettingStarted/W1D1_Tutorial3.md
+        - file: tutorials/W1D1_GettingStarted/W1D1_Bonus.md
+        - file: tutorials/W1D1_GettingStarted/further_reading.md
+    - file: tutorials/W1D2_InteractiveContent/chapter_intro.md
       children:
-        - file: tutorials/W1D2_InteractiveContent/chapter_intro.md
-          children:
-            - file: tutorials/W1D2_InteractiveContent/W1D2_Tutorial1.md
-            - file: tutorials/W1D2_InteractiveContent/W1D2_Tutorial2.md
-            - file: tutorials/W1D2_InteractiveContent/W1D2_Tutorial3.md
-            - file: tutorials/W1D2_InteractiveContent/W1D2_Bonus.md
-            - file: tutorials/W1D2_InteractiveContent/further_reading.md
-    - title: "Day 3: Publishing and CI"
+        - file: tutorials/W1D2_InteractiveContent/W1D2_Tutorial1.md
+        - file: tutorials/W1D2_InteractiveContent/W1D2_Tutorial2.md
+        - file: tutorials/W1D2_InteractiveContent/W1D2_Tutorial3.md
+        - file: tutorials/W1D2_InteractiveContent/W1D2_Bonus.md
+        - file: tutorials/W1D2_InteractiveContent/further_reading.md
+    - file: tutorials/W1D3_PublishingAndCI/chapter_intro.md
       children:
-        - file: tutorials/W1D3_PublishingAndCI/chapter_intro.md
-          children:
-            - file: tutorials/W1D3_PublishingAndCI/W1D3_Tutorial1.md
-            - file: tutorials/W1D3_PublishingAndCI/W1D3_Tutorial2.md
-            - file: tutorials/W1D3_PublishingAndCI/W1D3_Tutorial3.md
-            - file: tutorials/W1D3_PublishingAndCI/W1D3_Bonus.md
-            - file: tutorials/W1D3_PublishingAndCI/further_reading.md
-    - title: "Day 4: Real Content Example"
+        - file: tutorials/W1D3_PublishingAndCI/W1D3_Tutorial1.md
+        - file: tutorials/W1D3_PublishingAndCI/W1D3_Tutorial2.md
+        - file: tutorials/W1D3_PublishingAndCI/W1D3_Tutorial3.md
+        - file: tutorials/W1D3_PublishingAndCI/W1D3_Bonus.md
+        - file: tutorials/W1D3_PublishingAndCI/further_reading.md
+    - file: tutorials/W2D1_Examples/chapter_intro.md
       children:
-        - file: tutorials/W2D1_Examples/chapter_intro.md
-          children:
-            - file: tutorials/W2D1_Examples/W2D1_Tutorial1.md
-            - file: tutorials/W2D1_Examples/further_reading.md
+        - file: tutorials/W2D1_Examples/W2D1_Tutorial1.md
+        - file: tutorials/W2D1_Examples/further_reading.md
     - file: projects/README.md
 
 site:

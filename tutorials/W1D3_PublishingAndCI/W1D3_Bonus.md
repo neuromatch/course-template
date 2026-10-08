@@ -19,15 +19,13 @@ The template ships with one week (W1D1–W1D3). Here is how to extend it.
 
 2. Add the entries to `project.toc` in `myst.yml`:
 
-       - title: "Day 4: New Topic"
+       - file: tutorials/W1D4_NewTopic/chapter_intro.md
          children:
-           - file: tutorials/W1D4_NewTopic/chapter_intro.md
-             children:
-               - file: tutorials/W1D4_NewTopic/W1D4_Tutorial1.md
-               - file: tutorials/W1D4_NewTopic/W1D4_Tutorial2.md
-               - file: tutorials/W1D4_NewTopic/W1D4_Tutorial3.md
-               - file: tutorials/W1D4_NewTopic/W1D4_Bonus.md
-               - file: tutorials/W1D4_NewTopic/further_reading.md
+           - file: tutorials/W1D4_NewTopic/W1D4_Tutorial1.md
+           - file: tutorials/W1D4_NewTopic/W1D4_Tutorial2.md
+           - file: tutorials/W1D4_NewTopic/W1D4_Tutorial3.md
+           - file: tutorials/W1D4_NewTopic/W1D4_Bonus.md
+           - file: tutorials/W1D4_NewTopic/further_reading.md
 
 3. Push to `main` — CI handles notebook generation and deployment automatically.
 

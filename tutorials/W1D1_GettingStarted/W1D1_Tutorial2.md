@@ -14,12 +14,14 @@ The toc is a list of files and sections:
     project:
       toc:
         - file: tutorials/intro.md
-        - title: "Day 1: My Topic"
+        - file: tutorials/W1D1_MyTopic/chapter_intro.md
           children:
-            - file: tutorials/W1D1_MyTopic/chapter_intro.md
-              children:
-                - file: tutorials/W1D1_MyTopic/W1D1_Tutorial1.md
-                - file: tutorials/W1D1_MyTopic/further_reading.md
+            - file: tutorials/W1D1_MyTopic/W1D1_Tutorial1.md
+            - file: tutorials/W1D1_MyTopic/further_reading.md
+
+Each day's `chapter_intro.md` is the parent entry, and its title becomes the day's
+label in the sidebar. Don't wrap it in a separate `title:` group. If you do, the day
+shows up twice in the sidebar, once as the group and once as the intro page.
 
 ## Naming convention
 

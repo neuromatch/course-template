@@ -130,7 +130,7 @@ Warning: this modifies `.md` files in-place (badge injection). Revert unintended
 ### Adding a new day
 
 1. Create `tutorials/W{w}D{d}_{Topic}/` with `chapter_intro.md`, tutorial `.md` files, `further_reading.md`
-2. Add the TOC entry in `myst.yml` under `project.toc`
+2. Add the TOC entry in `myst.yml` under `project.toc`. Make `- file: tutorials/W{w}D{d}_{Topic}/chapter_intro.md` the top-level entry and list the tutorials under it as `children`. Don't wrap it in a `title:` group, because that makes the day appear twice in the sidebar.
 3. Validate: `python3 -c "import yaml; yaml.safe_load(open('myst.yml'))"`
 
 ## Pyodide / JupyterLite
