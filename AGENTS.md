@@ -35,7 +35,7 @@ notebooks/                   # Generated .ipynb files (gitignored, lives on note
 ### Key files
 
 - **`myst.yml`** -- the only config file. Contains project metadata, hand-authored TOC, JupyterLite settings (`project.jupyter.lite: true`), and site theme. There is no `_toc.yml` or `_config.yml`.
-- **`scripts/convert_to_notebooks.py`** -- reads `project.github` from `myst.yml` to generate fork-friendly badge URLs. Idempotent.
+- **`scripts/convert_to_notebooks.py`** -- reads `project.github` from `myst.yml` to generate fork-friendly badge URLs. Default mode writes notebooks only, and `--inject-md-badges` (CI-only) adds badges to `.md` pages. Idempotent.
 - **`requirements.txt`** -- Python dependencies: mystmd, jupytext, numpy, matplotlib, etc.
 - **`.nvmrc`** -- Node.js version (22). MyST requires Node >= 20.
 
@@ -63,7 +63,11 @@ A page without `kernelspec` is static (chapter intros, further reading, bonus pa
 
 ### Badges
 
-Never add badge HTML to `.md` files manually. The `convert_to_notebooks.py` script injects them automatically. Badge injection is idempotent but adds a blank line on each re-run -- if you run the script locally, revert changes to existing tutorials before committing.
+Never add or commit badge HTML in `.md` files. The `.md` sources on `main` are badge-free. Badges are added at build time in two places:
+- **Generated notebooks**: `generate-notebooks.yml` inserts a badge cell at position 0 of each `.ipynb`.
+- **Rendered site pages**: `publish-book.yml` runs `convert_to_notebooks.py --inject-md-badges` right before `myst build`, on CI's throwaway checkout. The result is never committed.
+
+Every page with `kernelspec` gets badges automatically, so local `myst start` previews show no badges.
 
 ### Code cell tags
 
@@ -119,12 +123,12 @@ uv run python scripts/convert_to_notebooks.py           # Convert all
 uv run python scripts/convert_to_notebooks.py --dry-run  # Preview only
 ```
 
-Warning: this modifies `.md` files in-place (badge injection). Revert unintended changes to existing tutorials with `git checkout origin/main -- tutorials/W1D*/`.
+This writes only to `notebooks/` (gitignored) and never modifies `.md` files. The separate `--inject-md-badges` mode edits `.md` files in place and is meant for CI only. If you run it locally, revert with `git checkout -- tutorials/`.
 
 ### CI pipelines
 
 1. **`generate-notebooks.yml`** -- triggers on push to `main` when `tutorials/`, `scripts/`, `myst.yml`, or `requirements.txt` change. Converts `.md` -> `.ipynb`, pushes to `notebooks-branch`.
-2. **`publish-book.yml`** -- triggers after `generate-notebooks.yml` completes or on push to `main`. Builds MyST book, deploys to GitHub Pages.
+2. **`publish-book.yml`** -- triggers after `generate-notebooks.yml` completes or on push to `main`. Runs `convert_to_notebooks.py --inject-md-badges` on its throwaway checkout, then builds the MyST book and deploys to GitHub Pages.
 3. **`build-pyodide-wheels.yml`** -- manual trigger (`workflow_dispatch`). Builds pure-Python wheels for packages that lack them on PyPI, uploads as GitHub Release assets.
 
 ### Adding a new day

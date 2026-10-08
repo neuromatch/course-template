@@ -4,50 +4,51 @@ kernelspec:
   name: python3
   display_name: Python 3
 ---
-<a href="https://colab.research.google.com/github/neuromatch/course-template/blob/notebooks-branch/notebooks/W1D3_PublishingAndCI/W1D3_Tutorial2.ipynb" target="_blank"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> <a href="https://kaggle.com/kernels/welcome?src=https://raw.githubusercontent.com/neuromatch/course-template/notebooks-branch/notebooks/W1D3_PublishingAndCI/W1D3_Tutorial2.ipynb" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg" alt="Open In Kaggle"/></a>
-
-
-
-
-
-
-
 
 # Tutorial 2: Colab and Kaggle Badges
 
 This tutorial is itself an example of a page that gets converted to `.ipynb` by CI
-and receives Colab and Kaggle badges. Look for them at the top of the notebook version.
+and receives Colab and Kaggle badges. Look for them at the top of this page and of
+the notebook version.
 
-## Why `.ipynb` files are committed to the repo
+## Where the notebooks live
 
 Colab and Kaggle fetch notebooks from **raw GitHub URLs**. They cannot open `.md`
-files — only `.ipynb`. The `notebooks/` directory holds the CI-generated notebooks
-that Colab and Kaggle link to.
+files, only `.ipynb`. CI generates the notebooks and pushes them to a separate
+`notebooks-branch`, under `notebooks/`. They are never committed to `main`.
 
-The `.md` files in `tutorials/` remain the canonical source. The `.ipynb` files
-in `notebooks/` are derived artifacts — never edit them by hand.
+The `.md` files in `tutorials/` are the only source. The generated `.ipynb` files
+are derived artifacts, so never edit them by hand.
 
 ## How badge injection works
 
-The `scripts/convert_to_notebooks.py` script:
+Badges are added at build time in two places, and never committed to `main`.
+
+**In the generated notebooks** (`generate-notebooks.yml`), `scripts/convert_to_notebooks.py`:
 
 1. Scans `tutorials/` for `.md` files with a `kernelspec` in their frontmatter
 2. Converts each to `.ipynb` via `jupytext --from md:myst --to notebook`
 3. Inserts a markdown cell at position 0 containing Colab and Kaggle badge HTML
 4. Writes the result to `notebooks/<day_folder>/<tutorial_name>.ipynb`
 
+**On the rendered site** (`publish-book.yml`), CI runs
+`convert_to_notebooks.py --inject-md-badges` right before `myst build`. This adds
+the badge HTML to the top of each executable page in CI's temporary checkout only.
+That's why badges don't appear in a local `myst start` preview, and why you should
+never add badge HTML to a `.md` file yourself.
+
 The badge URLs are derived from `project.github` in `myst.yml`, so they update
-automatically when you fork the template — no hardcoded repo paths.
+automatically when you fork the template. No repo paths are hardcoded.
 
 ## Badge URL format
 
 **Colab:**
 
-    https://colab.research.google.com/github/<org>/<repo>/blob/main/notebooks/<path>.ipynb
+    https://colab.research.google.com/github/<org>/<repo>/blob/notebooks-branch/notebooks/<path>.ipynb
 
 **Kaggle:**
 
-    https://kaggle.com/kernels/welcome?src=https://raw.githubusercontent.com/<org>/<repo>/main/notebooks/<path>.ipynb
+    https://kaggle.com/kernels/welcome?src=https://raw.githubusercontent.com/<org>/<repo>/notebooks-branch/notebooks/<path>.ipynb
 
 ## Running the conversion script locally
 
@@ -69,6 +70,7 @@ print(result.stderr or "")
 The first cell of every generated notebook contains HTML like this:
 
 ```html
+<a href="https://colab.research.google.com/github/<org>/<repo>/blob/notebooks-branch/notebooks/<path>.ipynb" target="_blank"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> <a href="https://kaggle.com/kernels/welcome?src=https://raw.githubusercontent.com/<org>/<repo>/notebooks-branch/notebooks/<path>.ipynb" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg" alt="Open In Kaggle"/></a>
 ```
 
 ## Which pages get notebooks generated?

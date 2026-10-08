@@ -42,6 +42,11 @@ jobs:
       - name: Install dependencies
         run: uv pip install -r requirements.txt
 
+      # Adds Colab/Kaggle badges to this checkout's copy of each executable
+      # tutorial. Never committed: the .md sources on main stay badge-free.
+      - name: Inject Colab/Kaggle badges into tutorial pages
+        run: uv run python scripts/convert_to_notebooks.py --inject-md-badges
+
       - name: Build MyST book
         run: uv run myst build --html
 

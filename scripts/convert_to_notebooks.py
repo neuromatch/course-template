@@ -3,13 +3,19 @@ Convert MyST Markdown tutorials to Jupyter notebooks and inject Colab/Kaggle bad
 
 Usage:
     python scripts/convert_to_notebooks.py [--dry-run]
+    python scripts/convert_to_notebooks.py --inject-md-badges [--dry-run]
 
-For each .md file in tutorials/ that has a kernelspec frontmatter:
-  1. Inject Colab + Kaggle badge HTML into the .md source (after frontmatter)
-     so badges appear on the rendered book page
-  2. Convert to .ipynb via jupytext
-  3. Inject a Colab + Kaggle badge markdown cell at position 0 in the .ipynb
-  4. Write .ipynb to notebooks/<day_folder>/<tutorial_name>.ipynb
+Default mode (used by generate-notebooks.yml). For each .md file in tutorials/
+that has a kernelspec frontmatter:
+  1. Convert to .ipynb via jupytext
+  2. Inject a Colab + Kaggle badge markdown cell at position 0 in the .ipynb
+  3. Write .ipynb to notebooks/<day_folder>/<tutorial_name>.ipynb
+  The .md sources are never modified in this mode.
+
+--inject-md-badges mode (used by publish-book.yml right before `myst build`):
+  Insert Colab + Kaggle badge HTML into each kernelspec .md file (after the
+  frontmatter) so badges appear on the rendered book page. This edits files
+  in place, so only run it on a throwaway checkout (CI). Never commit the result.
 
 For each .ipynb file authored directly in tutorials/:
   1. Inject badges only (no conversion needed)
@@ -114,7 +120,6 @@ def inject_badges_into_md(
     This makes badges appear on the rendered MyST book page.
     """
     badge_html = make_badge_html(notebook_rel_path, github_repo)
-    badge_block = f"\n{badge_html}\n"
 
     print(f"  Injecting badges into MD: {md_file}")
     if dry_run:
@@ -133,16 +138,18 @@ def inject_badges_into_md(
     frontmatter = content[: fm_end + 3]  # includes closing ---
     body = content[fm_end + 3:]           # everything after closing ---
 
-    # Remove any existing badge block (idempotency)
+    # Remove an existing badge line (idempotency). Anchored to the start of the
+    # body and restricted to a single line so badge HTML used as an example
+    # elsewhere on the page (e.g. inside a code block) is never touched.
     body = re.sub(
-        r"\n<a href=\"https://colab\.research\.google\.com/.*?</a>\s*"
-        r"<a href=\"https://kaggle\.com/.*?</a>\n",
-        "\n",
+        r"\A\s*<a href=\"https://colab\.research\.google\.com/[^\n]*?</a>[ \t]*"
+        r"<a href=\"https://kaggle\.com/[^\n]*?</a>[ \t]*\n",
+        "",
         body,
-        flags=re.DOTALL,
     )
 
-    new_content = frontmatter + badge_block + body
+    # Normalise spacing so repeated runs don't accumulate blank lines
+    new_content = f"{frontmatter}\n{badge_html}\n\n{body.lstrip(chr(10))}"
     md_file.write_text(new_content, encoding="utf-8")
 
 
@@ -229,7 +236,7 @@ def copy_ipynb_with_badges(
     inject_badges(out_path, github_repo, dry_run=False)
 
 
-def process_tutorials(github_repo: str, dry_run: bool) -> int:
+def process_tutorials(github_repo: str, dry_run: bool, md_badges_only: bool) -> int:
     """Walk tutorials/ and process all qualifying files. Returns count processed."""
     count = 0
 
@@ -241,11 +248,16 @@ def process_tutorials(github_repo: str, dry_run: bool) -> int:
         relative_to_tutorials = source_file.relative_to(TUTORIALS_DIR)
         out_path = NOTEBOOKS_DIR / relative_to_tutorials.with_suffix(".ipynb")
 
+        if md_badges_only:
+            if source_file.suffix == ".md" and has_kernelspec(source_file):
+                notebook_rel = str(out_path).replace("\\", "/")
+                inject_badges_into_md(source_file, notebook_rel, github_repo, dry_run)
+                count += 1
+            continue
+
         if source_file.suffix == ".md":
             if not has_kernelspec(source_file):
                 continue  # static page — skip
-            notebook_rel = str(out_path).replace("\\", "/")
-            inject_badges_into_md(source_file, notebook_rel, github_repo, dry_run)
             convert_md_to_notebook(source_file, out_path, dry_run)
             inject_badges(out_path, github_repo, dry_run)
 
@@ -266,6 +278,14 @@ def main() -> None:
         action="store_true",
         help="Print what would be done without writing any files",
     )
+    parser.add_argument(
+        "--inject-md-badges",
+        action="store_true",
+        help=(
+            "Only inject Colab/Kaggle badge HTML into the .md sources (in place). "
+            "Intended for CI right before `myst build`; do not commit the result."
+        ),
+    )
     args = parser.parse_args()
 
     if args.dry_run:
@@ -274,7 +294,7 @@ def main() -> None:
     github_repo = load_github_repo(MYST_CONFIG)
     print(f"GitHub repo: {github_repo}\n")
 
-    count = process_tutorials(github_repo, args.dry_run)
+    count = process_tutorials(github_repo, args.dry_run, args.inject_md_badges)
     print(f"\nDone. Processed {count} file(s).")
 
 
