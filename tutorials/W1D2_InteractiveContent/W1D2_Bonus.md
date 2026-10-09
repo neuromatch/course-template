@@ -1,74 +1,70 @@
 ---
-title: "Bonus: Binder and Remote Kernel Options"
+title: "Bonus: Working Within JupyterLite's Limits"
 ---
 
-# Bonus: Binder and Remote Kernel Options
+# Bonus: Working Within JupyterLite's Limits
 
-JupyterLite (in-browser WASM) is the default for this template. For compute-heavy
-content or packages not supported by WebAssembly, you can switch to a remote kernel.
+JupyterLite runs Python in the browser through Pyodide (WebAssembly). It needs no
+server, but not every package or workload can run there. This page covers how to
+get dependencies into the browser and what to do when something can't run there.
 
-## Using Binder
+## Packages bundled with Pyodide
 
-Replace JupyterLite with a mybinder.org-backed kernel by updating `myst.yml`:
+These import directly, with no install step:
 
-```yaml
-project:
-  jupyter:
-    binder:
-      repo: your-org/your-repo
-      ref: main
+- `numpy`, `scipy`, `pandas`, `matplotlib`, `altair`
+
+Many other packages with compiled code are also pre-built for Pyodide. See the
+[Pyodide package list](https://pyodide.org/en/stable/usage/packages-in-pyodide.html).
+
+## Installing other packages with micropip
+
+Pure-Python packages can be installed at runtime with `micropip`. Put the install
+in a setup cell at the top of the tutorial and tag it `remove-cell` so students
+don't see it:
+
+````markdown
+```{code-cell} python
+:tags: [remove-cell]
+import sys
+if sys.platform == "emscripten":  # only true in JupyterLite/Pyodide
+    import micropip
+    await micropip.install(["ipywidgets"])
+```
+````
+
+The `sys.platform` check makes the cell do nothing in Colab, Kaggle, or a local
+Jupyter session, where packages come from `requirements.txt` instead.
+
+## Packages without a wheel on PyPI
+
+micropip can only install wheels (`.whl`). If a package only publishes a source
+distribution:
+
+1. Build a pure-Python wheel with the `build-pyodide-wheels.yml` workflow (manual
+   trigger) and commit it to `_wheels/`.
+2. Install it from `raw.githubusercontent.com`, which sends the CORS headers the
+   browser needs. GitHub Release URLs do **not**, so they fail in the browser.
+
+```python
+_whl = "https://raw.githubusercontent.com/<org>/<repo>/main/_wheels"
+await micropip.install([f"{_whl}/vibecheck-0.0.5-py3-none-any.whl"])
 ```
 
-Students click the power button and a Binder session launches (~30–60 seconds
-cold start). The environment is built from your repo's `requirements.txt`,
-`environment.yml`, or `Dockerfile`.
+Remove the workaround once the package publishes wheels upstream.
 
-## Using a custom BinderHub
+## What doesn't work in the browser
 
-If your institution runs a private BinderHub:
+- **GPUs**: no CUDA, so no GPU-backed PyTorch or JAX
+- **Packages with C extensions that aren't pre-built for Pyodide**: they can't be
+  installed with micropip
+- **Threads and subprocesses**: limited or unavailable
+- **Large datasets and long computations**: limited by browser memory, and run
+  on a single core
 
-```yaml
-project:
-  jupyter:
-    binder:
-      url: https://binder.myorganisation.com/services/binder/
-      repo: your-org/your-repo
-      ref: main
-```
+## The fallback: Colab and Kaggle
 
-## Using JupyterHub
-
-Point students directly at a JupyterHub instance:
-
-```yaml
-project:
-  jupyter:
-    server:
-      url: https://hub.myuniversity.edu
-```
-
-## Mixing strategies per page
-
-Override the project default on individual pages using frontmatter:
-
-```yaml
----
-title: "GPU Tutorial"
-jupyter:
-  binder:
-    repo: your-org/gpu-environment-repo
----
-```
-
-Or make a page entirely static by simply not including a `kernelspec` in its
-frontmatter — pages without `kernelspec` get no power button and no notebook generated.
-
-## Adding a Binder badge
-
-To show a persistent Binder launch badge on every page (separate from the power
-button), add to `myst.yml`:
-
-```yaml
-project:
-  binder: https://mybinder.org/v2/gh/your-org/your-repo/HEAD
-```
+Every executable tutorial automatically gets **Colab** and **Kaggle** badges that
+open the generated notebook (see Day 3, Tutorial 2). When a tutorial needs a GPU,
+heavy compute, or an unsupported package, point students to those badges. The
+tutorial is still written in `.md` like any other.

@@ -11,7 +11,8 @@ By the end of Day 2 you will be able to:
 - Use JupyterLite for in-browser code execution (no server needed)
 - Produce interactive Altair visualisations embedded in the book
 - Use ipywidgets for interactive controls
-- Understand when to use `.ipynb` vs `.md` for your tutorials
+- Explain why all content is written in Markdown and notebooks are generated
+- Work within JupyterLite's package and compute limits
 
 ## Schedule
 
@@ -19,5 +20,5 @@ By the end of Day 2 you will be able to:
 |----------|-------|----------|
 | Tutorial 1 | In-browser execution with JupyterLite | 30 min |
 | Tutorial 2 | Rich interactive outputs | 30 min |
-| Tutorial 3 | When to use `.ipynb` vs `.md` | 20 min |
-| Bonus | Binder and remote kernel options | open-ended |
+| Tutorial 3 | Markdown is the only source | 20 min |
+| Bonus | Working within JupyterLite's limits | open-ended |

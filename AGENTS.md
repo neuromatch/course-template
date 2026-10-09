@@ -14,7 +14,7 @@ tutorials/
   intro.md                  # Landing page
   W{week}D{day}_{Topic}/    # One directory per day
     chapter_intro.md         # Day overview, learning objectives, schedule table
-    W{w}D{d}_Tutorial1.md   # Tutorial pages (may have kernelspec)
+    W{w}D{d}_Tutorial1.md   # Tutorial pages (kernelspec required if they contain code)
     W{w}D{d}_Tutorial2.md
     W{w}D{d}_Bonus.md       # Open-ended bonus
     further_reading.md       # Static links page
@@ -35,7 +35,7 @@ notebooks/                   # Generated .ipynb files (gitignored, lives on note
 ### Key files
 
 - **`myst.yml`** -- the only config file. Contains project metadata, hand-authored TOC, JupyterLite settings (`project.jupyter.lite: true`), and site theme. There is no `_toc.yml` or `_config.yml`.
-- **`scripts/convert_to_notebooks.py`** -- reads `project.github` from `myst.yml` to generate fork-friendly badge URLs. Default mode writes notebooks only, and `--inject-md-badges` (CI-only) adds badges to `.md` pages. Idempotent.
+- **`scripts/convert_to_notebooks.py`** -- reads `project.github` from `myst.yml` to generate fork-friendly badge URLs. Default mode writes notebooks only, and `--inject-md-badges` (CI-only) adds badges to `.md` pages. Both modes first enforce the content rules below. Idempotent.
 - **`requirements.txt`** -- Python dependencies: mystmd, jupytext, numpy, matplotlib, etc.
 - **`.nvmrc`** -- Node.js version (22). MyST requires Node >= 20.
 
@@ -60,6 +60,15 @@ This means:
 - CI injects Colab/Kaggle badges
 
 A page without `kernelspec` is static (chapter intros, further reading, bonus pages without code).
+
+### Content rules (enforced by CI)
+
+`convert_to_notebooks.py` validates these rules before doing anything, in both modes, and exits non-zero on any violation:
+
+- **No `.ipynb` in `tutorials/`.** All content is MyST `.md`. Convert incoming notebooks once (see "Converting .ipynb to MyST .md") and commit only the `.md`.
+- **Pages with code need `kernelspec`.** A `.md` file with a top-level `{code-cell}` must declare `kernelspec`. Code-cells shown as examples inside another fenced block don't count.
+
+There is no Binder, JupyterHub, or remote-kernel support. Code runs in the browser via JupyterLite, and Colab/Kaggle (via the generated notebooks) is the fallback for anything Pyodide can't run.
 
 ### Badges
 

@@ -17,7 +17,8 @@ title: Further Reading
 - [Altair documentation](https://altair-viz.github.io)
 - [ipywidgets documentation](https://ipywidgets.readthedocs.io)
 
-## Binder
+## Markdown notebooks and Pyodide packages
 
-- [Binder documentation](https://docs.mybinder.org)
-- [repo2docker — building Binder environments](https://repo2docker.readthedocs.io)
+- [Jupytext: MyST Markdown notebooks](https://jupytext.readthedocs.io/en/latest/formats-markdown.html)
+- [Packages built in Pyodide](https://pyodide.org/en/stable/usage/packages-in-pyodide.html)
+- [micropip documentation](https://micropip.pyodide.org)

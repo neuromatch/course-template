@@ -48,15 +48,6 @@ Use it to override colours, fonts, or spacing:
 }
 ```
 
-## Adding a Binder badge
-
-Show a persistent Binder launch badge on every page:
-
-```yaml
-project:
-  binder: https://mybinder.org/v2/gh/your-org/your-repo/HEAD
-```
-
 ## Enabling download buttons
 
 Let students download pages as PDF or Jupyter notebook:

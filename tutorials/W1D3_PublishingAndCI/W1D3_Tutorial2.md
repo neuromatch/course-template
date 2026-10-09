@@ -86,4 +86,7 @@ kernelspec:
 ```
 
 Pages without a `kernelspec` (like `further_reading.md` and `chapter_intro.md`)
-are skipped — no notebook is generated for them.
+are skipped, and no notebook is generated for them.
+
+If a page contains `{code-cell}` blocks but no `kernelspec`, the script fails CI
+with an error. Otherwise the page would silently get no notebook and no badges.

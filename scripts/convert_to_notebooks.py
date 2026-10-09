@@ -17,9 +17,9 @@ that has a kernelspec frontmatter:
   frontmatter) so badges appear on the rendered book page. This edits files
   in place, so only run it on a throwaway checkout (CI). Never commit the result.
 
-For each .ipynb file authored directly in tutorials/:
-  1. Inject badges only (no conversion needed)
-  2. Copy to notebooks/<day_folder>/<tutorial_name>.ipynb
+Both modes first validate the content rules and exit non-zero on any violation:
+  - No .ipynb files in tutorials/ (all content is authored as MyST .md)
+  - Any .md with a {code-cell} directive must declare a kernelspec
 
 The GitHub repo URL is read from myst.yml (project.github) so badge URLs update
 automatically when the template is forked.
@@ -81,6 +81,51 @@ def has_kernelspec(md_file: Path) -> bool:
         return False
 
     return isinstance(fm, dict) and "kernelspec" in fm
+
+
+FENCE_RE = re.compile(r"^(`{3,}|~{3,})(.*)$")
+
+
+def has_code_cells(md_file: Path) -> bool:
+    """
+    Return True if the .md file contains a top-level {code-cell} directive.
+
+    Code-cells shown as examples inside another fenced block (e.g. a
+    ````markdown fence) don't count, so documentation pages can show the
+    syntax without being treated as executable.
+    """
+    open_fence = None  # (char, length) of the fence we're currently inside
+    for line in md_file.read_text(encoding="utf-8").splitlines():
+        match = FENCE_RE.match(line)
+        if not match:
+            continue
+        marker, info = match.group(1), match.group(2).strip()
+        if open_fence is None:
+            if info.startswith("{code-cell}"):
+                return True
+            open_fence = (marker[0], len(marker))
+        elif marker[0] == open_fence[0] and len(marker) >= open_fence[1] and not info:
+            open_fence = None
+    return False
+
+
+def validate_content() -> list[str]:
+    """Check the Markdown-only content rules. Returns a list of violations."""
+    errors = []
+    for path in sorted(TUTORIALS_DIR.rglob("*.ipynb")):
+        if ".ipynb_checkpoints" in path.parts:
+            continue
+        errors.append(
+            f"{path}: .ipynb files are not allowed in tutorials/. Convert it with "
+            f"`jupytext --to md:myst` and commit only the .md."
+        )
+    for path in sorted(TUTORIALS_DIR.rglob("*.md")):
+        if has_code_cells(path) and not has_kernelspec(path):
+            errors.append(
+                f"{path}: contains {{code-cell}} blocks but no `kernelspec` in its "
+                f"frontmatter, so it would get no notebook, badges, or JupyterLite button."
+            )
+    return errors
 
 
 def make_badge_html(notebook_rel_path: str, github_repo: str) -> str:
@@ -217,52 +262,24 @@ def inject_badges(notebook_path: Path, github_repo: str, dry_run: bool) -> None:
         json.dump(nb, fh, indent=1, ensure_ascii=False)
 
 
-def copy_ipynb_with_badges(
-    src: Path, out_path: Path, github_repo: str, dry_run: bool
-) -> None:
-    """Copy a directly-authored .ipynb to notebooks/ and inject badges."""
-    print(f"  Copying:    {src} -> {out_path}")
-    if dry_run:
-        return
-
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-
-    with src.open(encoding="utf-8") as fh:
-        nb = json.load(fh)
-
-    with out_path.open("w", encoding="utf-8") as fh:
-        json.dump(nb, fh, indent=1, ensure_ascii=False)
-
-    inject_badges(out_path, github_repo, dry_run=False)
-
-
 def process_tutorials(github_repo: str, dry_run: bool, md_badges_only: bool) -> int:
-    """Walk tutorials/ and process all qualifying files. Returns count processed."""
+    """Walk tutorials/ and process all executable .md pages. Returns count processed."""
     count = 0
 
-    for source_file in sorted(TUTORIALS_DIR.rglob("*")):
-        if source_file.suffix not in (".md", ".ipynb"):
-            continue
+    for source_file in sorted(TUTORIALS_DIR.rglob("*.md")):
+        if not has_kernelspec(source_file):
+            continue  # static page — skip
 
         # Determine output path under notebooks/
         relative_to_tutorials = source_file.relative_to(TUTORIALS_DIR)
         out_path = NOTEBOOKS_DIR / relative_to_tutorials.with_suffix(".ipynb")
 
         if md_badges_only:
-            if source_file.suffix == ".md" and has_kernelspec(source_file):
-                notebook_rel = str(out_path).replace("\\", "/")
-                inject_badges_into_md(source_file, notebook_rel, github_repo, dry_run)
-                count += 1
-            continue
-
-        if source_file.suffix == ".md":
-            if not has_kernelspec(source_file):
-                continue  # static page — skip
+            notebook_rel = str(out_path).replace("\\", "/")
+            inject_badges_into_md(source_file, notebook_rel, github_repo, dry_run)
+        else:
             convert_md_to_notebook(source_file, out_path, dry_run)
             inject_badges(out_path, github_repo, dry_run)
-
-        elif source_file.suffix == ".ipynb":
-            copy_ipynb_with_badges(source_file, out_path, github_repo, dry_run)
 
         count += 1
 
@@ -287,6 +304,13 @@ def main() -> None:
         ),
     )
     args = parser.parse_args()
+
+    errors = validate_content()
+    if errors:
+        print("Content rule violations:", file=sys.stderr)
+        for error in errors:
+            print(f"  - {error}", file=sys.stderr)
+        sys.exit(1)
 
     if args.dry_run:
         print("DRY RUN — no files will be written\n")
