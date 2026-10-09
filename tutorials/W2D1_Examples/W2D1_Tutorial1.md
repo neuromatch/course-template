@@ -51,15 +51,8 @@ Today, the focus will be on **linear dynamics**, where $f(x)$ is a linear functi
 * Explore and understand the behavior of such systems where $x$ is a single variable
 * Consider cases where $\mathbf{x}$ is a state vector representing two variables.
 
-```{code-cell} python
-:tags: [hide-input]
-# @title Tutorial slides
-# @markdown These are the slides for the videos in all tutorials today
-from IPython.display import IFrame
-link_id = "snv4m"
-print(f"If you want to download the slides: https://osf.io/download/{link_id}/")
-IFrame(src=f"https://mfr.ca-1.osf.io/render?url=https://osf.io/{link_id}/?direct%26mode=render%26action=download%26mode=render", width=854, height=480)
-```
+:::{nma-slides} snv4m
+:::
 
 ---
 # Setup
@@ -268,54 +261,10 @@ def plot_specific_example_stream_plots(A_options):
 ---
 # Section 1: One-dimensional Differential Equations
 
-```{code-cell} python
-:tags: [hide-input]
-# @title Video 1: Linear Dynamical Systems
-from ipywidgets import widgets
-from IPython.display import YouTubeVideo
-from IPython.display import IFrame
-from IPython.display import display
-
-
-class PlayVideo(IFrame):
-  def __init__(self, id, source, page=1, width=400, height=300, **kwargs):
-    self.id = id
-    if source == 'Bilibili':
-      src = f'https://player.bilibili.com/player.html?bvid={id}&page={page}'
-    elif source == 'Osf':
-      src = f'https://mfr.ca-1.osf.io/render?url=https://osf.io/download/{id}/?direct%26mode=render'
-    super(PlayVideo, self).__init__(src, width, height, **kwargs)
-
-
-def display_videos(video_ids, W=400, H=300, fs=1):
-  tab_contents = []
-  for i, video_id in enumerate(video_ids):
-    out = widgets.Output()
-    with out:
-      if video_ids[i][0] == 'Youtube':
-        video = YouTubeVideo(id=video_ids[i][1], width=W,
-                             height=H, fs=fs, rel=0)
-        print(f'Video available at https://youtube.com/watch?v={video.id}')
-      else:
-        video = PlayVideo(id=video_ids[i][1], source=video_ids[i][0], width=W,
-                          height=H, fs=fs, autoplay=False)
-        if video_ids[i][0] == 'Bilibili':
-          print(f'Video available at https://www.bilibili.com/video/{video.id}')
-        elif video_ids[i][0] == 'Osf':
-          print(f'Video available at https://osf.io/{video.id}')
-      display(video)
-    tab_contents.append(out)
-  return tab_contents
-
-
-video_ids = [('Youtube', '87z6OR7-DBI'), ('Bilibili', 'BV1up4y1S7wj')]
-tab_contents = display_videos(video_ids, W=854, H=480)
-tabs = widgets.Tab()
-tabs.children = tab_contents
-for i in range(len(tab_contents)):
-  tabs.set_title(i, video_ids[i][0])
-display(tabs)
-```
+:::{nma-video} Video 1: Linear Dynamical Systems
+:youtube: 87z6OR7-DBI
+:bilibili: BV1up4y1S7wj
+:::
 
 ```{code-cell} python
 :tags: [hide-input]
@@ -543,54 +492,10 @@ content_review(f"{feedback_prefix}_What_models_Video")
 
 *Estimated timing to here from start of tutorial: 20 min*
 
-```{code-cell} python
-:tags: [hide-input]
-# @title Video 2: Oscillatory Solutions
-from ipywidgets import widgets
-from IPython.display import YouTubeVideo
-from IPython.display import IFrame
-from IPython.display import display
-
-
-class PlayVideo(IFrame):
-  def __init__(self, id, source, page=1, width=400, height=300, **kwargs):
-    self.id = id
-    if source == 'Bilibili':
-      src = f'https://player.bilibili.com/player.html?bvid={id}&page={page}'
-    elif source == 'Osf':
-      src = f'https://mfr.ca-1.osf.io/render?url=https://osf.io/download/{id}/?direct%26mode=render'
-    super(PlayVideo, self).__init__(src, width, height, **kwargs)
-
-
-def display_videos(video_ids, W=400, H=300, fs=1):
-  tab_contents = []
-  for i, video_id in enumerate(video_ids):
-    out = widgets.Output()
-    with out:
-      if video_ids[i][0] == 'Youtube':
-        video = YouTubeVideo(id=video_ids[i][1], width=W,
-                             height=H, fs=fs, rel=0)
-        print(f'Video available at https://youtube.com/watch?v={video.id}')
-      else:
-        video = PlayVideo(id=video_ids[i][1], source=video_ids[i][0], width=W,
-                          height=H, fs=fs, autoplay=False)
-        if video_ids[i][0] == 'Bilibili':
-          print(f'Video available at https://www.bilibili.com/video/{video.id}')
-        elif video_ids[i][0] == 'Osf':
-          print(f'Video available at https://osf.io/{video.id}')
-      display(video)
-    tab_contents.append(out)
-  return tab_contents
-
-
-video_ids = [('Youtube', 'vPYQPI4nKT8'), ('Bilibili', 'BV1gZ4y1u7PK')]
-tab_contents = display_videos(video_ids, W=854, H=480)
-tabs = widgets.Tab()
-tabs.children = tab_contents
-for i in range(len(tab_contents)):
-  tabs.set_title(i, video_ids[i][0])
-display(tabs)
-```
+:::{nma-video} Video 2: Oscillatory Solutions
+:youtube: vPYQPI4nKT8
+:bilibili: BV1gZ4y1u7PK
+:::
 
 ```{code-cell} python
 :tags: [hide-input]
@@ -661,54 +566,10 @@ content_review(f"{feedback_prefix}_Oscillatory_Dynamics_Interactive_Demo_Discuss
 
 *Estimated timing to here from start of tutorial: 33 min*
 
-```{code-cell} python
-:tags: [hide-input]
-# @title Video 3: Multi-Dimensional Dynamics
-from ipywidgets import widgets
-from IPython.display import YouTubeVideo
-from IPython.display import IFrame
-from IPython.display import display
-
-
-class PlayVideo(IFrame):
-  def __init__(self, id, source, page=1, width=400, height=300, **kwargs):
-    self.id = id
-    if source == 'Bilibili':
-      src = f'https://player.bilibili.com/player.html?bvid={id}&page={page}'
-    elif source == 'Osf':
-      src = f'https://mfr.ca-1.osf.io/render?url=https://osf.io/download/{id}/?direct%26mode=render'
-    super(PlayVideo, self).__init__(src, width, height, **kwargs)
-
-
-def display_videos(video_ids, W=400, H=300, fs=1):
-  tab_contents = []
-  for i, video_id in enumerate(video_ids):
-    out = widgets.Output()
-    with out:
-      if video_ids[i][0] == 'Youtube':
-        video = YouTubeVideo(id=video_ids[i][1], width=W,
-                             height=H, fs=fs, rel=0)
-        print(f'Video available at https://youtube.com/watch?v={video.id}')
-      else:
-        video = PlayVideo(id=video_ids[i][1], source=video_ids[i][0], width=W,
-                          height=H, fs=fs, autoplay=False)
-        if video_ids[i][0] == 'Bilibili':
-          print(f'Video available at https://www.bilibili.com/video/{video.id}')
-        elif video_ids[i][0] == 'Osf':
-          print(f'Video available at https://osf.io/{video.id}')
-      display(video)
-    tab_contents.append(out)
-  return tab_contents
-
-
-video_ids = [('Youtube', 'c_GdNS3YH_M'), ('Bilibili', 'BV1pf4y1R7uy')]
-tab_contents = display_videos(video_ids, W=854, H=480)
-tabs = widgets.Tab()
-tabs.children = tab_contents
-for i in range(len(tab_contents)):
-  tabs.set_title(i, video_ids[i][0])
-display(tabs)
-```
+:::{nma-video} Video 3: Multi-Dimensional Dynamics
+:youtube: c_GdNS3YH_M
+:bilibili: BV1pf4y1R7uy
+:::
 
 ```{code-cell} python
 :tags: [hide-input]
