@@ -10,8 +10,9 @@ on every push to `main`. The workflow files below are included directly from
 
 ## Workflow 1: `generate-notebooks.yml`
 
-1. Checks the content rules: no `.ipynb` files in `tutorials/`, and every page
-   with code cells has a `kernelspec`.
+1. Runs the `pytest` suite for the conversion scripts, then checks the content
+   rules: no `.ipynb` files in `tutorials/`, every page with code cells has a
+   `kernelspec`, and every `{nma-video}`/`{nma-slides}` directive is valid.
 2. Converts each executable `.md` tutorial to `.ipynb` and adds a Colab/Kaggle
    badge cell.
 3. Replaces `{nma-video}`/`{nma-slides}` directives with NMA video and slides
