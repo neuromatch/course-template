@@ -11,6 +11,8 @@ project:
     content: CC-BY-4.0
   jupyter:
     lite: true
+  plugins:
+    - plugins/nma.mjs
   toc:
     - file: tutorials/intro.md
     - file: tutorials/W1D1_GettingStarted/chapter_intro.md
