@@ -125,3 +125,50 @@ def test_slides_cell_source_default_title():
 def test_slides_cell_source_custom_title():
     [d] = find_directives(":::{nma-slides} snv4m\n:title: Day 3 slides\n:::\n")
     assert slides_cell_source(d).startswith("# @title Day 3 slides\n")
+
+
+from nma_media import expand_notebook
+
+CELL_ID_RE = re.compile(r"^[a-zA-Z0-9_-]{1,64}$")
+
+
+def _md_cell(text, cell_id="abc123"):
+    return {"cell_type": "markdown", "id": cell_id, "metadata": {},
+            "source": text.splitlines(keepends=True)}
+
+
+def test_expand_splits_markdown_cell():
+    nb = {"cells": [_md_cell(VIDEO_MD)]}
+    assert expand_notebook(nb) == 1
+    cells = nb["cells"]
+    assert [c["cell_type"] for c in cells] == ["markdown", "code", "markdown"]
+    assert "".join(cells[0]["source"]) == "Intro text"
+    assert "".join(cells[2]["source"]) == "Outro text"
+    code = cells[1]
+    assert code["metadata"] == {"cellView": "form", "tags": ["hide-input"]}
+    assert code["outputs"] == [] and code["execution_count"] is None
+    assert "".join(code["source"]).startswith("# @title Video 1")
+    ids = [c["id"] for c in cells]
+    assert len(set(ids)) == 3 and all(CELL_ID_RE.match(i) for i in ids)
+
+
+def test_expand_drops_empty_markdown_fragments():
+    nb = {"cells": [_md_cell(":::{nma-slides} snv4m\n:::\n")]}
+    expand_notebook(nb)
+    assert [c["cell_type"] for c in nb["cells"]] == ["code"]
+
+
+def test_expand_handles_two_directives_in_one_cell():
+    text = ":::{nma-slides} s1\n:::\n\nmiddle\n\n:::{nma-video} V\n:youtube: y\n:::\n"
+    nb = {"cells": [_md_cell(text)]}
+    assert expand_notebook(nb) == 2
+    assert [c["cell_type"] for c in nb["cells"]] == ["code", "markdown", "code"]
+
+
+def test_expand_leaves_other_cells_alone_and_is_idempotent():
+    code = {"cell_type": "code", "id": "c1", "metadata": {}, "outputs": [],
+            "execution_count": None, "source": ["x = 1"]}
+    plain = _md_cell("just text", "m1")
+    nb = {"cells": [code, plain]}
+    assert expand_notebook(nb) == 0
+    assert nb["cells"] == [code, plain]

@@ -181,3 +181,63 @@ def video_cell_source(d: MediaDirective) -> str:
 def slides_cell_source(d: MediaDirective) -> str:
     title = d.options.get("title") or DEFAULT_SLIDES_TITLE
     return SLIDES_TEMPLATE.substitute(title=title, link_id=d.arg)
+
+
+def _lines(text: str) -> list[str]:
+    return text.splitlines(keepends=True)
+
+
+def make_code_cell(d: MediaDirective, cell_id: str) -> dict:
+    source = video_cell_source(d) if d.kind == "nma-video" else slides_cell_source(d)
+    return {
+        "cell_type": "code",
+        "execution_count": None,
+        "id": cell_id,
+        "metadata": {"cellView": "form", "tags": ["hide-input"]},
+        "outputs": [],
+        "source": _lines(source),
+    }
+
+
+def _markdown_fragment(lines: list[str], cell_id: str) -> list[dict]:
+    text = "".join(lines).strip("\n")
+    if not text.strip():
+        return []
+    return [{"cell_type": "markdown", "id": cell_id, "metadata": {}, "source": _lines(text)}]
+
+
+def expand_markdown_cell(cell: dict) -> list[dict]:
+    """Split a markdown cell around its media directives. Returns replacement cells."""
+    source = cell["source"]
+    text = "".join(source) if isinstance(source, list) else source
+    directives = find_directives(text)
+    if not directives:
+        return [cell]
+
+    lines = text.splitlines(keepends=True)
+    base = cell.get("id", "cell")[:50]
+    out, cursor = [], 0
+    for n, d in enumerate(directives):
+        out += _markdown_fragment(lines[cursor:d.start], f"{base}-md{n}")
+        out.append(make_code_cell(d, f"{base}-{d.kind}{n}"))
+        cursor = d.end + 1
+    out += _markdown_fragment(lines[cursor:], f"{base}-md{len(directives)}")
+    return out
+
+
+def expand_notebook(nb: dict) -> int:
+    """Replace media directives in markdown cells with code cells, in place.
+
+    Returns the number of directives expanded. Assumes validate_directive
+    passed, so every directive is closed.
+    """
+    new_cells, count = [], 0
+    for cell in nb["cells"]:
+        if cell.get("cell_type") != "markdown":
+            new_cells.append(cell)
+            continue
+        expanded = expand_markdown_cell(cell)
+        count += sum(1 for c in expanded if c["cell_type"] == "code")
+        new_cells += expanded
+    nb["cells"] = new_cells
+    return count
