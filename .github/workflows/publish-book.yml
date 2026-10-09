@@ -8,6 +8,7 @@ on:
       - "myst.yml"
       - "requirements.txt"
       - "_static/**"
+      - "plugins/**"
       - "projects/**"
       - "CNAME"
   # Rebuild after notebook generation completes (tutorial content changes)
