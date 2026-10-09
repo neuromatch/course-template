@@ -84,3 +84,33 @@ def find_directives(text: str) -> list[MediaDirective]:
     if current is not None:
         found.append(current)  # unclosed; validate_directive reports it
     return found
+
+
+# (option name, label used in NMA's video_ids), in display order
+VIDEO_SOURCES = [("youtube", "Youtube"), ("bilibili", "Bilibili"), ("osf", "Osf")]
+ALLOWED_OPTIONS = {
+    "nma-video": {name for name, _ in VIDEO_SOURCES},
+    "nma-slides": {"title"},
+}
+DEFAULT_SLIDES_TITLE = "Tutorial slides"
+
+
+def validate_directive(d: MediaDirective) -> list[str]:
+    """Return human-readable errors for one directive, each prefixed with its line."""
+    where = f"line {d.start + 1}: {{{d.kind}}}"
+    errors = []
+    if d.end == -1:
+        errors.append(f"{where} is never closed")
+    for name in sorted(set(d.options) - ALLOWED_OPTIONS[d.kind]):
+        allowed = ", ".join(f":{o}:" for o in sorted(ALLOWED_OPTIONS[d.kind]))
+        errors.append(f"{where} has unknown option :{name}: (allowed: {allowed})")
+    if d.body:
+        errors.append(f"{where} takes no body content, only options")
+    if d.kind == "nma-video":
+        if not d.arg:
+            errors.append(f"{where} needs a title argument, e.g. {{nma-video}} Video 1: Intro")
+        if not any(d.options.get(name) for name, _ in VIDEO_SOURCES):
+            errors.append(f"{where} needs at least one of :youtube:, :bilibili:, :osf:")
+    elif not d.arg:
+        errors.append(f"{where} needs an OSF id argument, e.g. {{nma-slides}} snv4m")
+    return errors
