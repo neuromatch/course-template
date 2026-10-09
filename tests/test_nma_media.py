@@ -95,3 +95,33 @@ def test_unclosed_is_error():
 def test_body_is_error():
     [err] = _errors(":::{nma-video} T\n:youtube: x\nhello\n:::\n")
     assert "takes no body" in err
+
+
+from nma_media import slides_cell_source, video_cell_source
+
+
+def test_video_cell_source():
+    [d] = find_directives(VIDEO_MD)
+    src = video_cell_source(d)
+    assert src.startswith("# @title Video 1: Linear Dynamical Systems\n")
+    assert "video_ids = [('Youtube', '87z6OR7-DBI'), ('Bilibili', 'BV1up4y1S7wj')]" in src
+    assert "tabs = widgets.Tab()" in src
+    compile(src, "<cell>", "exec")
+
+
+def test_video_sources_use_fixed_order():
+    [d] = find_directives(":::{nma-video} T\n:osf: o1\n:youtube: y1\n:::\n")
+    assert "video_ids = [('Youtube', 'y1'), ('Osf', 'o1')]" in video_cell_source(d)
+
+
+def test_slides_cell_source_default_title():
+    [d] = find_directives(":::{nma-slides} snv4m\n:::\n")
+    src = slides_cell_source(d)
+    assert src.startswith("# @title Tutorial slides\n")
+    assert 'link_id = "snv4m"' in src
+    compile(src, "<cell>", "exec")
+
+
+def test_slides_cell_source_custom_title():
+    [d] = find_directives(":::{nma-slides} snv4m\n:title: Day 3 slides\n:::\n")
+    assert slides_cell_source(d).startswith("# @title Day 3 slides\n")

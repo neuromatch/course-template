@@ -114,3 +114,70 @@ def validate_directive(d: MediaDirective) -> list[str]:
     elif not d.arg:
         errors.append(f"{where} needs an OSF id argument, e.g. {{nma-slides}} snv4m")
     return errors
+
+
+# Reproduces the standard NMA video cell. string.Template ($name) is used so
+# the f-string braces inside the cell need no escaping.
+VIDEO_TEMPLATE = Template('''\
+# @title $title
+from ipywidgets import widgets
+from IPython.display import YouTubeVideo
+from IPython.display import IFrame
+from IPython.display import display
+
+
+class PlayVideo(IFrame):
+  def __init__(self, id, source, page=1, width=400, height=300, **kwargs):
+    self.id = id
+    if source == 'Bilibili':
+      src = f'https://player.bilibili.com/player.html?bvid={id}&page={page}'
+    elif source == 'Osf':
+      src = f'https://mfr.ca-1.osf.io/render?url=https://osf.io/download/{id}/?direct%26mode=render'
+    super(PlayVideo, self).__init__(src, width, height, **kwargs)
+
+
+def display_videos(video_ids, W=400, H=300, fs=1):
+  tab_contents = []
+  for i, video_id in enumerate(video_ids):
+    out = widgets.Output()
+    with out:
+      if video_ids[i][0] == 'Youtube':
+        video = YouTubeVideo(id=video_ids[i][1], width=W,
+                             height=H, fs=fs, rel=0)
+        print(f'Video available at https://youtube.com/watch?v={video.id}')
+      else:
+        video = PlayVideo(id=video_ids[i][1], source=video_ids[i][0], width=W,
+                          height=H, fs=fs, autoplay=False)
+        if video_ids[i][0] == 'Bilibili':
+          print(f'Video available at https://www.bilibili.com/video/{video.id}')
+        elif video_ids[i][0] == 'Osf':
+          print(f'Video available at https://osf.io/{video.id}')
+      display(video)
+    tab_contents.append(out)
+  return tab_contents
+
+
+video_ids = $video_ids
+tab_contents = display_videos(video_ids, W=854, H=480)
+tabs = widgets.Tab()
+tabs.children = tab_contents
+for i in range(len(tab_contents)):
+  tabs.set_title(i, video_ids[i][0])
+display(tabs)''')
+
+SLIDES_TEMPLATE = Template('''\
+# @title $title
+from IPython.display import IFrame
+link_id = "$link_id"
+print(f"If you want to download the slides: https://osf.io/download/{link_id}/")
+IFrame(src=f"https://mfr.ca-1.osf.io/render?url=https://osf.io/{link_id}/?direct%26mode=render%26action=download%26mode=render", width=854, height=480)''')
+
+
+def video_cell_source(d: MediaDirective) -> str:
+    video_ids = [(label, d.options[name]) for name, label in VIDEO_SOURCES if d.options.get(name)]
+    return VIDEO_TEMPLATE.substitute(title=d.arg, video_ids=repr(video_ids))
+
+
+def slides_cell_source(d: MediaDirective) -> str:
+    title = d.options.get("title") or DEFAULT_SLIDES_TITLE
+    return SLIDES_TEMPLATE.substitute(title=title, link_id=d.arg)
