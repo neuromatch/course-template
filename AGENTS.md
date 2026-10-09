@@ -20,6 +20,10 @@ tutorials/
     further_reading.md       # Static links page
 scripts/
   convert_to_notebooks.py   # Converts .md -> .ipynb, injects Colab/Kaggle badges
+  nma_media.py              # Validates {nma-video}/{nma-slides}, expands them into notebook cells
+plugins/
+  nma.mjs                   # MyST plugin: {nma-video}/{nma-slides} -> static embeds on the site
+tests/                       # pytest for scripts/
 _wheels/                     # Pre-built .whl files for Pyodide (CORS-friendly hosting)
 _static/
   custom.css                 # Custom CSS for the book theme
@@ -36,6 +40,8 @@ notebooks/                   # Generated .ipynb files (gitignored, lives on note
 
 - **`myst.yml`** -- the only config file. Contains project metadata, hand-authored TOC, JupyterLite settings (`project.jupyter.lite: true`), and site theme. There is no `_toc.yml` or `_config.yml`.
 - **`scripts/convert_to_notebooks.py`** -- reads `project.github` from `myst.yml` to generate fork-friendly badge URLs. Default mode writes notebooks only, and `--inject-md-badges` (CI-only) adds badges to `.md` pages. Both modes first enforce the content rules below. Idempotent.
+- **`plugins/nma.mjs`** -- MyST JavaScript plugin (registered under `project.plugins` in `myst.yml`). Renders `{nma-video}` as a YouTube/Bilibili/OSF tab set of iframes and `{nma-slides}` as an OSF iframe plus download link, at build time with no kernel.
+- **`scripts/nma_media.py`** -- the Python side of the same directives. It validates them and, after jupytext, replaces each one with a hidden NMA `# @title Video …` / `# @title Tutorial slides` code cell in the generated notebook. Its URL templates must stay in sync with `plugins/nma.mjs`.
 - **`requirements.txt`** -- Python dependencies: mystmd, jupytext, numpy, matplotlib, etc.
 - **`.nvmrc`** -- Node.js version (22). MyST requires Node >= 20.
 
@@ -67,6 +73,7 @@ A page without `kernelspec` is static (chapter intros, further reading, bonus pa
 
 - **No `.ipynb` in `tutorials/`.** All content is MyST `.md`. Convert incoming notebooks once (see "Converting .ipynb to MyST .md") and commit only the `.md`.
 - **Pages with code need `kernelspec`.** A `.md` file with a top-level `{code-cell}` must declare `kernelspec`. Code-cells shown as examples inside another fenced block don't count.
+- **Media directives must be valid.** Every top-level `{nma-video}` needs a title and at least one of `:youtube:`/`:bilibili:`/`:osf:`. Every `{nma-slides}` needs an OSF id. Unknown options, body text and unclosed blocks are errors, reported with file and line.
 
 There is no Binder, JupyterHub, or remote-kernel support. Code runs in the browser via JupyterLite, and Colab/Kaggle (via the generated notebooks) is the fallback for anything Pyodide can't run.
 
@@ -77,6 +84,26 @@ Never add or commit badge HTML in `.md` files. The `.md` sources on `main` are b
 - **Rendered site pages**: `publish-book.yml` runs `convert_to_notebooks.py --inject-md-badges` right before `myst build`, on CI's throwaway checkout. The result is never committed.
 
 Every page with `kernelspec` gets badges automatically, so local `myst start` previews show no badges.
+
+### Videos and slides
+
+Never write video or slide players as code cells. Use the directives:
+
+```markdown
+:::{nma-video} Video 1: Linear Dynamical Systems
+:youtube: 87z6OR7-DBI
+:bilibili: BV1up4y1S7wj
+:::
+
+:::{nma-slides} snv4m
+:::
+```
+
+- On the site, `plugins/nma.mjs` renders them as static iframes (tabs for multiple hosts), so they show without starting JupyterLite.
+- In generated notebooks, `scripts/nma_media.py` replaces them with the standard hidden NMA code cells (ipywidgets Tab / OSF IFrame).
+- Options: `nma-video` takes `:youtube:`, `:bilibili:`, `:osf:` (at least one). `nma-slides` takes an optional `:title:` (default "Tutorial slides").
+- Put them at the top level of the page (not nested in other directives), with options only and no body.
+- Adding a host means updating `VIDEO_SOURCES` in both files.
 
 ### Code cell tags
 
@@ -90,7 +117,7 @@ Every page with `kernelspec` gets badges automatically, so local `myst start` pr
 # Code hidden behind toggle, output visible. Used for:
 # - Solutions (# to_remove solution)
 # - Explanations (# to_remove explanation)
-# - Infrastructure (video players, plotting functions, feedback widgets)
+# - Infrastructure (plotting functions, feedback widgets)
 # - Interactive widgets (@widgets.interact)
 ```
 
@@ -130,14 +157,15 @@ uv run myst build --html   # Full build to _build/html/
 ```bash
 uv run python scripts/convert_to_notebooks.py           # Convert all
 uv run python scripts/convert_to_notebooks.py --dry-run  # Preview only
+uv run pytest -q                                          # Tests for scripts/
 ```
 
 This writes only to `notebooks/` (gitignored) and never modifies `.md` files. The separate `--inject-md-badges` mode edits `.md` files in place and is meant for CI only. If you run it locally, revert with `git checkout -- tutorials/`.
 
 ### CI pipelines
 
-1. **`generate-notebooks.yml`** -- triggers on push to `main` when `tutorials/`, `scripts/`, `myst.yml`, or `requirements.txt` change. Converts `.md` -> `.ipynb`, pushes to `notebooks-branch`.
-2. **`publish-book.yml`** -- triggers after `generate-notebooks.yml` completes or on push to `main`. Runs `convert_to_notebooks.py --inject-md-badges` on its throwaway checkout, then builds the MyST book and deploys to GitHub Pages.
+1. **`generate-notebooks.yml`** -- triggers on push to `main` when `tutorials/`, `scripts/`, `tests/`, `myst.yml`, or `requirements.txt` change. Runs `pytest`, converts `.md` -> `.ipynb` (expanding media directives into code cells), pushes to `notebooks-branch`.
+2. **`publish-book.yml`** -- triggers after `generate-notebooks.yml` completes or on push to `main` (including changes under `plugins/`). Runs `convert_to_notebooks.py --inject-md-badges` on its throwaway checkout, then builds the MyST book and deploys to GitHub Pages.
 3. **`build-pyodide-wheels.yml`** -- manual trigger (`workflow_dispatch`). Builds pure-Python wheels for packages that lack them on PyPI, uploads as GitHub Release assets.
 
 ### Adding a new day
@@ -195,6 +223,8 @@ if sys.platform == "emscripten":
 | `# to_remove explanation` | `:tags: [hide-input]` |
 | `raise NotImplementedError` (exercise) | No tags (students must see/edit) |
 | `# @markdown` / `@widgets.interact` | `:tags: [hide-input]` |
+| Video cell (`# @title Video …`, `video_ids = [...]`) | `{nma-video}` directive (copy the ids) |
+| Slides cell (`# @title Tutorial slides`, `link_id = …`) | `{nma-slides}` directive (the `link_id`) |
 
 ### Frontmatter
 
@@ -215,8 +245,9 @@ kernelspec:
 2. Add clean frontmatter with `kernelspec`
 3. Add Pyodide setup cell if needed (micropip installs)
 4. Convert all code cells to `{code-cell}` directives with appropriate tags
-5. Normalize LaTeX for KaTeX compatibility
-6. Preserve all prose, math, `<details>` blocks, HTML as-is
-7. Add day directory, `chapter_intro.md`, `further_reading.md`
-8. Register in `myst.yml` TOC
-9. Test: `myst build --html` -- check for `⛔` errors
+5. Replace video and slides cells with `{nma-video}`/`{nma-slides}` (keep the "Submit your feedback" cells as code cells)
+6. Normalize LaTeX for KaTeX compatibility
+7. Preserve all prose, math, `<details>` blocks, HTML as-is
+8. Add day directory, `chapter_intro.md`, `further_reading.md`
+9. Register in `myst.yml` TOC
+10. Test: `myst build --html` -- check for `⛔` errors

@@ -8,8 +8,10 @@ Usage:
 Default mode (used by generate-notebooks.yml). For each .md file in tutorials/
 that has a kernelspec frontmatter:
   1. Convert to .ipynb via jupytext
-  2. Inject a Colab + Kaggle badge markdown cell at position 0 in the .ipynb
-  3. Write .ipynb to notebooks/<day_folder>/<tutorial_name>.ipynb
+  2. Replace {nma-video}/{nma-slides} directives with NMA code cells
+     (scripts/nma_media.py)
+  3. Inject a Colab + Kaggle badge markdown cell at position 0 in the .ipynb
+  4. Write .ipynb to notebooks/<day_folder>/<tutorial_name>.ipynb
   The .md sources are never modified in this mode.
 
 --inject-md-badges mode (used by publish-book.yml right before `myst build`):
@@ -20,6 +22,8 @@ that has a kernelspec frontmatter:
 Both modes first validate the content rules and exit non-zero on any violation:
   - No .ipynb files in tutorials/ (all content is authored as MyST .md)
   - Any .md with a {code-cell} directive must declare a kernelspec
+  - {nma-video}/{nma-slides} directives must be valid (ids present, known
+    options only, closed, no body)
 
 The GitHub repo URL is read from myst.yml (project.github) so badge URLs update
 automatically when the template is forked.
@@ -35,6 +39,8 @@ import sys
 from pathlib import Path
 
 import yaml
+
+from nma_media import expand_notebook, find_directives, validate_directive
 
 
 TUTORIALS_DIR = Path("tutorials")
@@ -125,6 +131,10 @@ def validate_content() -> list[str]:
                 f"{path}: contains {{code-cell}} blocks but no `kernelspec` in its "
                 f"frontmatter, so it would get no notebook, badges, or JupyterLite button."
             )
+        text = path.read_text(encoding="utf-8")
+        for directive in find_directives(text):
+            for problem in validate_directive(directive):
+                errors.append(f"{path}: {problem}")
     return errors
 
 
@@ -238,6 +248,19 @@ def convert_md_to_notebook(md_file: Path, out_path: Path, dry_run: bool) -> None
         sys.exit(1)
 
 
+def expand_media(notebook_path: Path, dry_run: bool) -> None:
+    """Replace {nma-video}/{nma-slides} directives with NMA code cells."""
+    if dry_run:
+        return
+    with notebook_path.open(encoding="utf-8") as fh:
+        nb = json.load(fh)
+    count = expand_notebook(nb)
+    if count:
+        print(f"  Expanded {count} video/slides directive(s): {notebook_path}")
+        with notebook_path.open("w", encoding="utf-8") as fh:
+            json.dump(nb, fh, indent=1, ensure_ascii=False)
+
+
 def inject_badges(notebook_path: Path, github_repo: str, dry_run: bool) -> None:
     """Insert Colab/Kaggle badge cell at position 0. Idempotent."""
     notebook_rel = str(notebook_path).replace("\\", "/")
@@ -279,6 +302,7 @@ def process_tutorials(github_repo: str, dry_run: bool, md_badges_only: bool) -> 
             inject_badges_into_md(source_file, notebook_rel, github_repo, dry_run)
         else:
             convert_md_to_notebook(source_file, out_path, dry_run)
+            expand_media(out_path, dry_run)
             inject_badges(out_path, github_repo, dry_run)
 
         count += 1

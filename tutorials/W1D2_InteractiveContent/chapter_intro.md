@@ -12,6 +12,7 @@ By the end of Day 2 you will be able to:
 - Produce interactive Altair visualisations embedded in the book
 - Use ipywidgets for interactive controls
 - Explain why all content is written in Markdown and notebooks are generated
+- Embed lecture videos and slides that render without a kernel
 - Work within JupyterLite's package and compute limits
 
 ## Schedule
@@ -21,4 +22,5 @@ By the end of Day 2 you will be able to:
 | Tutorial 1 | In-browser execution with JupyterLite | 30 min |
 | Tutorial 2 | Rich interactive outputs | 30 min |
 | Tutorial 3 | Markdown is the only source | 20 min |
+| Tutorial 4 | Videos and slides | 15 min |
 | Bonus | Working within JupyterLite's limits | open-ended |

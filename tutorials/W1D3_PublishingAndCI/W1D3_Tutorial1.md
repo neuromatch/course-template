@@ -10,11 +10,14 @@ on every push to `main`. The workflow files below are included directly from
 
 ## Workflow 1: `generate-notebooks.yml`
 
-1. Checks the content rules: no `.ipynb` files in `tutorials/`, and every page
-   with code cells has a `kernelspec`.
+1. Runs the `pytest` suite for the conversion scripts, then checks the content
+   rules: no `.ipynb` files in `tutorials/`, every page with code cells has a
+   `kernelspec`, and every `{nma-video}`/`{nma-slides}` directive is valid.
 2. Converts each executable `.md` tutorial to `.ipynb` and adds a Colab/Kaggle
    badge cell.
-3. Pushes the notebooks to the separate `notebooks-branch`.
+3. Replaces `{nma-video}`/`{nma-slides}` directives with NMA video and slides
+   code cells.
+4. Pushes the notebooks to the separate `notebooks-branch`.
 
 Generated notebooks are never committed to `main`, which keeps `main` free of
 generated files and avoids CI commit loops.
@@ -28,6 +31,9 @@ generated files and avoids CI commit loops.
 Runs after notebook generation finishes, or directly when config or static files
 change. It adds Colab/Kaggle badges to the executable pages in its temporary
 checkout, builds the MyST book, and deploys it to GitHub Pages.
+
+Videos and slides need no extra step. The `plugins/nma.mjs` MyST plugin renders
+them during `myst build`, and a change under `plugins/` triggers a rebuild.
 
 ```{literalinclude} ../../.github/workflows/publish-book.yml
 :language: yaml

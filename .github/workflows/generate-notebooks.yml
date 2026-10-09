@@ -5,7 +5,8 @@ on:
     branches: [main]
     paths:
       - "tutorials/**"
-      - "scripts/convert_to_notebooks.py"
+      - "scripts/**"
+      - "tests/**"
       - "myst.yml"
       - "requirements.txt"
   # Allow manual trigger from the Actions tab
@@ -31,6 +32,9 @@ jobs:
 
       - name: Install dependencies
         run: uv pip install -r requirements.txt
+
+      - name: Test notebook conversion helpers
+        run: uv run pytest -q tests
 
       - name: Convert tutorials to notebooks
         run: uv run python scripts/convert_to_notebooks.py
