@@ -303,3 +303,89 @@ def test_input_notebook_is_not_mutated():
     before = str(NB)
     split_notebook(NB, "T", "Day", "org/repo")
     assert str(NB) == before
+
+
+# --- Task 5: run-all fallback -----------------------------------------------
+
+import pytest
+from IPython.core.interactiveshell import InteractiveShell
+
+from nma_solutions import FALLBACK_NOTE, fallback_cell_source, fallback_md_block
+
+EX_SRC = 'def f(x):\n  raise NotImplementedError("Student exercise: implement f")\n  return ...\n\nresult = f(3)'
+SOL_SRC = "def f(x):\n  return 2 * x\n\nresult = f(3)"
+
+
+@pytest.fixture
+def shell():
+    ip = InteractiveShell.instance()
+    saved = list(ip.input_transformers_post)
+    ip.user_ns.pop("result", None)
+    yield ip
+    ip.input_transformers_post[:] = saved
+
+
+def test_unfinished_exercise_runs_solution(shell, capsys):
+    shell.run_cell(fallback_cell_source([(EX_SRC, SOL_SRC)]))
+    result = shell.run_cell(EX_SRC)
+    assert result.success
+    assert shell.user_ns["result"] == 6
+    assert FALLBACK_NOTE in capsys.readouterr().out
+
+
+def test_edited_but_unfinished_exercise_still_falls_back(shell):
+    shell.run_cell(fallback_cell_source([(EX_SRC, SOL_SRC)]))
+    edited = EX_SRC.replace("  return ...", "  y = x  # started\n  return ...")
+    assert shell.run_cell(edited).success
+    assert shell.user_ns["result"] == 6
+
+
+def test_finished_exercise_runs_student_code(shell, capsys):
+    shell.run_cell(fallback_cell_source([(EX_SRC, SOL_SRC)]))
+    shell.run_cell("def f(x):\n  return 10 * x\n\nresult = f(3)")
+    assert shell.user_ns["result"] == 30
+    assert FALLBACK_NOTE not in capsys.readouterr().out
+
+
+def test_unrelated_raise_is_left_alone(shell):
+    shell.run_cell(fallback_cell_source([(EX_SRC, SOL_SRC)]))
+    result = shell.run_cell("class Base:\n  def go(self):\n    raise NotImplementedError\nBase().go()")
+    assert isinstance(result.error_in_exec, NotImplementedError)
+
+
+def test_picks_the_matching_exercise(shell):
+    other_ex = 'def g(a, b):\n  raise NotImplementedError("Student exercise: g")\n\nresult = g(1, 2)'
+    other_sol = "def g(a, b):\n  return a + b\n\nresult = g(1, 2)"
+    shell.run_cell(fallback_cell_source([(EX_SRC, SOL_SRC), (other_ex, other_sol)]))
+    shell.run_cell(other_ex)
+    assert shell.user_ns["result"] == 3
+
+
+def test_rerunning_setup_keeps_one_transformer(shell):
+    before = len(shell.input_transformers_post)
+    source = fallback_cell_source([(EX_SRC, SOL_SRC)])
+    assert shell.run_cell(source).success
+    assert shell.run_cell(source).success
+    assert len(shell.input_transformers_post) == before + 1
+
+
+def test_setup_leaves_no_names_behind(shell):
+    names = set(shell.user_ns)
+    shell.run_cell(fallback_cell_source([(EX_SRC, SOL_SRC)]))
+    assert set(shell.user_ns) - names <= {"_", "__", "___"} | {k for k in shell.user_ns if k.startswith("_i")}
+
+
+def test_md_block_is_a_hidden_code_cell():
+    block = fallback_md_block([(EX_SRC, SOL_SRC)])
+    lines = block.splitlines()
+    assert lines[0] == "```{code-cell} python"
+    assert lines[1] == ":tags: [remove-cell]"
+    assert lines[2].startswith("# nma-exercise-fallback")
+    assert lines[-1] == "```"
+    assert "\n```\n" not in block[:-4]
+
+
+def test_commented_out_raise_counts_as_finished(shell):
+    shell.run_cell(fallback_cell_source([(EX_SRC, SOL_SRC)]))
+    shell.run_cell(EX_SRC.replace("  raise", "  # raise").replace("return ...", "return 5 * x"))
+    assert shell.user_ns["result"] == 15

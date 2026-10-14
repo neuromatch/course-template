@@ -34,6 +34,7 @@ URL rules here and in that file must stay in sync.
 
 import re
 from dataclasses import dataclass, field
+from string import Template
 
 FENCE_RE = re.compile(r"^(`{3,}|~{3,}|:{3,})(.*)$")
 DIRECTIVE_RE = re.compile(r"^\{([\w-]+)\}\s*(.*?)\s*$")
@@ -346,3 +347,67 @@ def split_notebook(nb: dict, stem: str, rel_dir: str, repo: str) -> tuple[dict, 
 def text_of_cell(cell: dict) -> str:
     source = cell.get("source", "")
     return "".join(source) if isinstance(source, list) else source
+
+
+FALLBACK_SENTINEL = "# nma-exercise-fallback (generated, do not edit)"
+FALLBACK_NOTE = "Exercise not completed yet, so the reference solution was run."
+
+# Runs inside the reader's kernel (Pyodide on the site). It must be
+# self-contained and leave no names behind. The transformer runs more than
+# once per cell (pyodide-kernel also uses it to detect imports), so it must
+# not have side effects: the note is printed by the code it returns.
+FALLBACK_TEMPLATE = '''\
+$sentinel
+# Runs the reference solution when an unfinished exercise is executed,
+# so "Run all" doesn't stop at the first exercise.
+def _nma_install_fallback(exercises):
+    import difflib
+    import re
+    from IPython import get_ipython
+
+    shell = get_ipython()
+    if shell is None:
+        return
+    unfinished = re.compile(r"^[ \\t]*raise NotImplementedError", re.MULTILINE)
+
+    def nma_exercise_fallback(lines):
+        source = "".join(lines)
+        if not unfinished.search(source) or "nma-exercise-fallback" in source:
+            return lines
+        best, best_score = None, $threshold
+        for exercise, solution in exercises:
+            if source.strip() == exercise.strip():
+                best = solution
+                break
+            score = difflib.SequenceMatcher(None, source, exercise).ratio()
+            if score >= best_score:
+                best, best_score = solution, score
+        if best is None:
+            return lines
+        return [$note_line] + (best + "\\n").splitlines(keepends=True)
+
+    transformers = shell.input_transformers_post
+    transformers[:] = [t for t in transformers
+                       if getattr(t, "__name__", "") != "nma_exercise_fallback"]
+    transformers.append(nma_exercise_fallback)
+
+
+_nma_install_fallback($exercises)
+del _nma_install_fallback'''
+
+FUZZY_THRESHOLD = 0.6
+
+
+def fallback_cell_source(pairs: list[tuple[str, str]]) -> str:
+    exercises = "[\n" + "".join(f"    ({e!r}, {s!r}),\n" for e, s in pairs) + "]"
+    return Template(FALLBACK_TEMPLATE).substitute(
+        sentinel=FALLBACK_SENTINEL,
+        threshold=FUZZY_THRESHOLD,
+        note_line=repr(f"print({FALLBACK_NOTE!r})\n"),
+        exercises=exercises,
+    )
+
+
+def fallback_md_block(pairs: list[tuple[str, str]]) -> str:
+    """The fallback as a hidden MyST code cell, for injecting into a page."""
+    return f"```{{code-cell}} python\n:tags: [remove-cell]\n{fallback_cell_source(pairs)}\n```"
