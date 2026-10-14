@@ -127,8 +127,35 @@ def has_code_cells(md_file: Path) -> bool:
     return False
 
 
-def validate_content() -> list[str]:
-    """Check the Markdown-only content rules. Returns a list of violations."""
+def injected_content_errors(text: str) -> list[str]:
+    """
+    Errors for build-time content (badges, the run-all fallback cell) that
+    --prepare-site adds and that must never be committed to a source file.
+    """
+    if not text.startswith("---"):
+        return []
+    fm_end = text.find("---", 3)
+    if fm_end == -1:
+        return []
+    body = text[fm_end + 3:]
+    errors = []
+    if BADGE_LINE_RE.match(body):
+        errors.append("starts with Colab/Kaggle badge HTML, which CI adds at build time")
+    if any(b.kind == "code-cell" and not b.nested and b.body_lines[:1] == [nma_solutions.FALLBACK_SENTINEL]
+           for b in nma_solutions.find_blocks(body)):
+        errors.append("contains the generated run-all fallback cell, which CI adds at build time")
+    return [
+        f"{e}. Remove it (this usually means --prepare-site output was committed; "
+        f"revert with `git checkout -- tutorials/`)" for e in errors
+    ]
+
+
+def validate_content(check_injected: bool = True) -> list[str]:
+    """Check the Markdown-only content rules. Returns a list of violations.
+
+    check_injected: also reject build-time content in the sources. Off for
+    --prepare-site, which re-runs on its own output.
+    """
     errors = []
     for path in sorted(TUTORIALS_DIR.rglob("*.ipynb")):
         if ".ipynb_checkpoints" in path.parts:
@@ -144,6 +171,9 @@ def validate_content() -> list[str]:
                 f"frontmatter, so it would get no notebook, badges, or JupyterLite button."
             )
         text = path.read_text(encoding="utf-8")
+        if check_injected:
+            for problem in injected_content_errors(text):
+                errors.append(f"{path}: {problem}")
         for directive in find_directives(text):
             for problem in validate_directive(directive):
                 errors.append(f"{path}: {problem}")
@@ -365,7 +395,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    errors = validate_content()
+    errors = validate_content(check_injected=not args.prepare_site)
     if errors:
         print("Content rule violations:", file=sys.stderr)
         for error in errors:

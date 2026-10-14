@@ -4,50 +4,6 @@ kernelspec:
   name: python3
   display_name: Python 3
 ---
-<a href="https://colab.research.google.com/github/neuromatch/course-template/blob/notebooks-branch/notebooks/W1D2_InteractiveContent/W1D2_Tutorial5.ipynb" target="_blank"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> <a href="https://kaggle.com/kernels/welcome?src=https://raw.githubusercontent.com/neuromatch/course-template/notebooks-branch/notebooks/W1D2_InteractiveContent/W1D2_Tutorial5.ipynb" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg" alt="Open In Kaggle"/></a>
-
-```{code-cell} python
-:tags: [remove-cell]
-# nma-exercise-fallback (generated, do not edit)
-# Runs the reference solution when an unfinished exercise is executed,
-# so "Run all" doesn't stop at the first exercise.
-def _nma_install_fallback(exercises):
-    import difflib
-    import re
-    from IPython import get_ipython
-
-    shell = get_ipython()
-    if shell is None:
-        return
-    unfinished = re.compile(r"^[ \t]*raise NotImplementedError", re.MULTILINE)
-
-    def nma_exercise_fallback(lines):
-        source = "".join(lines)
-        if not unfinished.search(source) or "nma-exercise-fallback" in source:
-            return lines
-        best, best_score = None, 0.6
-        for exercise, solution in exercises:
-            if source.strip() == exercise.strip():
-                best = solution
-                break
-            score = difflib.SequenceMatcher(None, source, exercise).ratio()
-            if score >= best_score:
-                best, best_score = solution, score
-        if best is None:
-            return lines
-        return ["print('Exercise not completed yet, so the reference solution was run.')\n"] + (best + "\n").splitlines(keepends=True)
-
-    transformers = shell.input_transformers_post
-    transformers[:] = [t for t in transformers
-                       if getattr(t, "__name__", "") != "nma_exercise_fallback"]
-    transformers.append(nma_exercise_fallback)
-
-
-_nma_install_fallback([
-    ('def double(x):\n  ###################################################################\n  ## Fill out the following then remove\n  raise NotImplementedError("Student exercise: double x")\n  ###################################################################\n  return ...\n\nprint(double(21))', 'def double(x):\n  return 2 * x\n\nprint(double(21))'),
-])
-del _nma_install_fallback
-```
 
 # Tutorial 5: Exercises and Solutions
 

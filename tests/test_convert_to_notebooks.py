@@ -63,3 +63,23 @@ def test_add_badge_cell_is_idempotent():
     assert twice == once
     assert len(once["cells"]) == 2 and once["cells"][0]["id"] == "badges"
     assert len(nb["cells"]) == 1
+
+
+from convert_to_notebooks import injected_content_errors
+
+
+def test_clean_source_has_no_injected_content_errors():
+    assert injected_content_errors(PAGE) == []
+
+
+def test_prepared_source_is_rejected(tmp_path):
+    page = tmp_path / "T.md"
+    page.write_text(PAGE)
+    errors = injected_content_errors(prepare(page))
+    assert len(errors) == 2
+    assert any("badge" in e for e in errors) and any("fallback" in e for e in errors)
+
+
+def test_badge_example_inside_code_block_is_fine():
+    text = PAGE + '\n```html\n<a href="https://colab.research.google.com/x"><img src="colab-badge.svg"/></a>\n```\n'
+    assert injected_content_errors(text) == []
