@@ -49,3 +49,14 @@ site:
   options:
     folders: true
     style: _static/custom.css
+
+# Neuromatch settings. Read by plugins/nma.mjs and scripts/, not by MyST
+# (MyST logs "extra key ignored: nma", which is expected).
+# Use plain `key: value` lines only; CI rejects anything else.
+nma:
+  # {nma-feedback} widgets post here (datatops). user_key is a write-only key
+  # that is published in every notebook, so it is not a secret.
+  feedback:
+    url: https://pmyvdlilci.execute-api.us-east-1.amazonaws.com/klab
+    project: neuromatch_cn
+    user_key: y1x3mpx5

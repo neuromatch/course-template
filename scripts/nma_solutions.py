@@ -80,9 +80,10 @@ def _split_options(lines: list[str]) -> tuple[dict, list[str]]:
     return options, lines[i:]
 
 
-def find_blocks(text: str) -> list[Block]:
+def find_blocks(text: str, kinds: tuple = KINDS) -> list[Block]:
     """
-    Return the solution/explanation directives and the code cells in `text`.
+    Return the `kinds` directives (default: solution/explanation) and the code
+    cells in `text`.
 
     The scanner keeps a stack of open fences. Fences whose content is code
     (plain ``` blocks, {code-cell}) are opaque. Anything inside them is text,
@@ -120,7 +121,7 @@ def find_blocks(text: str) -> list[Block]:
         name = directive.group(1) if directive else None
         literal = char != ":" and (name is None or name in LITERAL_DIRECTIVES)
         block = None
-        if name in KINDS or name == "code-cell":
+        if name in kinds or name == "code-cell":
             block = Block("code-cell" if name == "code-cell" else name, i,
                           nested=bool(stack), arg=directive.group(2))
             blocks.append(block)

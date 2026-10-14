@@ -10,11 +10,13 @@ that has a kernelspec frontmatter:
   1. Convert to .ipynb via jupytext
   2. Replace {nma-video}/{nma-slides} directives with NMA code cells
      (scripts/nma_media.py)
-  3. Split {nma-solution}/{nma-explanation} directives (scripts/nma_solutions.py)
+  3. Replace {nma-feedback} directives with "Submit your feedback" cells and
+     add the "Import feedback gadget" cell (scripts/nma_feedback.py)
+  4. Split {nma-solution}/{nma-explanation} directives (scripts/nma_solutions.py)
      into a student notebook (link cells) and an instructor notebook (solution
      code cells, explanation markdown), and write the solution files
-  4. Inject a Colab + Kaggle badge markdown cell at position 0 of each notebook
-  5. Write notebooks/<day>/<tutorial>.ipynb (student),
+  5. Inject a Colab + Kaggle badge markdown cell at position 0 of each notebook
+  6. Write notebooks/<day>/<tutorial>.ipynb (student),
      notebooks/<day>/instructor/<tutorial>.ipynb and notebooks/<day>/solutions/*
   The .md sources are never modified in this mode.
 
@@ -35,6 +37,9 @@ Both modes first validate the content rules and exit non-zero on any violation:
   - {nma-solution}/{nma-explanation} directives must be valid, every exercise
     (code cell raising NotImplementedError) must be directly followed by an
     {nma-solution}, and no `# to_remove` markers may be left in code cells
+  - {nma-feedback} directives must be valid, myst.yml must define
+    nma.feedback if any page uses them, and no hand-written vibecheck
+    feedback cells may be left
 
 The GitHub repo URL is read from myst.yml (project.github) so badge URLs update
 automatically when the template is forked.
@@ -51,6 +56,7 @@ from pathlib import Path
 
 import yaml
 
+import nma_feedback
 import nma_solutions
 from nma_media import expand_notebook, find_directives, validate_directive
 
@@ -157,6 +163,10 @@ def validate_content(check_injected: bool = True) -> list[str]:
     --prepare-site, which re-runs on its own output.
     """
     errors = []
+    config_text = MYST_CONFIG.read_text(encoding="utf-8") if MYST_CONFIG.exists() else ""
+    config_problems = nma_feedback.config_errors(config_text)
+    errors += config_problems
+    has_config = not config_problems and nma_feedback.load_config(config_text) is not None
     for path in sorted(TUTORIALS_DIR.rglob("*.ipynb")):
         if ".ipynb_checkpoints" in path.parts:
             continue
@@ -179,6 +189,13 @@ def validate_content(check_injected: bool = True) -> list[str]:
                 errors.append(f"{path}: {problem}")
         for problem in nma_solutions.validate(text):
             errors.append(f"{path}: {problem}")
+        for problem in nma_feedback.validate(text) + nma_feedback.legacy_cell_errors(text):
+            errors.append(f"{path}: {problem}")
+        if not has_config and not config_problems and nma_feedback.find_directives(text):
+            errors.append(
+                f"{path}: uses {{nma-feedback}} but myst.yml has no complete "
+                f"nma.feedback block (url, project, user_key)"
+            )
     return errors
 
 
@@ -315,7 +332,8 @@ def write_notebook(nb: dict, path: Path) -> None:
         json.dump(nb, fh, indent=1, ensure_ascii=False)
 
 
-def build_notebooks(source_file: Path, out_path: Path, github_repo: str, dry_run: bool) -> None:
+def build_notebooks(source_file: Path, out_path: Path, github_repo: str, dry_run: bool,
+                    feedback_config: "nma_feedback.FeedbackConfig | None" = None) -> None:
     """
     Post-process the jupytext output at out_path: expand media directives,
     split solutions into student/instructor notebooks, write solution files
@@ -336,6 +354,12 @@ def build_notebooks(source_file: Path, out_path: Path, github_repo: str, dry_run
     if count:
         print(f"  Expanded {count} video/slides directive(s)")
 
+    if feedback_config is not None:
+        prefix = nma_feedback.page_prefix(source_file.read_text(encoding="utf-8"), source_file.stem)
+        count = nma_feedback.expand_notebook(nb, prefix, feedback_config)
+        if count:
+            print(f"  Expanded {count} feedback directive(s) (prefix {prefix})")
+
     student, instructor, files = nma_solutions.split_notebook(
         nb, source_file.stem, rel_dir, github_repo)
     for name, content in files.items():
@@ -353,6 +377,7 @@ def build_notebooks(source_file: Path, out_path: Path, github_repo: str, dry_run
 def process_tutorials(github_repo: str, dry_run: bool, prepare_site: bool) -> int:
     """Walk tutorials/ and process all executable .md pages. Returns count processed."""
     count = 0
+    feedback_config = nma_feedback.load_config(MYST_CONFIG.read_text(encoding="utf-8"))
 
     for source_file in sorted(TUTORIALS_DIR.rglob("*.md")):
         if not has_kernelspec(source_file):
@@ -366,7 +391,7 @@ def process_tutorials(github_repo: str, dry_run: bool, prepare_site: bool) -> in
             prepare_site_md(source_file, out_path.as_posix(), github_repo, dry_run)
         else:
             convert_md_to_notebook(source_file, out_path, dry_run)
-            build_notebooks(source_file, out_path, github_repo, dry_run)
+            build_notebooks(source_file, out_path, github_repo, dry_run, feedback_config)
 
         count += 1
 

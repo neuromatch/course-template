@@ -83,3 +83,48 @@ def test_prepared_source_is_rejected(tmp_path):
 def test_badge_example_inside_code_block_is_fine():
     text = PAGE + '\n```html\n<a href="https://colab.research.google.com/x"><img src="colab-badge.svg"/></a>\n```\n'
     assert injected_content_errors(text) == []
+
+
+FEEDBACK_PAGE = """---
+title: T
+feedback_prefix: W9D9_T1
+kernelspec:
+  name: python3
+  display_name: Python 3
+---
+
+# Title
+
+```{code-cell} python
+x = 1
+```
+
+:::{nma-feedback} Some_Video
+:::
+"""
+
+
+def test_build_notebooks_expands_feedback(tmp_path, monkeypatch):
+    import json
+
+    import nma_feedback
+    from convert_to_notebooks import build_notebooks, convert_md_to_notebook
+
+    monkeypatch.chdir(tmp_path)
+    page = tmp_path / "tutorials" / "D" / "T.md"
+    page.parent.mkdir(parents=True)
+    page.write_text(FEEDBACK_PAGE)
+    out = tmp_path / "notebooks" / "D" / "T.ipynb"
+    config = nma_feedback.FeedbackConfig("https://e.org", "proj", "key")
+
+    convert_md_to_notebook(page.relative_to(tmp_path), out, dry_run=False)
+    build_notebooks(page.relative_to(tmp_path), out.relative_to(tmp_path), "org/repo", False, config)
+
+    for path in (out, out.parent / "instructor" / out.name):
+        cells = json.loads(path.read_text())["cells"]
+        sources = ["".join(c["source"]) for c in cells]
+        assert "colab-badge.svg" in sources[0]
+        assert sources[1].startswith("# @title Import feedback gadget")
+        assert "feedback_prefix = 'W9D9_T1'" in sources[1]
+        assert sources[-1] == '# @title Submit your feedback\ncontent_review(f"{feedback_prefix}_Some_Video")'
+        assert not any("{nma-feedback}" in s for s in sources)
