@@ -6,10 +6,14 @@ name: Build Pyodide Wheels
 #
 # Temporary workaround until upstream maintainers publish wheels to PyPI.
 # Once they do, update the micropip.install() call in the tutorial to use
-# package names instead of URLs, and delete this workflow.
+# package names instead of URLs.
 
 on:
   workflow_dispatch:
+    inputs:
+      packages:
+        description: "Space-separated PyPI package names to build wheels for"
+        required: true
 
 jobs:
   build:
@@ -19,6 +23,7 @@ jobs:
 
     env:
       TAG: pyodide-wheels
+      PACKAGES: ${{ inputs.packages }}
 
     steps:
       - uses: actions/checkout@v4
@@ -33,7 +38,7 @@ jobs:
 
           mkdir -p dist /tmp/sdists
 
-          for pkg in vibecheck datatops; do
+          for pkg in $PACKAGES; do
             uv run pip download "$pkg" --no-deps --no-binary :all: -d /tmp/sdists
             tarball=$(ls /tmp/sdists/${pkg}-*.tar.gz)
             uv run python -m build --wheel "$tarball" --outdir dist
