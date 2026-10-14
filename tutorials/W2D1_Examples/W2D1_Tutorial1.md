@@ -1,5 +1,7 @@
 ---
 title: "Tutorial 1: Linear Dynamical Systems"
+# Keeps the section ids of the original NMA notebook (W2D2 Tutorial 1)
+feedback_prefix: W2D2_T1
 kernelspec:
   name: python3
   display_name: Python 3
@@ -10,15 +12,7 @@ kernelspec:
 import sys
 if sys.platform == "emscripten":
     import micropip
-    # vibecheck and datatops lack wheels on PyPI; serve from repo (CORS-friendly)
-    _whl = "https://raw.githubusercontent.com/neuromatch/course-template/main/_wheels"
-    await micropip.install([
-        "ipywidgets",
-        f"{_whl}/vibecheck-0.0.5-py3-none-any.whl",
-        f"{_whl}/datatops-0.3.1-py3-none-any.whl",
-    ])
-elif 'google.colab' in sys.modules:
-    !pip install vibecheck datatops
+    await micropip.install(["ipywidgets"])
 ```
 
 # Tutorial 1: Linear dynamical systems
@@ -58,26 +52,6 @@ Today, the focus will be on **linear dynamics**, where $f(x)$ is a linear functi
 
 ---
 # Setup
-
-```{code-cell} python
-:tags: [hide-input]
-# @title Import feedback gadget
-
-from vibecheck import DatatopsContentReviewContainer
-def content_review(notebook_section: str):
-    return DatatopsContentReviewContainer(
-        "",  # No text prompt
-        notebook_section,
-        {
-            "url": "https://pmyvdlilci.execute-api.us-east-1.amazonaws.com/klab",
-            "name": "neuromatch_cn",
-            "user_key": "y1x3mpx5",
-        },
-    ).render()
-
-
-feedback_prefix = "W2D2_T1"
-```
 
 ```{code-cell} python
 # Imports
@@ -276,11 +250,8 @@ def plot_specific_example_stream_plots(A_options):
 :bilibili: BV1up4y1S7wj
 :::
 
-```{code-cell} python
-:tags: [hide-input]
-# @title Submit your feedback
-content_review(f"{feedback_prefix}_Linear_Dynamical_Systems_Video")
-```
+:::{nma-feedback} Linear_Dynamical_Systems_Video
+:::
 
 This video serves as an introduction to dynamical systems as the mathematics of things that change in time, including examples of relevant timescales relevant for neuroscience. It covers the definition of a linear system and why we are spending a whole day on linear dynamical systems, and walks through solutions to one-dimensional, deterministic dynamical systems, their behaviors, and stability criteria.
 
@@ -432,11 +403,8 @@ with plt.xkcd():
 ```
 ::::
 
-```{code-cell} python
-:tags: [hide-input]
-# @title Submit your feedback
-content_review(f"{feedback_prefix}_Forward_Euler_Integration_Exercise")
-```
+:::{nma-feedback} Forward_Euler_Integration_Exercise
+:::
 
 ## Interactive Demo 1: Forward Euler Integration
 
@@ -487,11 +455,8 @@ as an accurate estimate of the true underlying system. We may tolerate some
 choppiness in the solution, but eventually qualitatively wrong things creep in!
 :::
 
-```{code-cell} python
-:tags: [hide-input]
-# @title Submit your feedback
-content_review(f"{feedback_prefix}_What_models_Video")
-```
+:::{nma-feedback} What_models_Video
+:::
 
 ---
 # Section 2: Oscillatory Dynamics
@@ -503,11 +468,8 @@ content_review(f"{feedback_prefix}_What_models_Video")
 :bilibili: BV1gZ4y1u7PK
 :::
 
-```{code-cell} python
-:tags: [hide-input]
-# @title Submit your feedback
-content_review(f"{feedback_prefix}_Forward_Euler_Integration_Interactive_Demo_Discussion")
-```
+:::{nma-feedback} Forward_Euler_Integration_Interactive_Demo_Discussion
+:::
 
 We will now explore what happens when $a$ is a complex number and has a non-zero imaginary component.
 
@@ -557,11 +519,8 @@ tried to constrain the widget so that it is not obvious, as it is not the point
 of this exercise.
 :::
 
-```{code-cell} python
-:tags: [hide-input]
-# @title Submit your feedback
-content_review(f"{feedback_prefix}_Oscillatory_Dynamics_Interactive_Demo_Discussion")
-```
+:::{nma-feedback} Oscillatory_Dynamics_Interactive_Demo_Discussion
+:::
 
 ---
 # Section 3: Deterministic Linear Dynamics in Two Dimensions
@@ -573,11 +532,8 @@ content_review(f"{feedback_prefix}_Oscillatory_Dynamics_Interactive_Demo_Discuss
 :bilibili: BV1pf4y1R7uy
 :::
 
-```{code-cell} python
-:tags: [hide-input]
-# @title Submit your feedback
-content_review(f"{feedback_prefix}_MultiDimensional_Dynamics_Video")
-```
+:::{nma-feedback} MultiDimensional_Dynamics_Video
+:::
 
 This video serves as an introduction to two-dimensional, deterministic dynamical systems written as a vector-matrix equation. It covers stream plots and how to connect phase portraits with the eigenvalues and eigenvectors of the transition matrix A.
 
@@ -697,11 +653,8 @@ with plt.xkcd():
 ```
 ::::
 
-```{code-cell} python
-:tags: [hide-input]
-# @title Submit your feedback
-content_review(f"{feedback_prefix}_Sample_trajectories_in_2_dimensions_Exercise")
-```
+:::{nma-feedback} Sample_trajectories_in_2_dimensions_Exercise
+:::
 
 ## Interactive Demo 3A: Varying A
 
@@ -739,11 +692,8 @@ You should observe exponential growth to positive values, exponential
 growth to negative values, stable oscillations, and decay to the origin.
 :::
 
-```{code-cell} python
-:tags: [hide-input]
-# @title Submit your feedback
-content_review(f"{feedback_prefix}_Varying_A_Interactive_Demo_Discussion")
-```
+:::{nma-feedback} Varying_A_Interactive_Demo_Discussion
+:::
 
 ## Interactive Demo 3B: Varying Initial Conditions
 
@@ -785,11 +735,8 @@ dynamics. The only difference is the radii of the resulting elliptical
 trajectories.
 :::
 
-```{code-cell} python
-:tags: [hide-input]
-# @title Submit your feedback
-content_review(f"{feedback_prefix}_Varying_Initial_Conditions_Interactive_Demo_Discussion")
-```
+:::{nma-feedback} Varying_Initial_Conditions_Interactive_Demo_Discussion
+:::
 
 ---
 # Section 4: Stream Plots
@@ -843,11 +790,8 @@ the saddle that one puts on a horse for a rider). Trajectories decay along the
 blue eigenvector but grows along the red eigenvector.
 :::
 
-```{code-cell} python
-:tags: [hide-input]
-# @title Submit your feedback
-content_review(f"{feedback_prefix}_Interpreting_Eigenvalues_and_Eigenvectors_Discussion")
-```
+:::{nma-feedback} Interpreting_Eigenvalues_and_Eigenvectors_Discussion
+:::
 
 ---
 # Summary

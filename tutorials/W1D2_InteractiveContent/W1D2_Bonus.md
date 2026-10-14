@@ -48,7 +48,7 @@ distribution:
 
 ```python
 _whl = "https://raw.githubusercontent.com/<org>/<repo>/main/_wheels"
-await micropip.install([f"{_whl}/vibecheck-0.0.5-py3-none-any.whl"])
+await micropip.install([f"{_whl}/<package>-<version>-py3-none-any.whl"])
 ```
 
 Remove the workaround once the package publishes wheels upstream.

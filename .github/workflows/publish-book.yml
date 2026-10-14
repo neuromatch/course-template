@@ -9,6 +9,7 @@ on:
       - "requirements.txt"
       - "_static/**"
       - "plugins/**"
+      - "tests/js/**"
       - "projects/**"
       - "CNAME"
   # Rebuild after notebook generation completes (tutorial content changes)
@@ -42,6 +43,10 @@ jobs:
 
       - name: Install dependencies
         run: uv pip install -r requirements.txt
+
+      # Unit tests for plugins/ (config reader, feedback widget requests)
+      - name: Test MyST plugins
+        run: node --test tests/js/*.test.mjs
 
       # Adds Colab/Kaggle badges and, on pages with exercises, the hidden
       # run-all fallback cell to this checkout's copy of each executable
