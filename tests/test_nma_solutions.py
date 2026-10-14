@@ -215,3 +215,91 @@ def test_exercise_pairs_strip_cell_options():
     text = f"```{{code-cell}} python\n:tags: []\nraise NotImplementedError\n```\n\n{SOLUTION}\n"
     [(exercise, _)] = exercise_pairs(text)
     assert exercise == "raise NotImplementedError"
+
+
+# --- Task 4: notebook splitting ---------------------------------------------
+
+from nma_solutions import split_notebook
+
+
+def md(source, cell_id="m"):
+    return {"cell_type": "markdown", "id": cell_id, "metadata": {}, "source": source}
+
+
+def code(source, cell_id="c"):
+    return {"cell_type": "code", "id": cell_id, "metadata": {}, "execution_count": None,
+            "outputs": [], "source": source}
+
+
+def notebook(*cells):
+    return {"cells": list(cells), "metadata": {}, "nbformat": 4, "nbformat_minor": 5}
+
+
+def text_of(cell):
+    src = cell["source"]
+    return "".join(src) if isinstance(src, list) else src
+
+
+NB = notebook(
+    md("# T", "a"),
+    code('def f(x):\n  raise NotImplementedError("x")', "b"),
+    md(f"{SOLUTION}\n\nProse after.\n\n{EXPLANATION}", "c"),
+    code("plot()", "d"),
+    md(f"{SOLUTION}", "e"),
+)
+URL = "https://github.com/org/repo/blob/notebooks-branch/notebooks/Day/solutions/"
+
+
+def test_student_notebook_has_links_and_no_solution_code():
+    student, _, _ = split_notebook(NB, "T", "Day", "org/repo")
+    texts = [(c["cell_type"], text_of(c)) for c in student["cells"]]
+    assert texts == [
+        ("markdown", "# T"),
+        ("code", 'def f(x):\n  raise NotImplementedError("x")'),
+        ("markdown", f"[*Click for solution*]({URL}T_Solution_1.py)"),
+        ("markdown", "Prose after."),
+        ("markdown", f"[*Click for explanation*]({URL}T_Explanation_1.md)"),
+        ("code", "plot()"),
+        ("markdown", f"[*Click for solution*]({URL}T_Solution_2.py)"),
+    ]
+    assert "return 2 * x" not in str(student)
+    assert "decays" not in str(student)
+
+
+def test_instructor_notebook_has_solutions_and_explanations():
+    _, instructor, _ = split_notebook(NB, "T", "Day", "org/repo")
+    cells = instructor["cells"]
+    assert [c["cell_type"] for c in cells] == [
+        "markdown", "code", "code", "markdown", "markdown", "code", "code"]
+    assert text_of(cells[2]) == "# to_remove solution\ndef f(x):\n  return 2 * x"
+    assert cells[2]["metadata"] == {"cellView": "form"}
+    assert cells[2]["outputs"] == [] and cells[2]["execution_count"] is None
+    assert text_of(cells[4]) == "**Explanation**\n\nFor $a<0$ the solution **decays**."
+
+
+def test_files_are_returned():
+    _, _, files = split_notebook(NB, "T", "Day", "org/repo")
+    assert files == {
+        "T_Solution_1.py": "def f(x):\n  return 2 * x\n",
+        "T_Explanation_1.md": "For $a<0$ the solution **decays**.\n",
+        "T_Solution_2.py": "def f(x):\n  return 2 * x\n",
+    }
+
+
+def test_cell_ids_are_unique():
+    student, instructor, _ = split_notebook(NB, "T", "Day", "org/repo")
+    for nb in (student, instructor):
+        ids = [c["id"] for c in nb["cells"]]
+        assert len(ids) == len(set(ids))
+
+
+def test_notebook_without_directives_is_unchanged():
+    nb = notebook(md("# T", "a"), code("x = 1", "b"))
+    student, instructor, files = split_notebook(nb, "T", "Day", "org/repo")
+    assert student == nb and instructor == nb and files == {}
+
+
+def test_input_notebook_is_not_mutated():
+    before = str(NB)
+    split_notebook(NB, "T", "Day", "org/repo")
+    assert str(NB) == before

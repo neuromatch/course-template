@@ -268,3 +268,81 @@ def exercise_pairs(text: str) -> list[tuple[str, str]]:
             exercise = "\n".join(ex.body_lines).strip("\n")
             pairs.append((exercise, solution_code(sol) or ""))
     return pairs
+
+
+LINK_LABELS = {SOLUTION: "Click for solution", EXPLANATION: "Click for explanation"}
+
+
+def _lines(text: str) -> list[str]:
+    return text.splitlines(keepends=True)
+
+
+def _markdown(text: str, cell_id: str) -> dict:
+    return {"cell_type": "markdown", "id": cell_id, "metadata": {}, "source": _lines(text)}
+
+
+def _student_cell(item: Item, url: str, cell_id: str) -> dict:
+    return _markdown(f"[*{LINK_LABELS[item.kind]}*]({url})", cell_id)
+
+
+def _instructor_cell(item: Item, cell_id: str) -> dict:
+    body = item.content.rstrip("\n")
+    if item.kind == EXPLANATION:
+        return _markdown(f"**Explanation**\n\n{body}", cell_id)
+    return {
+        "cell_type": "code",
+        "execution_count": None,
+        "id": cell_id,
+        "metadata": {"cellView": "form"},
+        "outputs": [],
+        "source": _lines(f"# to_remove solution\n{body}"),
+    }
+
+
+def split_notebook(nb: dict, stem: str, rel_dir: str, repo: str) -> tuple[dict, dict, dict]:
+    """
+    Build the student and instructor versions of a jupytext-generated notebook.
+
+    Markdown cells are split around top-level {nma-solution}/{nma-explanation}
+    directives. Returns (student_nb, instructor_nb, files), where files maps
+    solution filenames to their content. The input notebook is not modified.
+    Assumes validate() passed on the source page.
+    """
+    student, instructor, files = [], [], {}
+    counters = {}
+    for cell in nb["cells"]:
+        text = text_of_cell(cell)
+        blocks = find_blocks(text) if cell.get("cell_type") == "markdown" else []
+        directive_blocks = [b for b in blocks if b.kind in KINDS and not b.nested]
+        if not directive_blocks:
+            student.append(cell)
+            instructor.append(cell)
+            continue
+
+        items = items_from_blocks(directive_blocks, stem, counters)
+        lines = text.splitlines(keepends=True)
+        base = cell.get("id", "cell")[:50]
+        cursor = 0
+        for k, (block, item) in enumerate(zip(directive_blocks, items)):
+            prose = "".join(lines[cursor:block.start]).strip("\n")
+            if prose.strip():
+                fragment = _markdown(prose, f"{base}-m{k}")
+                student.append(fragment)
+                instructor.append(fragment)
+            url = solution_url(repo, rel_dir, item.filename)
+            student.append(_student_cell(item, url, f"{base}-s{k}"))
+            instructor.append(_instructor_cell(item, f"{base}-i{k}"))
+            files[item.filename] = item.content
+            cursor = block.end + 1
+        prose = "".join(lines[cursor:]).strip("\n")
+        if prose.strip():
+            fragment = _markdown(prose, f"{base}-m{len(directive_blocks)}")
+            student.append(fragment)
+            instructor.append(fragment)
+
+    return {**nb, "cells": student}, {**nb, "cells": instructor}, files
+
+
+def text_of_cell(cell: dict) -> str:
+    source = cell.get("source", "")
+    return "".join(source) if isinstance(source, list) else source
