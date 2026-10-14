@@ -10,7 +10,7 @@ course content looks like in the new template.
 
 The tutorial below was originally **W2D3_Tutorial1: Linear Dynamical Systems**
 from the NMA Computational Neuroscience course. All elements -- videos, exercises,
-solutions, interactive widgets, and feedback cells -- have been preserved and
+solutions, interactive widgets, and feedback widgets -- have been preserved and
 reformatted into MyST syntax.
 
 ## Learning objectives

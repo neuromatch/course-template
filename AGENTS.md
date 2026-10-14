@@ -9,7 +9,7 @@ Neuromatch course template built with MyST (Markedly Structured Text). MyST `.md
 ## Architecture
 
 ```
-myst.yml                    # Single config: metadata, TOC, JupyterLite, site theme
+myst.yml                    # Single config: metadata, TOC, JupyterLite, site theme, nma: settings
 tutorials/
   intro.md                  # Landing page
   W{week}D{day}_{Topic}/    # One directory per day
@@ -22,9 +22,11 @@ scripts/
   convert_to_notebooks.py   # Converts .md -> .ipynb, injects Colab/Kaggle badges
   nma_media.py              # Validates {nma-video}/{nma-slides}, expands them into notebook cells
   nma_solutions.py          # Validates {nma-solution}/{nma-explanation}, builds student/instructor notebooks
+  nma_feedback.py           # Validates {nma-feedback} and the nma: settings, writes feedback cells
 plugins/
-  nma.mjs                   # MyST plugin: media -> static embeds, solutions -> links on the site
-tests/                       # pytest for scripts/
+  nma.mjs                   # MyST plugin: media -> static embeds, solutions -> links, feedback -> widget
+  nma-feedback.mjs          # Browser-side feedback widget (anywidget ESM), posts to datatops
+tests/                       # pytest for scripts/; tests/js/ is node --test for plugins/
 _wheels/                     # Pre-built .whl files for Pyodide (CORS-friendly hosting)
 _static/
   custom.css                 # Custom CSS for the book theme
@@ -40,11 +42,12 @@ notebooks/                   # Generated files (gitignored, lives on notebooks-b
 
 ### Key files
 
-- **`myst.yml`** -- the only config file. Contains project metadata, hand-authored TOC, JupyterLite settings (`project.jupyter.lite: true`), and site theme. There is no `_toc.yml` or `_config.yml`.
+- **`myst.yml`** -- the only config file. Contains project metadata, hand-authored TOC, JupyterLite settings (`project.jupyter.lite: true`), site theme, and the top-level `nma:` block (Neuromatch settings read by `plugins/` and `scripts/`, not by MyST, which logs `extra key ignored: nma`). There is no `_toc.yml` or `_config.yml`.
 - **`scripts/convert_to_notebooks.py`** -- reads `project.github` from `myst.yml` to generate fork-friendly badge URLs. Default mode writes the student and instructor notebooks and the solution files. `--prepare-site` (CI-only, alias `--inject-md-badges`) adds badges and the run-all fallback cell to `.md` pages. Both modes first enforce the content rules below. Idempotent.
 - **`plugins/nma.mjs`** -- MyST JavaScript plugin (registered under `project.plugins` in `myst.yml`). Renders `{nma-video}` as a YouTube/Bilibili/OSF tab set of iframes and `{nma-slides}` as an OSF iframe plus download link, at build time with no kernel. Renders `{nma-solution}`/`{nma-explanation}` as "Click for solution/explanation" links to the solution files on `notebooks-branch`.
 - **`scripts/nma_media.py`** -- the Python side of the same directives. It validates them and, after jupytext, replaces each one with a hidden NMA `# @title Video …` / `# @title Tutorial slides` code cell in the generated notebook. Its URL templates must stay in sync with `plugins/nma.mjs`.
 - **`scripts/nma_solutions.py`** -- the Python side of `{nma-solution}`/`{nma-explanation}`. It validates them, splits each generated notebook into student and instructor versions, writes the solution files, and builds the site's run-all fallback cell. Its file naming and URL rules must stay in sync with `plugins/nma.mjs`.
+- **`scripts/nma_feedback.py`** / **`plugins/nma-feedback.mjs`** -- `{nma-feedback}`. The Python side validates the directive and the `nma:` block and writes the notebook feedback cells. The JS widget posts to datatops from the browser. `read_nma_block()` (Python) and `readNmaConfig()` (in `nma.mjs`) are two copies of the same line-based reader and must stay in sync. Shared fixtures in `tests/fixtures/nma_config/` test both.
 - **`requirements.txt`** -- Python dependencies: mystmd, jupytext, numpy, matplotlib, etc.
 - **`.nvmrc`** -- Node.js version (22). MyST requires Node >= 20.
 
@@ -78,6 +81,7 @@ A page without `kernelspec` is static (chapter intros, further reading, bonus pa
 - **Pages with code need `kernelspec`.** A `.md` file with a top-level `{code-cell}` must declare `kernelspec`. Code-cells shown as examples inside another fenced block don't count.
 - **Exercises need solutions.** Every top-level exercise code cell (an uncommented `raise NotImplementedError` line) must be directly followed by an `{nma-solution}`, and every `{nma-solution}` must directly follow an exercise. No `# to_remove` markers may be left in code cells. Solution bodies must be a single ```` ```python ```` fence, explanations can't be empty, and neither directive may be nested or take options.
 - **Media directives must be valid.** Every top-level `{nma-video}` needs a title and at least one of `:youtube:`/`:bilibili:`/`:osf:`. Every `{nma-slides}` needs an OSF id. Unknown options, body text and unclosed blocks are errors, reported with file and line.
+- **Feedback uses the directive.** `{nma-feedback}` takes a section name (`[A-Za-z0-9_]+`, unique per page), at the top level, with no options or body. No code cell may call `content_review(`, import `vibecheck`, or be an "Import feedback gadget" cell. If any page uses `{nma-feedback}`, `myst.yml` must have `nma.feedback.{url,project,user_key}`, and the `nma:` block must be plain `key: value` lines with string values.
 
 There is no Binder, JupyterHub, or remote-kernel support. Code runs in the browser via JupyterLite, and Colab/Kaggle (via the generated notebooks) is the fallback for anything Pyodide can't run.
 
@@ -108,6 +112,29 @@ Never write video or slide players as code cells. Use the directives:
 - Options: `nma-video` takes `:youtube:`, `:bilibili:`, `:osf:` (at least one). `nma-slides` takes an optional `:title:` (default "Tutorial slides").
 - Put them at the top level of the page (not nested in other directives), with options only and no body.
 - Adding a host means updating `VIDEO_SOURCES` in both files.
+
+### Feedback
+
+Never write feedback cells (`content_review(...)`, the vibecheck "Import feedback gadget" cell) by hand. Use the directive:
+
+```markdown
+:::{nma-feedback} Linear_Dynamical_Systems_Video
+:::
+```
+
+- The section id sent is `<prefix>_<name>`. The prefix is the frontmatter `feedback_prefix:` if set (MyST warns `extra key ignored`, which is expected), otherwise derived from the filename: `W2D1_Tutorial1` -> `W2D1_T1`, any other stem is used as is. Set `feedback_prefix` when converting an NMA notebook so its ids stay the same.
+- Where responses go is set once in `myst.yml`:
+
+  ```yaml
+  nma:
+    feedback:
+      url: https://pmyvdlilci.execute-api.us-east-1.amazonaws.com/klab
+      project: neuromatch_cn
+      user_key: y1x3mpx5   # write-only, published in every notebook; not a secret
+  ```
+
+- **Site:** `plugins/nma.mjs` turns each directive into MyST's `anywidget` node backed by `plugins/nma-feedback.mjs`. It renders 🙂/😐/🙁 with no kernel and POSTs `{button_name, feedback, section_id, timestamp_utc}` to `<url>/api/v1/projects/<project>` with header `X-User-Key`, the same request vibecheck makes.
+- **Notebooks:** each directive becomes a hidden `# @title Submit your feedback` / `content_review(f"{feedback_prefix}_<name>")` cell, and one hidden "Import feedback gadget" cell (`%pip install vibecheck datatops`, `content_review`, `feedback_prefix`) is added at the top. Notebooks only run on Colab/Kaggle/local Jupyter, so it has no Pyodide branch.
 
 ### Exercises, solutions and explanations
 
@@ -148,7 +175,7 @@ Markdown answer to a discussion question, math allowed: $a < 0$.
 ```{code-cell} python
 :tags: [hide-input]
 # Code hidden behind toggle, output visible. Used for:
-# - Infrastructure (plotting functions, feedback widgets)
+# - Infrastructure (plotting functions, figure settings)
 # - Interactive widgets (@widgets.interact)
 ```
 
@@ -189,6 +216,7 @@ uv run myst build --html   # Full build to _build/html/
 uv run python scripts/convert_to_notebooks.py           # Convert all
 uv run python scripts/convert_to_notebooks.py --dry-run  # Preview only
 uv run pytest -q                                          # Tests for scripts/
+node --test tests/js/*.test.mjs                           # Tests for plugins/
 ```
 
 This writes only to `notebooks/` (gitignored) and never modifies `.md` files. The separate `--prepare-site` mode edits `.md` files in place and is meant for CI only. If you run it locally, revert with `git checkout -- tutorials/`.
@@ -196,7 +224,7 @@ This writes only to `notebooks/` (gitignored) and never modifies `.md` files. Th
 ### CI pipelines
 
 1. **`generate-notebooks.yml`** -- triggers on push to `main` when `tutorials/`, `scripts/`, `tests/`, `myst.yml`, or `requirements.txt` change. Runs `pytest`, converts `.md` -> `.ipynb` (expanding media directives into code cells), pushes to `notebooks-branch`.
-2. **`publish-book.yml`** -- triggers after `generate-notebooks.yml` completes or on push to `main` (including changes under `plugins/`). Runs `convert_to_notebooks.py --prepare-site` (badges plus the exercise fallback cell) on its throwaway checkout, then builds the MyST book and deploys to GitHub Pages.
+2. **`publish-book.yml`** -- triggers after `generate-notebooks.yml` completes or on push to `main` (including changes under `plugins/`). Runs `node --test tests/js/*.test.mjs`, then `convert_to_notebooks.py --prepare-site` (badges plus the exercise fallback cell) on its throwaway checkout, then builds the MyST book and deploys to GitHub Pages.
 3. **`build-pyodide-wheels.yml`** -- manual trigger (`workflow_dispatch`). Builds pure-Python wheels for packages that lack them on PyPI, uploads as GitHub Release assets.
 
 ### Adding a new day
@@ -213,7 +241,7 @@ numpy, matplotlib, scipy, pandas, altair -- available in Pyodide out of the box.
 
 ### Packages needing micropip
 
-ipywidgets, vibecheck, datatops -- install via micropip in a setup cell.
+ipywidgets -- install via micropip in a setup cell. (Feedback needs nothing: the site widget is plain JS.)
 
 ### Wheel hosting (CORS)
 
@@ -236,13 +264,10 @@ Pyodide can't open sockets, so `urllib.request` / `http.client` (and anything bu
 import sys
 if sys.platform == "emscripten":
     import micropip
-    _whl = "https://raw.githubusercontent.com/neuromatch/course-template/main/_wheels"
-    await micropip.install([
-        "ipywidgets",
-        f"{_whl}/vibecheck-0.0.5-py3-none-any.whl",
-        f"{_whl}/datatops-0.3.1-py3-none-any.whl",
-    ])
+    await micropip.install(["ipywidgets"])
 ```
+
+For a package served from `_wheels/`, add `f"https://raw.githubusercontent.com/<org>/<repo>/main/_wheels/<file>.whl"` to the list.
 
 ## Converting .ipynb to MyST .md
 
@@ -258,6 +283,8 @@ if sys.platform == "emscripten":
 | `# to_remove explanation` | `{nma-explanation}` (turn the docstring into Markdown) |
 | `raise NotImplementedError` (exercise) | No tags (students must see/edit) |
 | `# @markdown` / `@widgets.interact` | `:tags: [hide-input]` |
+| `# @title Submit your feedback` (`content_review(f"{feedback_prefix}_X")`) | `{nma-feedback} X` |
+| `# @title Import feedback gadget` | Omit -- generated. Copy its `feedback_prefix` into the frontmatter if it differs from the filename default |
 | Video cell (`# @title Video …`, `video_ids = [...]`) | `{nma-video}` directive (copy the ids) |
 | Slides cell (`# @title Tutorial slides`, `link_id = …`) | `{nma-slides}` directive (the `link_id`) |
 
@@ -280,7 +307,7 @@ kernelspec:
 2. Add clean frontmatter with `kernelspec`
 3. Add Pyodide setup cell if needed (micropip installs)
 4. Convert all code cells to `{code-cell}` directives with appropriate tags
-5. Replace video and slides cells with `{nma-video}`/`{nma-slides}` (keep the "Submit your feedback" cells as code cells)
+5. Replace video and slides cells with `{nma-video}`/`{nma-slides}`, and feedback cells with `{nma-feedback}` (drop the gadget cell, set `feedback_prefix` if needed)
 6. Replace `# to_remove solution` cells with `{nma-solution}` and `# to_remove explanation` cells with `{nma-explanation}`
 7. Normalize LaTeX for KaTeX compatibility
 8. Preserve all prose, math, `<details>` blocks, HTML as-is
