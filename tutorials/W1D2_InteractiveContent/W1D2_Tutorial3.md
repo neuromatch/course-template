@@ -18,6 +18,7 @@ tutorials/W1D2_.../W1D2_Tutorial1.md     <- you edit this
         └── jupytext (CI) ───────────►  notebooks-branch:
                                           notebooks/W1D2_.../W1D2_Tutorial1.ipynb
                                           (opened by the Colab/Kaggle badges)
+                                          plus instructor/ and solutions/
 ```
 
 Every page that has a `kernelspec` in its frontmatter goes down both paths. See
@@ -57,6 +58,7 @@ and delete the original:
 uv run jupytext --to md:myst path/to/Notebook.ipynb -o tutorials/W2D1_MyTopic/W2D1_Tutorial1.md
 ```
 
-Then tidy up the result: clean frontmatter, cell tags such as `hide-input` for
-solutions, and KaTeX-compatible math. The full checklist is in `AGENTS.md` under
+Then tidy up the result: clean frontmatter, cell tags such as `hide-input`,
+`{nma-solution}`/`{nma-explanation}` directives instead of `# to_remove` cells
+(see Tutorial 5), and KaTeX-compatible math. The full checklist is in `AGENTS.md` under
 "Converting .ipynb to MyST .md". Commit only the `.md`.

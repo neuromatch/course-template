@@ -3,32 +3,43 @@ Convert MyST Markdown tutorials to Jupyter notebooks and inject Colab/Kaggle bad
 
 Usage:
     python scripts/convert_to_notebooks.py [--dry-run]
-    python scripts/convert_to_notebooks.py --inject-md-badges [--dry-run]
+    python scripts/convert_to_notebooks.py --prepare-site [--dry-run]
 
 Default mode (used by generate-notebooks.yml). For each .md file in tutorials/
 that has a kernelspec frontmatter:
   1. Convert to .ipynb via jupytext
   2. Replace {nma-video}/{nma-slides} directives with NMA code cells
      (scripts/nma_media.py)
-  3. Inject a Colab + Kaggle badge markdown cell at position 0 in the .ipynb
-  4. Write .ipynb to notebooks/<day_folder>/<tutorial_name>.ipynb
+  3. Split {nma-solution}/{nma-explanation} directives (scripts/nma_solutions.py)
+     into a student notebook (link cells) and an instructor notebook (solution
+     code cells, explanation markdown), and write the solution files
+  4. Inject a Colab + Kaggle badge markdown cell at position 0 of each notebook
+  5. Write notebooks/<day>/<tutorial>.ipynb (student),
+     notebooks/<day>/instructor/<tutorial>.ipynb and notebooks/<day>/solutions/*
   The .md sources are never modified in this mode.
 
---inject-md-badges mode (used by publish-book.yml right before `myst build`):
-  Insert Colab + Kaggle badge HTML into each kernelspec .md file (after the
-  frontmatter) so badges appear on the rendered book page. This edits files
-  in place, so only run it on a throwaway checkout (CI). Never commit the result.
+--prepare-site mode (used by publish-book.yml right before `myst build`;
+--inject-md-badges is an alias): edit each kernelspec .md file in place,
+inserting after the frontmatter:
+  - the Colab + Kaggle badge HTML
+  - for pages with exercises, a hidden setup cell that runs the reference
+    solution when an unfinished exercise is executed, so "Run all" in
+    JupyterLite doesn't stop at the first exercise
+  Only run it on a throwaway checkout (CI). Never commit the result.
 
 Both modes first validate the content rules and exit non-zero on any violation:
   - No .ipynb files in tutorials/ (all content is authored as MyST .md)
   - Any .md with a {code-cell} directive must declare a kernelspec
   - {nma-video}/{nma-slides} directives must be valid (ids present, known
     options only, closed, no body)
+  - {nma-solution}/{nma-explanation} directives must be valid, every exercise
+    (code cell raising NotImplementedError) must be directly followed by an
+    {nma-solution}, and no `# to_remove` markers may be left in code cells
 
 The GitHub repo URL is read from myst.yml (project.github) so badge URLs update
 automatically when the template is forked.
 
-Both badge injection steps are idempotent — safe to re-run.
+Both modes are idempotent — safe to re-run.
 """
 
 import argparse
@@ -40,6 +51,7 @@ from pathlib import Path
 
 import yaml
 
+import nma_solutions
 from nma_media import expand_notebook, find_directives, validate_directive
 
 
@@ -115,8 +127,35 @@ def has_code_cells(md_file: Path) -> bool:
     return False
 
 
-def validate_content() -> list[str]:
-    """Check the Markdown-only content rules. Returns a list of violations."""
+def injected_content_errors(text: str) -> list[str]:
+    """
+    Errors for build-time content (badges, the run-all fallback cell) that
+    --prepare-site adds and that must never be committed to a source file.
+    """
+    if not text.startswith("---"):
+        return []
+    fm_end = text.find("---", 3)
+    if fm_end == -1:
+        return []
+    body = text[fm_end + 3:]
+    errors = []
+    if BADGE_LINE_RE.match(body):
+        errors.append("starts with Colab/Kaggle badge HTML, which CI adds at build time")
+    if any(b.kind == "code-cell" and not b.nested and b.body_lines[:1] == [nma_solutions.FALLBACK_SENTINEL]
+           for b in nma_solutions.find_blocks(body)):
+        errors.append("contains the generated run-all fallback cell, which CI adds at build time")
+    return [
+        f"{e}. Remove it (this usually means --prepare-site output was committed; "
+        f"revert with `git checkout -- tutorials/`)" for e in errors
+    ]
+
+
+def validate_content(check_injected: bool = True) -> list[str]:
+    """Check the Markdown-only content rules. Returns a list of violations.
+
+    check_injected: also reject build-time content in the sources. Off for
+    --prepare-site, which re-runs on its own output.
+    """
     errors = []
     for path in sorted(TUTORIALS_DIR.rglob("*.ipynb")):
         if ".ipynb_checkpoints" in path.parts:
@@ -132,9 +171,14 @@ def validate_content() -> list[str]:
                 f"frontmatter, so it would get no notebook, badges, or JupyterLite button."
             )
         text = path.read_text(encoding="utf-8")
+        if check_injected:
+            for problem in injected_content_errors(text):
+                errors.append(f"{path}: {problem}")
         for directive in find_directives(text):
             for problem in validate_directive(directive):
                 errors.append(f"{path}: {problem}")
+        for problem in nma_solutions.validate(text):
+            errors.append(f"{path}: {problem}")
     return errors
 
 
@@ -165,18 +209,30 @@ def make_badge_html(notebook_rel_path: str, github_repo: str) -> str:
     )
 
 
-def inject_badges_into_md(
+BADGE_LINE_RE = re.compile(
+    r"\A\s*<a href=\"https://colab\.research\.google\.com/[^\n]*?</a>[ \t]*"
+    r"<a href=\"https://kaggle\.com/[^\n]*?</a>[ \t]*\n"
+)
+FALLBACK_BLOCK_RE = re.compile(
+    r"\A\s*```\{code-cell\} python\n:tags: \[remove-cell\]\n"
+    + re.escape(nma_solutions.FALLBACK_SENTINEL)
+    + r"\n.*?\n```[ \t]*\n",
+    re.S,
+)
+
+
+def prepare_site_md(
     md_file: Path, notebook_rel_path: str, github_repo: str, dry_run: bool
 ) -> None:
     """
-    Insert Colab/Kaggle badge HTML into the .md source after the frontmatter block.
+    Insert badges (and, for pages with exercises, the run-all fallback cell)
+    into the .md source after the frontmatter block.
 
-    Idempotent: removes any existing badge block before inserting.
-    This makes badges appear on the rendered MyST book page.
+    Idempotent: removes a previously injected badge line and fallback cell first.
+    Both are anchored to the start of the body, so examples elsewhere on the
+    page (e.g. inside a code block) are never touched.
     """
-    badge_html = make_badge_html(notebook_rel_path, github_repo)
-
-    print(f"  Injecting badges into MD: {md_file}")
+    print(f"  Preparing site page: {md_file}")
     if dry_run:
         return
 
@@ -192,19 +248,18 @@ def inject_badges_into_md(
 
     frontmatter = content[: fm_end + 3]  # includes closing ---
     body = content[fm_end + 3:]           # everything after closing ---
+    body = BADGE_LINE_RE.sub("", body)
+    body = FALLBACK_BLOCK_RE.sub("", body)
 
-    # Remove an existing badge line (idempotency). Anchored to the start of the
-    # body and restricted to a single line so badge HTML used as an example
-    # elsewhere on the page (e.g. inside a code block) is never touched.
-    body = re.sub(
-        r"\A\s*<a href=\"https://colab\.research\.google\.com/[^\n]*?</a>[ \t]*"
-        r"<a href=\"https://kaggle\.com/[^\n]*?</a>[ \t]*\n",
-        "",
-        body,
-    )
+    header = [make_badge_html(notebook_rel_path, github_repo)]
+    pairs = nma_solutions.exercise_pairs(body)
+    if pairs:
+        header.append(nma_solutions.fallback_md_block(pairs))
+        print(f"    Added run-all fallback for {len(pairs)} exercise(s)")
 
     # Normalise spacing so repeated runs don't accumulate blank lines
-    new_content = f"{frontmatter}\n{badge_html}\n\n{body.lstrip(chr(10))}"
+    header_text = "\n\n".join(header)
+    new_content = f"{frontmatter}\n{header_text}\n\n{body.lstrip(chr(10))}"
     md_file.write_text(new_content, encoding="utf-8")
 
 
@@ -248,44 +303,54 @@ def convert_md_to_notebook(md_file: Path, out_path: Path, dry_run: bool) -> None
         sys.exit(1)
 
 
-def expand_media(notebook_path: Path, dry_run: bool) -> None:
-    """Replace {nma-video}/{nma-slides} directives with NMA code cells."""
-    if dry_run:
-        return
-    with notebook_path.open(encoding="utf-8") as fh:
-        nb = json.load(fh)
-    count = expand_notebook(nb)
-    if count:
-        print(f"  Expanded {count} video/slides directive(s): {notebook_path}")
-        with notebook_path.open("w", encoding="utf-8") as fh:
-            json.dump(nb, fh, indent=1, ensure_ascii=False)
+def add_badge_cell(nb: dict, notebook_rel_path: str, github_repo: str) -> dict:
+    """Return nb with a Colab/Kaggle badge cell at position 0. Idempotent."""
+    cells = [c for c in nb["cells"] if "colab-badge.svg" not in "".join(c.get("source", []))]
+    return {**nb, "cells": [make_badge_cell(notebook_rel_path, github_repo)] + cells}
 
 
-def inject_badges(notebook_path: Path, github_repo: str, dry_run: bool) -> None:
-    """Insert Colab/Kaggle badge cell at position 0. Idempotent."""
-    notebook_rel = str(notebook_path).replace("\\", "/")
-    badge_cell = make_badge_cell(notebook_rel, github_repo)
-
-    print(f"  Injecting badges: {notebook_path}")
-    if dry_run:
-        return
-
-    with notebook_path.open(encoding="utf-8") as fh:
-        nb = json.load(fh)
-
-    # Remove any existing badge cell (idempotency — safe to re-run)
-    nb["cells"] = [
-        c for c in nb["cells"]
-        if "colab-badge.svg" not in "".join(c.get("source", []))
-    ]
-
-    nb["cells"].insert(0, badge_cell)
-
-    with notebook_path.open("w", encoding="utf-8") as fh:
+def write_notebook(nb: dict, path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as fh:
         json.dump(nb, fh, indent=1, ensure_ascii=False)
 
 
-def process_tutorials(github_repo: str, dry_run: bool, md_badges_only: bool) -> int:
+def build_notebooks(source_file: Path, out_path: Path, github_repo: str, dry_run: bool) -> None:
+    """
+    Post-process the jupytext output at out_path: expand media directives,
+    split solutions into student/instructor notebooks, write solution files
+    and add badges.
+    """
+    rel = source_file.relative_to(TUTORIALS_DIR)
+    rel_dir = rel.parent.as_posix() if rel.parent != Path(".") else ""
+    instructor_path = out_path.parent / "instructor" / out_path.name
+    solutions_dir = out_path.parent / "solutions"
+    if dry_run:
+        print(f"  Would write: {instructor_path} and {solutions_dir}/")
+        return
+
+    with out_path.open(encoding="utf-8") as fh:
+        nb = json.load(fh)
+
+    count = expand_notebook(nb)
+    if count:
+        print(f"  Expanded {count} video/slides directive(s)")
+
+    student, instructor, files = nma_solutions.split_notebook(
+        nb, source_file.stem, rel_dir, github_repo)
+    for name, content in files.items():
+        solutions_dir.mkdir(parents=True, exist_ok=True)
+        (solutions_dir / name).write_text(content, encoding="utf-8")
+    if files:
+        print(f"  Wrote {len(files)} solution file(s) to {solutions_dir}/")
+
+    for nb_out, path in ((student, out_path), (instructor, instructor_path)):
+        notebook_rel = path.as_posix()
+        write_notebook(add_badge_cell(nb_out, notebook_rel, github_repo), path)
+        print(f"  Wrote notebook with badges: {path}")
+
+
+def process_tutorials(github_repo: str, dry_run: bool, prepare_site: bool) -> int:
     """Walk tutorials/ and process all executable .md pages. Returns count processed."""
     count = 0
 
@@ -297,13 +362,11 @@ def process_tutorials(github_repo: str, dry_run: bool, md_badges_only: bool) -> 
         relative_to_tutorials = source_file.relative_to(TUTORIALS_DIR)
         out_path = NOTEBOOKS_DIR / relative_to_tutorials.with_suffix(".ipynb")
 
-        if md_badges_only:
-            notebook_rel = str(out_path).replace("\\", "/")
-            inject_badges_into_md(source_file, notebook_rel, github_repo, dry_run)
+        if prepare_site:
+            prepare_site_md(source_file, out_path.as_posix(), github_repo, dry_run)
         else:
             convert_md_to_notebook(source_file, out_path, dry_run)
-            expand_media(out_path, dry_run)
-            inject_badges(out_path, github_repo, dry_run)
+            build_notebooks(source_file, out_path, github_repo, dry_run)
 
         count += 1
 
@@ -320,16 +383,19 @@ def main() -> None:
         help="Print what would be done without writing any files",
     )
     parser.add_argument(
+        "--prepare-site",
         "--inject-md-badges",
+        dest="prepare_site",
         action="store_true",
         help=(
-            "Only inject Colab/Kaggle badge HTML into the .md sources (in place). "
-            "Intended for CI right before `myst build`; do not commit the result."
+            "Edit the .md sources in place for the site build: add Colab/Kaggle "
+            "badges and the run-all fallback cell. Intended for CI right before "
+            "`myst build`; do not commit the result."
         ),
     )
     args = parser.parse_args()
 
-    errors = validate_content()
+    errors = validate_content(check_injected=not args.prepare_site)
     if errors:
         print("Content rule violations:", file=sys.stderr)
         for error in errors:
@@ -342,7 +408,7 @@ def main() -> None:
     github_repo = load_github_repo(MYST_CONFIG)
     print(f"GitHub repo: {github_repo}\n")
 
-    count = process_tutorials(github_repo, args.dry_run, args.inject_md_badges)
+    count = process_tutorials(github_repo, args.dry_run, args.prepare_site)
     print(f"\nDone. Processed {count} file(s).")
 
 

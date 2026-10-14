@@ -13,6 +13,7 @@ By the end of Day 2 you will be able to:
 - Use ipywidgets for interactive controls
 - Explain why all content is written in Markdown and notebooks are generated
 - Embed lecture videos and slides that render without a kernel
+- Write exercises with solutions and explanations for students and instructors
 - Work within JupyterLite's package and compute limits
 
 ## Schedule
@@ -23,4 +24,5 @@ By the end of Day 2 you will be able to:
 | Tutorial 2 | Rich interactive outputs | 30 min |
 | Tutorial 3 | Markdown is the only source | 20 min |
 | Tutorial 4 | Videos and slides | 15 min |
+| Tutorial 5 | Exercises and solutions | 15 min |
 | Bonus | Working within JupyterLite's limits | open-ended |
