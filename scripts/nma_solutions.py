@@ -296,9 +296,9 @@ def _instructor_cell(item: Item, cell_id: str) -> dict:
         "cell_type": "code",
         "execution_count": None,
         "id": cell_id,
-        "metadata": {"cellView": "form"},
+        "metadata": {},
         "outputs": [],
-        "source": _lines(f"# to_remove solution\n{body}"),
+        "source": _lines(f"# Solution\n{body}"),
     }
 
 

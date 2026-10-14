@@ -63,7 +63,7 @@ You write each answer once, and the build produces three versions of the page.
 |---|---|
 | Website | A *Click for solution* / *Click for explanation* link. The answer is not shown on the page. |
 | Student notebook (Colab/Kaggle) | The same link, in its own markdown cell. The `.ipynb` holds no answers. |
-| Instructor notebook | The solution as a code cell (starting `# to_remove solution`) and the explanation as markdown. |
+| Instructor notebook | The solution as a code cell (starting `# Solution`) and the explanation as markdown. |
 
 The links point to files that CI writes next to the notebooks on
 `notebooks-branch`:

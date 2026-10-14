@@ -271,8 +271,9 @@ def test_instructor_notebook_has_solutions_and_explanations():
     cells = instructor["cells"]
     assert [c["cell_type"] for c in cells] == [
         "markdown", "code", "code", "markdown", "markdown", "code", "code"]
-    assert text_of(cells[2]) == "# to_remove solution\ndef f(x):\n  return 2 * x"
-    assert cells[2]["metadata"] == {"cellView": "form"}
+    assert text_of(cells[2]) == "# Solution\ndef f(x):\n  return 2 * x"
+    assert cells[2]["metadata"] == {}
+    assert "to_remove" not in str(instructor)
     assert cells[2]["outputs"] == [] and cells[2]["execution_count"] is None
     assert text_of(cells[4]) == "**Explanation**\n\nFor $a<0$ the solution **decays**."
 

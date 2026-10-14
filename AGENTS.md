@@ -135,7 +135,7 @@ Markdown answer to a discussion question, math allowed: $a < 0$.
 - `{nma-explanation}` stands alone, usually after an interactive demo or a "Think!" question.
 - Both go at the top level of the page, with no argument and no options.
 - **Site:** a *Click for solution/explanation* link to `notebooks/<Day>/solutions/<T>_Solution_<n>.py` / `<T>_Explanation_<n>.md` on `notebooks-branch`, where `n` counts each directive type from the top of the page. The answer isn't shown on the page.
-- **Student notebook:** the same link as a markdown cell. **Instructor notebook** (`notebooks/<Day>/instructor/`): the solution as a `# to_remove solution` code cell, and the explanation as markdown.
+- **Student notebook:** the same link as a markdown cell. **Instructor notebook** (`notebooks/<Day>/instructor/`): the solution as a code cell starting with `# Solution`, and the explanation as markdown under **Explanation**.
 - **Run-all fallback (site only):** `--prepare-site` adds a hidden `remove-cell` setup cell to pages with exercises. It registers an IPython input transformer: while a cell still has an uncommented `raise NotImplementedError` line, the matching reference solution runs instead (exact match, else the closest by `difflib` ≥ 0.6), so "Run all" in JupyterLite doesn't stop. The solutions are hidden, not secret.
 
 ### Code cell tags

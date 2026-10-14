@@ -115,7 +115,7 @@ This runs in `convert_to_notebooks.py` after jupytext and the media expansion.
 | Output | Path | `nma-solution` | `nma-explanation` |
 |---|---|---|---|
 | Student nb | `notebooks/<Day>/<T>.ipynb` | markdown link cell | markdown link cell |
-| Instructor nb | `notebooks/<Day>/instructor/<T>.ipynb` | code cell, `# to_remove solution` first line, `cellView: form` | markdown cell with the text |
+| Instructor nb | `notebooks/<Day>/instructor/<T>.ipynb` | code cell, `# Solution` first line | markdown cell with the text |
 | Files | `notebooks/<Day>/solutions/` | `<T>_Solution_<n>.py` | `<T>_Explanation_<n>.md` |
 
 - Both notebooks get the badge cell, each pointing to its own path.
