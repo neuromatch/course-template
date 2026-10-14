@@ -389,3 +389,14 @@ def test_commented_out_raise_counts_as_finished(shell):
     shell.run_cell(fallback_cell_source([(EX_SRC, SOL_SRC)]))
     shell.run_cell(EX_SRC.replace("  raise", "  # raise").replace("return ...", "return 5 * x"))
     assert shell.user_ns["result"] == 15
+
+
+def test_injected_fallback_cell_is_not_an_exercise():
+    text = fallback_md_block([(EX_SRC, SOL_SRC)]) + "\n"
+    assert [b.kind for b in find_blocks(text)] == ["code-cell"]
+    assert validate(text) == []
+
+
+def test_commented_out_raise_is_not_an_exercise():
+    text = "```{code-cell} python\ndef f():\n  # raise NotImplementedError\n  return 1\n```\n"
+    assert [b.kind for b in find_blocks(text)] == ["code-cell"]

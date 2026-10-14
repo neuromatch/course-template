@@ -47,7 +47,9 @@ KINDS = (SOLUTION, EXPLANATION)
 # Directives whose body is code, not Markdown, so fences inside them are text.
 LITERAL_DIRECTIVES = {"code-cell", "code", "code-block"}
 
-EXERCISE_MARKER = "raise NotImplementedError"
+# An exercise cell has an uncommented `raise NotImplementedError` line. The
+# site fallback uses the same rule to decide whether a cell is still unfinished.
+EXERCISE_RE = re.compile(r"^\s*raise NotImplementedError\b")
 TO_REMOVE_RE = re.compile(r"^\s*#\s*to_remove\b")
 
 
@@ -95,7 +97,7 @@ def find_blocks(text: str) -> list[Block]:
         stop = end if end != -1 else len(lines)
         body = lines[block.start + 1:stop]
         block.options, block.body_lines = _split_options(body)
-        if block.kind == "code-cell" and any(EXERCISE_MARKER in l for l in block.body_lines):
+        if block.kind == "code-cell" and any(EXERCISE_RE.match(l) for l in block.body_lines):
             block.kind = "exercise"
 
     for i, line in enumerate(lines):
