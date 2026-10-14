@@ -215,3 +215,56 @@ def validate(text: str) -> list[str]:
         elif not explanation_text(b).strip():
             errors.append(f"{where} {name} is empty")
     return errors
+
+
+# File naming. Keep in sync with plugins/nma.mjs.
+FILE_PATTERNS = {SOLUTION: "{stem}_Solution_{n}.py", EXPLANATION: "{stem}_Explanation_{n}.md"}
+NOTEBOOKS_BRANCH = "notebooks-branch"
+
+
+def solution_filename(stem: str, kind: str, n: int) -> str:
+    return FILE_PATTERNS[kind].format(stem=stem, n=n)
+
+
+def solution_url(repo: str, rel_dir: str, filename: str) -> str:
+    """GitHub URL of a solution file. rel_dir is the page's folder under tutorials/."""
+    path = "/".join(p for p in ("notebooks", rel_dir, "solutions", filename) if p)
+    return f"https://github.com/{repo}/blob/{NOTEBOOKS_BRANCH}/{path}"
+
+
+@dataclass
+class Item:
+    kind: str       # SOLUTION or EXPLANATION
+    n: int          # 1-based position among directives of the same kind
+    filename: str
+    content: str    # solution code or explanation Markdown, newline-terminated
+
+
+def items_from_blocks(blocks: list[Block], stem: str, counters: dict | None = None) -> list[Item]:
+    """Number top-level directives. Pass `counters` to continue numbering across calls."""
+    counters = {} if counters is None else counters
+    items = []
+    for b in blocks:
+        if b.kind not in KINDS or b.nested:
+            continue
+        counters[b.kind] = counters.get(b.kind, 0) + 1
+        n = counters[b.kind]
+        content = solution_code(b) if b.kind == SOLUTION else explanation_text(b)
+        items.append(Item(b.kind, n, solution_filename(stem, b.kind, n), (content or "") + "\n"))
+    return items
+
+
+def extract(text: str, stem: str) -> list[Item]:
+    """The page's solutions and explanations, in order. Assumes validate() passed."""
+    return items_from_blocks(find_blocks(text), stem)
+
+
+def exercise_pairs(text: str) -> list[tuple[str, str]]:
+    """(exercise source, solution code) for each exercise. Assumes validate() passed."""
+    blocks = [b for b in find_blocks(text) if not b.nested]
+    pairs = []
+    for ex, sol in zip(blocks, blocks[1:]):
+        if ex.kind == "exercise" and sol.kind == SOLUTION:
+            exercise = "\n".join(ex.body_lines).strip("\n")
+            pairs.append((exercise, solution_code(sol) or ""))
+    return pairs

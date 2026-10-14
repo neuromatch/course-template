@@ -171,3 +171,47 @@ def test_prose_between_exercise_and_solution_is_error():
 def test_exercise_without_solution_is_error():
     [err] = validate(f"{EXERCISE}\n\nProse\n")
     assert err.startswith("line 1:") and "no {nma-solution}" in err
+
+
+# --- Task 3: naming, urls, extraction ---------------------------------------
+
+from nma_solutions import EXPLANATION as EXPL_KIND
+from nma_solutions import SOLUTION as SOL_KIND
+from nma_solutions import exercise_pairs, extract, solution_filename, solution_url
+
+
+def test_solution_filename():
+    assert solution_filename("W2D1_Tutorial1", SOL_KIND, 1) == "W2D1_Tutorial1_Solution_1.py"
+    assert solution_filename("W2D1_Tutorial1", EXPL_KIND, 3) == "W2D1_Tutorial1_Explanation_3.md"
+
+
+def test_solution_url():
+    assert solution_url("org/repo", "W2D1_Examples", "T_Solution_1.py") == (
+        "https://github.com/org/repo/blob/notebooks-branch/notebooks/"
+        "W2D1_Examples/solutions/T_Solution_1.py"
+    )
+
+
+def test_extract_numbers_each_kind_separately():
+    text = f"{PAGE}\n{EXERCISE}\n\n{SOLUTION}\n"
+    items = extract(text, "T")
+    assert [(i.kind, i.n, i.filename) for i in items] == [
+        (SOL_KIND, 1, "T_Solution_1.py"),
+        (EXPL_KIND, 1, "T_Explanation_1.md"),
+        (SOL_KIND, 2, "T_Solution_2.py"),
+    ]
+    assert items[0].content == "def f(x):\n  return 2 * x\n"
+    assert items[1].content == "For $a<0$ the solution **decays**.\n"
+
+
+def test_exercise_pairs():
+    [(exercise, solution)] = exercise_pairs(PAGE)
+    assert exercise.startswith("def f(x):\n  raise NotImplementedError")
+    assert exercise.endswith("return ...")
+    assert solution == "def f(x):\n  return 2 * x"
+
+
+def test_exercise_pairs_strip_cell_options():
+    text = f"```{{code-cell}} python\n:tags: []\nraise NotImplementedError\n```\n\n{SOLUTION}\n"
+    [(exercise, _)] = exercise_pairs(text)
+    assert exercise == "raise NotImplementedError"
