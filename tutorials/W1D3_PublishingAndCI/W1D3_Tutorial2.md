@@ -29,10 +29,12 @@ Badges are added at build time in two places, and never committed to `main`.
 1. Scans `tutorials/` for `.md` files with a `kernelspec` in their frontmatter
 2. Converts each to `.ipynb` via `jupytext --from md:myst --to notebook`
 3. Inserts a markdown cell at position 0 containing Colab and Kaggle badge HTML
-4. Writes the result to `notebooks/<day_folder>/<tutorial_name>.ipynb`
+4. Writes the result to `notebooks/<day_folder>/<tutorial_name>.ipynb`, and the
+   instructor version to `notebooks/<day_folder>/instructor/<tutorial_name>.ipynb`
+   (see Day 2, Tutorial 5)
 
 **On the rendered site** (`publish-book.yml`), CI runs
-`convert_to_notebooks.py --inject-md-badges` right before `myst build`. This adds
+`convert_to_notebooks.py --prepare-site` right before `myst build`. This adds
 the badge HTML to the top of each executable page in CI's temporary checkout only.
 That's why badges don't appear in a local `myst start` preview, and why you should
 never add badge HTML to a `.md` file yourself.
