@@ -226,6 +226,10 @@ https://raw.githubusercontent.com/neuromatch/course-template/main/_wheels/<packa
 
 This is a temporary workaround. Once upstream maintainers publish wheels to PyPI, remove the URL workaround and install by package name.
 
+### No sockets: downloading files
+
+Pyodide can't open sockets, so `urllib.request` / `http.client` (and anything built on them, such as `plt.style.use(<url>)` or `pd.read_csv(<url>)`) fail in the browser with `OSError: [Errno 23] Host is unreachable`. Under `sys.platform == "emscripten"`, fetch with `pyodide.http.open_url(url)` (synchronous) or `await pyodide.http.pyfetch(url)`, write the result to a local file, and use that path. `requests` works as is because Pyodide patches it. The host must send CORS headers (`raw.githubusercontent.com` does).
+
 ### Setup cell pattern
 
 ```python

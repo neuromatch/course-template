@@ -17,6 +17,8 @@ if sys.platform == "emscripten":
         f"{_whl}/vibecheck-0.0.5-py3-none-any.whl",
         f"{_whl}/datatops-0.3.1-py3-none-any.whl",
     ])
+elif 'google.colab' in sys.modules:
+    !pip install vibecheck datatops
 ```
 
 # Tutorial 1: Linear dynamical systems
@@ -92,7 +94,15 @@ logging.getLogger('matplotlib.font_manager').disabled = True
 
 import ipywidgets as widgets  # interactive display
 %config InlineBackend.figure_format = 'retina'
-plt.style.use("https://raw.githubusercontent.com/NeuromatchAcademy/course-content/main/nma.mplstyle")
+_nma_style = "https://raw.githubusercontent.com/NeuromatchAcademy/course-content/main/nma.mplstyle"
+if sys.platform == "emscripten":
+  # Pyodide has no sockets, so matplotlib can't download the style itself.
+  # Fetch it through the browser and load it from a local file.
+  from pyodide.http import open_url
+  with open("nma.mplstyle", "w") as f:
+    f.write(open_url(_nma_style).read())
+  _nma_style = "nma.mplstyle"
+plt.style.use(_nma_style)
 ```
 
 ```{code-cell} python

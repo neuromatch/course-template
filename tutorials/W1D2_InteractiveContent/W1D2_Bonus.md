@@ -56,6 +56,18 @@ Remove the workaround once the package publishes wheels upstream.
 ## What doesn't work in the browser
 
 - **GPUs**: no CUDA, so no GPU-backed PyTorch or JAX
+- **Sockets**: there is no raw networking, so anything built on `urllib.request`
+  or `http.client` fails with `OSError: [Errno 23] Host is unreachable`. That
+  includes `plt.style.use(<url>)` and `pd.read_csv(<url>)`. Fetch through the
+  browser instead (`requests` also works, because Pyodide patches it), and the
+  server must send CORS headers:
+
+  ```python
+  if sys.platform == "emscripten":
+      from pyodide.http import open_url
+      with open("nma.mplstyle", "w") as f:
+          f.write(open_url(url).read())
+  ```
 - **Packages with C extensions that aren't pre-built for Pyodide**: they can't be
   installed with micropip
 - **Threads and subprocesses**: limited or unavailable
