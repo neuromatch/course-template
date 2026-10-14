@@ -371,9 +371,8 @@ plt.ylabel('x')
 plt.show()
 ```
 
-```{code-cell} python
-:tags: [hide-input]
-# to_remove solution
+::::{nma-solution}
+```python
 def integrate_exponential(a, x0, dt, T):
   """Compute solution of the differential equation xdot=a*x with
   initial condition x0 for a duration T. Use time step dt for numerical
@@ -421,6 +420,7 @@ with plt.xkcd():
   plt.ylabel('x')
   plt.show()
 ```
+::::
 
 ```{code-cell} python
 :tags: [hide-input]
@@ -459,27 +459,23 @@ def plot_euler_integration(a, dt):
   plt.show()
 ```
 
-```{code-cell} python
-:tags: [hide-input]
-# to_remove explanation
-"""
-1) For a<0, the solution decays in time.
-For a>0, the solution grows in time.
-For a=0, the solution stays at 1 (and is stable).
+:::{nma-explanation}
+1. For $a<0$, the solution decays in time.
+   For $a>0$, the solution grows in time.
+   For $a=0$, the solution stays at 1 (and is stable).
 
-2) For small-ish dt, the solution still looks the same.
-As dt gets bigger, the solution starts to look choppier and is no longer smooth,
-but still has mostly the right trends.
-For a = 0.15, as dt gets above 0.7 or so, we start to see the forward Euler
-integration starts to actually break down. Specifically, the solution is no
-longer decreasing monotonically and has developed an erroneous dip below zero.
+2. For small-ish $dt$, the solution still looks the same.
+   As $dt$ gets bigger, the solution starts to look choppier and is no longer smooth,
+   but still has mostly the right trends.
+   For $a = 0.15$, as $dt$ gets above 0.7 or so, we start to see the forward Euler
+   integration starts to actually break down. Specifically, the solution is no
+   longer decreasing monotonically and has developed an erroneous dip below zero.
 
-The more general lesson is that, for each system, there is a dt threshold
+The more general lesson is that, for each system, there is a $dt$ threshold
 above which the simulation introduces numerical artifacts and no longer behaves
 as an accurate estimate of the true underlying system. We may tolerate some
 choppiness in the solution, but eventually qualitatively wrong things creep in!
-""";
-```
+:::
 
 ```{code-cell} python
 :tags: [hide-input]
@@ -535,16 +531,13 @@ def plot_euler_integration(real=(-2, 2, .2), imaginary=(-4, 7, .1)):
   plt.show()
 ```
 
-```{code-cell} python
-:tags: [hide-input]
-# to_remove explanation
-"""
-1) To make the system both oscillate and grow, real has to be positive,
-and imaginary has to be not zero.
+:::{nma-explanation}
+1. To make the system both oscillate and grow, `real` has to be positive,
+   and `imaginary` has to be non-zero.
 
-2) Stable oscillation of 0.5 Hz (half a cycle per unit time, or one cycle per two
-unit time) is achieved with real = 0 and imaginary = +/- pi
-(approximately 3.1 or -3.1).
+2. Stable oscillation of 0.5 Hz (half a cycle per unit time, or one cycle per two
+   unit time) is achieved with `real` $= 0$ and `imaginary` $= \pm\pi$
+   (approximately 3.1 or -3.1).
 
 Note: For really large values of the imaginary component, the numerical
 integration scheme breaks down a bit, and we see non-stable oscillations
@@ -552,8 +545,7 @@ even when real=0. This is a numerical artifact of the forward Euler scheme.
 Some of the students may discover this if they push the parameters, but I've
 tried to constrain the widget so that it is not obvious, as it is not the point
 of this exercise.
-""";
-```
+:::
 
 ```{code-cell} python
 :tags: [hide-input]
@@ -659,9 +651,8 @@ x0 = [-0.1, 0.2]
 plot_trajectory(system, [A[0, 0], A[0, 1], A[1, 0], A[1, 1]], x0, dt=dt, T=T)
 ```
 
-```{code-cell} python
-:tags: [hide-input]
-# to_remove solution
+::::{nma-solution}
+```python
 def system(t, x, a00, a01, a10, a11):
   '''
   Compute the derivative of the state x at time t for a linear
@@ -694,6 +685,7 @@ x0 = [-0.1, 0.2]
 with plt.xkcd():
   plot_trajectory(system, [A[0, 0], A[0, 1], A[1, 0], A[1, 1]], x0, dt=dt, T=T)
 ```
+::::
 
 ```{code-cell} python
 :tags: [hide-input]
@@ -732,14 +724,10 @@ def plot_euler_integration(A=widgets.Dropdown(options=[A_option_1,
     plot_trajectory(system, [A[0][0],A[0][1],A[1][0],A[1][1]], x0, dt=dt, T=T)
 ```
 
-```{code-cell} python
-:tags: [hide-input]
-# to_remove explanation
-"""
+:::{nma-explanation}
 You should observe exponential growth to positive values, exponential
 growth to negative values, stable oscillations, and decay to the origin.
-""";
-```
+:::
 
 ```{code-cell} python
 :tags: [hide-input]
@@ -781,15 +769,11 @@ def plot_euler_integration(x0 = widgets.Dropdown(options=[x0_option_1,
     plot_trajectory(system, [A[0][0], A[0][1], A[1][0], A[1][1]], x0, dt=dt, T=T)
 ```
 
-```{code-cell} python
-:tags: [hide-input]
-# to_remove explanation
-"""
+:::{nma-explanation}
 Changing the initial conditions for this A always produces oscillatory
 dynamics. The only difference is the radii of the resulting elliptical
 trajectories.
-""";
-```
+:::
 
 ```{code-cell} python
 :tags: [hide-input]
@@ -827,10 +811,7 @@ A_options = [A_option_1, A_option_2, A_option_3, A_option_4]
 plot_specific_example_stream_plots(A_options)
 ```
 
-```{code-cell} python
-:tags: [hide-input]
-# to_remove explanation
-"""
+:::{nma-explanation}
 In top-left A, both eigenvalues are imaginary (no real component, the two
 eigenvalues are complex conjugate pairs), so the solutions are all stable
 oscillations. The eigenvectors are also complex conjugate pairs (that's why
@@ -850,8 +831,7 @@ In the bottom-right A, one eigenvalue is positive (red) and one eigenvalue is ne
 (blue). This makes the shape of the landscape the shape of a saddle (named after
 the saddle that one puts on a horse for a rider). Trajectories decay along the
 blue eigenvector but grows along the red eigenvector.
-""";
-```
+:::
 
 ```{code-cell} python
 :tags: [hide-input]
