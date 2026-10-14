@@ -1,6 +1,12 @@
 // Renders {nma-video} and {nma-slides} as static embeds on the website.
 // scripts/nma_media.py builds the matching notebook code cells.
 // Keep the URL templates in both files in sync.
+//
+// Also renders {nma-solution} / {nma-explanation} as links (see the second
+// half of this file and scripts/nma_solutions.py).
+
+import { readFileSync } from 'node:fs';
+import { join, relative, sep } from 'node:path';
 
 const VIDEO_SOURCES = [
   {
@@ -100,4 +106,130 @@ const nmaSlides = {
   },
 };
 
-export default { name: 'Neuromatch media', directives: [nmaVideo, nmaSlides] };
+// ---------------------------------------------------------------------------
+// {nma-solution} / {nma-explanation}: render as a "Click for ..." link to the
+// solution file that scripts/nma_solutions.py writes to notebooks-branch.
+// The solution text itself is never put on the page.
+//
+// The directives only emit a placeholder. The transform below numbers the
+// placeholders in document order and builds the links. The file naming and URL
+// rules must stay in sync with scripts/nma_solutions.py.
+
+const SOLUTION_KINDS = {
+  'nma-solution': { label: 'Click for solution', file: (stem, n) => `${stem}_Solution_${n}.py` },
+  'nma-explanation': {
+    label: 'Click for explanation',
+    file: (stem, n) => `${stem}_Explanation_${n}.md`,
+  },
+};
+const NOTEBOOKS_BRANCH = 'notebooks-branch';
+const PLACEHOLDER = 'nmaSolutionRef';
+
+const solutionDirective = (name, doc) => ({
+  name,
+  doc,
+  body: { type: String, required: true, doc: 'Hidden on the site; see scripts/nma_solutions.py.' },
+  run(data) {
+    return [{ type: PLACEHOLDER, kind: name, position: data.node.position }];
+  },
+});
+
+let cachedRepo;
+function githubRepo() {
+  if (cachedRepo === undefined) {
+    let config = '';
+    try {
+      config = readFileSync(join(process.cwd(), 'myst.yml'), 'utf8');
+    } catch {
+      // handled below
+    }
+    const match = config.match(/^\s*github:\s*['"]?https?:\/\/github\.com\/([^\s'"]+?)\/?['"]?\s*$/m);
+    cachedRepo = match ? match[1] : null;
+  }
+  return cachedRepo;
+}
+
+// tutorials/W2D1_Examples/W2D1_Tutorial1.md -> { relDir: 'W2D1_Examples', stem: 'W2D1_Tutorial1' }
+function pageLocation(filePath) {
+  const rel = relative(process.cwd(), filePath).split(sep).join('/');
+  if (!rel.startsWith('tutorials/')) return null;
+  const parts = rel.slice('tutorials/'.length).split('/');
+  const stem = parts.pop().replace(/\.[^.]+$/, '');
+  return { relDir: parts.join('/'), stem };
+}
+
+function solutionUrl(repo, relDir, filename) {
+  const path = ['notebooks', relDir, 'solutions', filename].filter(Boolean).join('/');
+  return `https://github.com/${repo}/blob/${NOTEBOOKS_BRANCH}/${path}`;
+}
+
+const solutionLinks = {
+  name: 'nma-solution-links',
+  doc: 'Turn nma-solution/nma-explanation placeholders into links to the solution files.',
+  stage: 'document',
+  plugin: () => (tree, vfile) => {
+    const found = []; // [placeholder node, is top level]
+    const walk = (node, ancestors) => {
+      (node.children ?? []).forEach((child) => {
+        if (child.type === PLACEHOLDER) {
+          found.push([child, ancestors.every((a) => a.type === 'root' || a.type === 'block')]);
+        } else {
+          walk(child, [...ancestors, child]);
+        }
+      });
+    };
+    walk(tree, [tree]);
+    if (found.length === 0) return;
+
+    const repo = githubRepo();
+    const location = pageLocation(vfile.path);
+    const counters = {};
+    for (const [node, topLevel] of found) {
+      const replaceWith = (children, extra = {}) => {
+        for (const key of Object.keys(node)) delete node[key];
+        Object.assign(node, { type: 'div', children, ...extra });
+      };
+      const kind = node.kind;
+      const fatal = (message) => {
+        const msg = vfile.message(message, node, 'nma-plugin');
+        msg.fatal = true;
+        replaceWith([]);
+      };
+      if (!topLevel) {
+        fatal(`${kind} must be at the top level of the page, not inside another directive`);
+        continue;
+      }
+      if (!repo) {
+        fatal(`${kind} needs project.github (a github.com URL) in myst.yml`);
+        continue;
+      }
+      if (!location) {
+        fatal(`${kind} is only supported in pages under tutorials/`);
+        continue;
+      }
+      counters[kind] = (counters[kind] ?? 0) + 1;
+      const { label, file } = SOLUTION_KINDS[kind];
+      const url = solutionUrl(repo, location.relDir, file(location.stem, counters[kind]));
+      replaceWith(
+        [
+          {
+            type: 'paragraph',
+            children: [{ type: 'link', url, children: [{ type: 'emphasis', children: [text(label)] }] }],
+          },
+        ],
+        { class: 'nma-solution-link' },
+      );
+    }
+  },
+};
+
+export default {
+  name: 'Neuromatch media and solutions',
+  directives: [
+    nmaVideo,
+    nmaSlides,
+    solutionDirective('nma-solution', 'Exercise solution, shown as a link to the solution file.'),
+    solutionDirective('nma-explanation', 'Discussion answer, shown as a link to the explanation file.'),
+  ],
+  transforms: [solutionLinks],
+};
