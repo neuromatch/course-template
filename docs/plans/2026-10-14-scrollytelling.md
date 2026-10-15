@@ -84,7 +84,14 @@ Design: `docs/plans/2026-10-14-scrollytelling-design.md`.
 ### Task 8: Documentation (how to use scrolly pages in the template)
 Authors learn the template from the book itself, so the main guide is a book page, backed by AGENTS.md for agents.
 
-- **New how-to page** `tutorials/W1D2_InteractiveContent/W1D2_Tutorial6.md`, "Tutorial 6: Scrollytelling Pages". Follow the style of Tutorials 4 and 5 (same day). It is static (no `kernelspec`), so every example goes inside a ```` ````markdown ```` fence and is never executed or validated as real content. Sections:
+- **New how-to page** `tutorials/W1D2_InteractiveContent/W1D2_Tutorial6.md`, "Tutorial 6: Scrollytelling Pages". **The page is itself a scrolly page** (`layout: scrolly` + `kernelspec`), so it teaches each feature by using it:
+  - Each step's **card** explains one feature and shows its syntax in a ```` ````markdown ```` fence. Fenced examples are literal text: the Python scanner treats non-directive fences as opaque, and MyST makes them `code` nodes, so the `{step}`/`{code-cell}` lines inside them are never treated as real markers or cells. Add a test for this in both `test_nma_scrolly.py` and `scrolly.test.mjs`.
+  - Each step's **stage** shows the feature working: a hero step, a `{stage}` `:style: list`, an untagged editable cell, a `hide-input` cell, a `remove-input` figure, a `# @param` slider and dropdown demo, a tiny real exercise with `{nma-solution}` (to show the fallback when running ahead), an `{nma-explanation}`, an `{nma-feedback}`, and an `{nma-video}` on the stage.
+  - Keep the Python small and Pyodide-safe (numpy and matplotlib only, no data files), so `--render` is fast and the page works in the browser.
+  - Because it has `kernelspec`, it also gets a generated notebook. That notebook is the "what the Colab version looks like" example for section 10.
+  - Write it after Task 6, and use it in Task 9 to check every feature end to end.
+
+  Sections (one or more steps each):
   1. What a scrolly page is, and when to use it (a narrative walkthrough of figures and demos) or not (long reference material, heavy exercises).
   2. Turning a page on: `layout: scrolly`, then `{step}` markers. A minimal three-step example.
   3. `{step}` options: `hero`, `:section:`, `:kicker:`. `{stage}` with `:style: list`.
@@ -113,5 +120,5 @@ Authors learn the template from the book itself, so the main guide is a book pag
 
 ### Task 9: Verification
 - `uv run pytest -q`, `node --test tests/js/*.test.mjs`, `convert_to_notebooks.py --dry-run` and a real run (inspect the Tutorial 2 student and instructor notebooks), `nma_scrolly.py --render`, `convert_to_notebooks.py --prepare-site` on a scratch copy, `myst build --html` (no ⛔), then `git checkout -- tutorials/`.
-- Load the built site in chromium (`/usr/bin/chromium --headless --screenshot`) at 1280 and 400 widths, on Tutorial 2 and on the new W1D2 Tutorial 6 page. Confirm that the stage switches on scroll and that pre-rendered figures appear.
+- Load the built site in chromium (`/usr/bin/chromium --headless --screenshot`) at 1280 and 400 widths, on Tutorial 2 and on the new W1D2 Tutorial 6 page. Confirm that the stage switches on scroll, pre-rendered figures appear, and on Tutorial 6 every demonstrated feature works (sliders rerun, the exercise fallback runs, feedback posts). Inspect the Tutorial 6 student and instructor notebooks too.
 - Commit any fixes.
