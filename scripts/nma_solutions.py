@@ -375,7 +375,9 @@ def _nma_install_fallback(exercises):
 
     def nma_exercise_fallback(lines):
         source = "".join(lines)
-        if not unfinished.search(source) or "nma-exercise-fallback" in source:
+        if (not unfinished.search(source)
+                or "nma-exercise-fallback" in source
+                or "$no_fallback" in source):
             return lines
         best, best_score = None, $threshold
         for exercise, solution in exercises:
@@ -399,12 +401,16 @@ _nma_install_fallback($exercises)
 del _nma_install_fallback'''
 
 FUZZY_THRESHOLD = 0.6
+# A cell containing this marker is never replaced by the fallback: the editable
+# panels append it to the cell the student explicitly runs.
+NO_FALLBACK_MARKER = "nma-no-fallback"  # keep in sync with plugins/cells/src/model.mjs
 
 
 def fallback_cell_source(pairs: list[tuple[str, str]]) -> str:
     exercises = "[\n" + "".join(f"    ({e!r}, {s!r}),\n" for e, s in pairs) + "]"
     return Template(FALLBACK_TEMPLATE).substitute(
         sentinel=FALLBACK_SENTINEL,
+        no_fallback=NO_FALLBACK_MARKER,
         threshold=FUZZY_THRESHOLD,
         note_line=repr(f"print({FALLBACK_NOTE!r})\n"),
         exercises=exercises,

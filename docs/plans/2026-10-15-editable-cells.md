@@ -155,7 +155,7 @@ git commit -m "feat: runtime: colab frontmatter (validation, no fallback cell on
 **Interfaces:**
 - Produces: `nma_solutions.NO_FALLBACK_MARKER = "nma-no-fallback"`. A cell whose source contains it is never replaced by the fallback transformer.
 
-- [ ] **Step 1: Write failing tests** (reuse the `shell` fixture, `EX_SRC`, `SOL_SRC`):
+- [x] **Step 1: Write failing tests** (reuse the `shell` fixture, `EX_SRC`, `SOL_SRC`):
 
 ```python
 def test_marked_exercise_is_not_replaced(shell, capsys):
@@ -176,19 +176,19 @@ def test_unmarked_exercise_still_falls_back(shell):
 
   If the exact `tb_next` depth differs in IPython, assert the frame for `f` has `tb_lineno == 2` by walking the traceback. What matters is that the marker adds no lines before the code.
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `uv run pytest -q tests/test_nma_solutions.py -k marker`
 Expected: FAIL (`ImportError: NO_FALLBACK_MARKER`)
 
-- [ ] **Step 3: Implement.** Add `or "$no_fallback" in source` to the transformer's early-return condition. Substitute `no_fallback=NO_FALLBACK_MARKER` in `fallback_cell_source`. Comment: `# keep in sync with plugins/cells/src/model.mjs`.
+- [x] **Step 3: Implement.** Add `or "$no_fallback" in source` to the transformer's early-return condition. Substitute `no_fallback=NO_FALLBACK_MARKER` in `fallback_cell_source`. Comment: `# keep in sync with plugins/cells/src/model.mjs`.
 
-- [ ] **Step 4: Run the full suite**
+- [x] **Step 4: Run the full suite**
 
 Run: `uv run pytest -q`
 Expected: all pass
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add scripts/nma_solutions.py tests/test_nma_solutions.py

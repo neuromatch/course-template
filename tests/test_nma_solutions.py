@@ -311,7 +311,7 @@ def test_input_notebook_is_not_mutated():
 import pytest
 from IPython.core.interactiveshell import InteractiveShell
 
-from nma_solutions import FALLBACK_NOTE, fallback_cell_source, fallback_md_block
+from nma_solutions import FALLBACK_NOTE, NO_FALLBACK_MARKER, fallback_cell_source, fallback_md_block
 
 EX_SRC = 'def f(x):\n  raise NotImplementedError("Student exercise: implement f")\n  return ...\n\nresult = f(3)'
 SOL_SRC = "def f(x):\n  return 2 * x\n\nresult = f(3)"
@@ -401,3 +401,25 @@ def test_injected_fallback_cell_is_not_an_exercise():
 def test_commented_out_raise_is_not_an_exercise():
     text = "```{code-cell} python\ndef f():\n  # raise NotImplementedError\n  return 1\n```\n"
     assert [b.kind for b in find_blocks(text)] == ["code-cell"]
+
+
+def test_marked_exercise_is_not_replaced(shell, capsys):
+    shell.run_cell(fallback_cell_source([(EX_SRC, SOL_SRC)]))
+    result = shell.run_cell(EX_SRC + f"\n# {NO_FALLBACK_MARKER}\n")
+    assert isinstance(result.error_in_exec, NotImplementedError)
+    assert FALLBACK_NOTE not in capsys.readouterr().out
+
+
+def test_marker_keeps_traceback_line_numbers(shell):
+    shell.run_cell(fallback_cell_source([(EX_SRC, SOL_SRC)]))
+    result = shell.run_cell(EX_SRC + f"\n# {NO_FALLBACK_MARKER}\n")
+    tb, lines = result.error_in_exec.__traceback__, {}
+    while tb:
+        lines[tb.tb_frame.f_code.co_name] = tb.tb_lineno
+        tb = tb.tb_next
+    assert lines["f"] == 2  # the raise line in f
+
+
+def test_unfinished_exercise_without_marker_still_falls_back(shell):
+    shell.run_cell(fallback_cell_source([(EX_SRC, SOL_SRC)]))
+    assert shell.run_cell(EX_SRC).success and shell.user_ns["result"] == 6
