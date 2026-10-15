@@ -302,3 +302,13 @@ test('the pinned stage and HUD stop at the end of the section (no negative margi
   const stacked = cssRules(scrollyCss).filter(({ body }) => /grid-area:\s*1\s*\/\s*1/.test(body)).map((r) => r.sel).join(' ');
   for (const part of ['scrolly-engine', 'scrolly-stage', 'scrolly-steps']) assert.match(stacked, new RegExp(part), `${part} not in the shared grid cell`);
 });
+
+test('cards stay in their column when they hold wide content (code blocks)', () => {
+  // The step is a flex row; a flex item's default min-width: auto is its
+  // longest unwrapped line, so a ```python fence pushed the card over the stage.
+  const card = cssRules(scrollyCss).find(({ sel }) => sel === '.scrolly-card');
+  assert.match(card.body, /min-width:\s*0/);
+  const pre = cssRules(scrollyCss).find(({ sel }) => /\.scrolly-card pre\b/.test(sel));
+  assert.ok(pre, 'no .scrolly-card pre rule');
+  assert.match(pre.body, /overflow-x:\s*auto/);
+});
