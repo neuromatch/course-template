@@ -45,6 +45,15 @@ jobs:
       - name: Install dependencies
         run: uv pip install -r requirements.txt
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      # The committed plugins/cells/dist/ bundles must match src/.
+      - name: Check editable-cells bundle is up to date
+        working-directory: plugins/cells
+        run: npm ci && npm run build && git diff --exit-code dist/
+
       # Unit tests for plugins/ (config reader, feedback widget requests)
       - name: Test MyST plugins
         run: node --test tests/js/*.test.mjs
@@ -63,6 +72,14 @@ jobs:
 
       - name: Build MyST book
         run: uv run myst build --html
+
+      # Opens the built site in headless Chromium and runs cells (needs jsdelivr/cdnjs).
+      - name: Browser smoke test (editable cells)
+        run: |
+          uv run playwright install --with-deps chromium
+          (cd _build/html && python3 -m http.server 8765 >/dev/null 2>&1 &)
+          sleep 2
+          NMA_E2E_URL=http://localhost:8765 uv run pytest -q tests/e2e
 
       - name: Add CNAME for custom domain
         run: cp CNAME _build/html/CNAME

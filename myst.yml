@@ -14,6 +14,7 @@ project:
   plugins:
     - plugins/nma.mjs
     - plugins/scrolly/scrolly.mjs
+    - plugins/cells/cells.mjs
   toc:
     - file: tutorials/intro.md
     - file: tutorials/W1D1_GettingStarted/chapter_intro.md
@@ -44,6 +45,7 @@ project:
       children:
         - file: tutorials/W2D1_Examples/W2D1_Tutorial1.md
         - file: tutorials/W2D1_Examples/W2D1_Tutorial2.md
+        - file: tutorials/W2D1_Examples/W2D1_Tutorial3.md
         - file: tutorials/W2D1_Examples/further_reading.md
     - file: projects/README.md
 

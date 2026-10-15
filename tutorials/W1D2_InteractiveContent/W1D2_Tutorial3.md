@@ -46,8 +46,7 @@ is broken:
      display_name: Python 3
    ```
 
-   Without it the page would get no notebook, no badges, and no JupyterLite power
-   button. Pages without code cells (intros, further reading) stay static.
+   Without it the page would get no notebook, no badges, and no editable cells. Pages without code cells (intros, further reading) stay static.
 
 ## Bringing in an existing notebook
 

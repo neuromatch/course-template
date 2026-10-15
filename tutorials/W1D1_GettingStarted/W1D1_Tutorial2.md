@@ -48,4 +48,4 @@ For example: `tutorials/W2D3_ReinforcementLearning/W2D3_Tutorial1.md`
 ## further_reading.md pages
 
 These are always static — no code execution. Simply omit the `kernelspec` from their
-frontmatter and the JupyterLite power button will not appear.
+frontmatter and the page gets no editable cells.

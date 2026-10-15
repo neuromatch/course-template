@@ -30,7 +30,7 @@ edit them by hand.
 Benefits:
 - **Clean git history** — no output noise or cell metadata cluttering your diffs
 - **Human-readable** — readable in any text editor, easy to review
-- **In-browser execution** — students can run code directly in this book via JupyterLite, no install needed
+- **In-browser execution** — students can edit and run code cells directly in this book (JupyterLite), no install needed
 - **Colab and Kaggle badges** — auto-injected by CI on every executable tutorial
 
 ## Prerequisites for course authors

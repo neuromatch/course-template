@@ -8,3 +8,6 @@
  *   --color-primary: #FF6B6B;
  * }
  */
+
+/* Editable cells (plugins/cells) replace JupyterLite's power button site-wide. */
+.myst-jp-nb-toolbar-power { display: none !important; }

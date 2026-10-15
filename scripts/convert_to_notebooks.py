@@ -62,6 +62,7 @@ from pathlib import Path
 
 import yaml
 
+import nma_cells
 import nma_feedback
 import nma_scrolly
 import nma_solutions
@@ -200,6 +201,8 @@ def validate_content(check_injected: bool = True) -> list[str]:
             errors.append(f"{path}: {problem}")
         for problem in nma_scrolly.validate(text):
             errors.append(f"{path}: {problem}")
+        for problem in nma_cells.validate(text):
+            errors.append(f"{path}: {problem}")
         if not has_config and not config_problems and nma_feedback.find_directives(text):
             errors.append(
                 f"{path}: uses {{nma-feedback}} but myst.yml has no complete "
@@ -251,7 +254,7 @@ def prepare_site_md(
     md_file: Path, notebook_rel_path: str, github_repo: str, dry_run: bool
 ) -> None:
     """
-    Insert badges (and, for pages with exercises, the run-all fallback cell)
+    Insert badges (and, for browser pages with exercises, the run-all fallback cell)
     into the .md source after the frontmatter block.
 
     Idempotent: removes a previously injected badge line and fallback cell first.
@@ -278,9 +281,11 @@ def prepare_site_md(
     body = FALLBACK_BLOCK_RE.sub("", body)
 
     header = [make_badge_html(notebook_rel_path, github_repo)]
-    # Scrolly pages don't run in JupyterLite; their runtime substitutes
-    # solutions itself (plugins/scrolly/runnable.mjs).
-    pairs = [] if nma_scrolly.is_scrolly(content) else nma_solutions.exercise_pairs(body)
+    # Scrolly pages don't run in JupyterLite (their runtime substitutes
+    # solutions itself, plugins/scrolly/runnable.mjs), and `runtime: colab`
+    # pages never run on the site, so neither needs the fallback cell.
+    skip = nma_scrolly.is_scrolly(content) or nma_cells.runtime_of(content) == "colab"
+    pairs = [] if skip else nma_solutions.exercise_pairs(body)
     if pairs:
         header.append(nma_solutions.fallback_md_block(pairs))
         print(f"    Added run-all fallback for {len(pairs)} exercise(s)")

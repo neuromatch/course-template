@@ -1,0 +1,81 @@
+/* Editable cell panel. Lives in each panel's shadow root.
+   Public tokens (set them on :root / html.dark in _static/custom.css):
+   --nma-cell-{bg,fg}-{light,dark}, --nma-cell-border, --nma-cell-radius,
+   --nma-cell-accent, --nma-cell-exercise-accent, --nma-cell-bar-{bg,fg}-{light,dark},
+   --nma-cell-gutter-{bg,fg}-{light,dark}, --nma-cell-active-line-{light,dark},
+   --nma-cell-font, --nma-cell-font-size,
+   --nma-tok-{keyword,string,number,comment,function,definition}-{light,dark}. */
+:host {
+  display: block;
+  margin: 1rem 0;
+  --_bg: var(--nma-cell-bg-light, #fbfbfe);
+  --_fg: var(--nma-cell-fg-light, #1f1d3a);
+  --_bar-bg: var(--nma-cell-bar-bg-light, #eeeef8);
+  --_bar-fg: var(--nma-cell-bar-fg-light, #3a3868);
+  --_gutter-bg: var(--nma-cell-gutter-bg-light, #f1f1f9);
+  --_gutter-fg: var(--nma-cell-gutter-fg-light, #8886a8);
+  --_active: var(--nma-cell-active-line-light, rgba(94, 92, 214, 0.08));
+  --_keyword: var(--nma-tok-keyword-light, #6b3fc4);
+  --_string: var(--nma-tok-string-light, #0b7a5a);
+  --_number: var(--nma-tok-number-light, #b4540b);
+  --_comment: var(--nma-tok-comment-light, #7a7897);
+  --_function: var(--nma-tok-function-light, #1c5fb8);
+  --_definition: var(--nma-tok-definition-light, #1c5fb8);
+}
+:host([data-theme='dark']) {
+  --_bg: var(--nma-cell-bg-dark, #1b1a2e);
+  --_fg: var(--nma-cell-fg-dark, #e8e7ff);
+  --_bar-bg: var(--nma-cell-bar-bg-dark, #22214a);
+  --_bar-fg: var(--nma-cell-bar-fg-dark, #d6d5ff);
+  --_gutter-bg: var(--nma-cell-gutter-bg-dark, #201f3c);
+  --_gutter-fg: var(--nma-cell-gutter-fg-dark, #7f7da8);
+  --_active: var(--nma-cell-active-line-dark, rgba(94, 251, 215, 0.07));
+  --_keyword: var(--nma-tok-keyword-dark, #c3a6ff);
+  --_string: var(--nma-tok-string-dark, #5efbd7);
+  --_number: var(--nma-tok-number-dark, #ffb86b);
+  --_comment: var(--nma-tok-comment-dark, #8b89b3);
+  --_function: var(--nma-tok-function-dark, #8ab8ff);
+  --_definition: var(--nma-tok-definition-dark, #8ab8ff);
+}
+.cell {
+  --nma-cell-bg: var(--_bg);
+  --nma-cell-fg: var(--_fg);
+  --nma-cell-gutter-bg: var(--_gutter-bg);
+  --nma-cell-gutter-fg: var(--_gutter-fg);
+  --nma-cell-active-line: var(--_active);
+  --nma-tok-keyword: var(--_keyword);
+  --nma-tok-string: var(--_string);
+  --nma-tok-number: var(--_number);
+  --nma-tok-comment: var(--_comment);
+  --nma-tok-function: var(--_function);
+  --nma-tok-definition: var(--_definition);
+  --nma-cell-font: var(--nma-cell-font-family, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  --nma-cell-font-size: var(--nma-cell-font-size-value, 0.875rem);
+  --nma-cell-accent: var(--nma-cell-accent-value, #5e5cd6);
+  border: 1px solid var(--nma-cell-border, rgba(42, 41, 82, 0.18));
+  border-left: 4px solid var(--nma-cell-accent);
+  border-radius: var(--nma-cell-radius, 8px);
+  overflow: hidden;
+  background: var(--_bg);
+  color: var(--_fg);
+}
+.cell.is-exercise { border-left-color: var(--nma-cell-exercise-accent, #e8a33d); }
+.bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
+  padding: 0.35rem 0.7rem; background: var(--_bar-bg); color: var(--_bar-fg);
+  font: 600 0.78rem system-ui, sans-serif;
+}
+.label { margin-right: auto; letter-spacing: 0.02em; }
+button {
+  font: inherit; color: inherit; background: transparent; cursor: pointer;
+  border: 1px solid currentColor; border-radius: 999px; padding: 0.1rem 0.75rem;
+}
+button:hover { background: rgba(127, 127, 160, 0.18); }
+button:focus-visible { outline: 2px solid var(--nma-cell-accent); outline-offset: 2px; }
+button.run { background: var(--nma-cell-accent); border-color: var(--nma-cell-accent); color: #fff; }
+button.run:hover { filter: brightness(1.1); }
+button[hidden], .editor[hidden] { display: none; }
+.status { font-weight: 500; opacity: 0.85; min-width: 4ch; }
+.editor .cm-editor { max-height: 70vh; }
+.editor .cm-scroller { overflow: auto; }
+slot[name='out'] { display: block; }
