@@ -155,6 +155,7 @@ test('buildScrolly engine model', () => {
   const [engine] = byClass(tree, 'scrolly-engine');
   assert.equal(engine.type, 'anywidget');
   assert.equal(engine.esm, '/plugins/scrolly/engine.mjs');
+  assert.equal(engine.css, '/plugins/scrolly/scrolly.css');
   const m = engine.model;
   assert.equal(m.n, 4);
   assert.deepEqual(m.hero, [true, false, false, false]);
@@ -226,4 +227,51 @@ test('fenced example markers are text, not nodes', () => {
   buildScrolly(tree, { renders: {}, solutions: {}, config: {} });
   assert.equal(byClass(tree, 'scrolly-step').length, 1);
   assert.equal(find(tree, (n) => n.type === 'code' && n.lang === 'markdown').length, 1);
+});
+
+// --- runnable.mjs pure helpers -------------------------------------------------
+
+import { highlight, applyParams, pyLiteral, codeForEarlierCell, formatValue } from '../../plugins/scrolly/runnable.mjs';
+import { readNmaConfig } from '../../plugins/nma.mjs';
+
+test('highlight escapes HTML and marks tokens', () => {
+  const html = highlight('def f(x):  # a < b\n    return "<s>" + 1');
+  assert.match(html, /<i class="tk-k">def<\/i>/);
+  assert.match(html, /<i class="tk-f">f<\/i>/);
+  assert.match(html, /<i class="tk-c"># a &lt; b<\/i>/);
+  assert.match(html, /<i class="tk-s">"&lt;s&gt;"<\/i>/);
+  assert.match(html, /<i class="tk-n">1<\/i>/);
+  assert.ok(!html.includes('<s>'));
+  // the text content is unchanged
+  assert.equal(html.replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>'), 'def f(x):  # a < b\n    return "<s>" + 1');
+});
+
+test('applyParams rewrites only param lines and keeps the comment', () => {
+  const code = 'a = -0.5   # @param {type:"slider", min:-2.5, max:1.5}\nmode = "x"  # @param ["x", "y"]\nb = a  # not a param\nflag = True # @param [True, False]';
+  assert.equal(
+    applyParams(code, { a: 1.25, mode: 'y', flag: false, b: 9 }),
+    'a = 1.25   # @param {type:"slider", min:-2.5, max:1.5}\nmode = "y"  # @param ["x", "y"]\nb = a  # not a param\nflag = False # @param [True, False]',
+  );
+});
+
+test('pyLiteral and formatValue', () => {
+  assert.equal(pyLiteral(null), 'None');
+  assert.equal(pyLiteral(true), 'True');
+  assert.equal(pyLiteral('it\'s "q"'), '"it\'s \\"q\\""');
+  assert.equal(pyLiteral(0.001), '0.001');
+  assert.equal(formatValue(0.1 + 0.2), '0.3');
+  assert.equal(formatValue('a'), 'a');
+});
+
+test('earlier unfinished exercises run their solution', () => {
+  const cell = { index: 2, code: 'def f():\n    raise NotImplementedError("x")', fallback: 'def f():\n    return 1' };
+  assert.deepEqual(codeForEarlierCell(cell, {}), { code: 'def f():\n    return 1', fallback: true });
+  assert.deepEqual(codeForEarlierCell(cell, { 2: 'def f():\n    return 2' }), { code: 'def f():\n    return 2', fallback: false });
+  assert.deepEqual(codeForEarlierCell(cell, { 2: 'def f():\n    # raise NotImplementedError\n    return 3' }).fallback, false);
+  assert.deepEqual(codeForEarlierCell({ index: 0, code: 'raise NotImplementedError', fallback: null }, {}).fallback, false);
+});
+
+test('the real myst.yml sets nma.scrolly.pyodide_url', () => {
+  const text = readFileSync(join(here, '..', '..', 'myst.yml'), 'utf8');
+  assert.match(readNmaConfig(text).scrolly?.pyodide_url ?? '', /^https:\/\/.+\/$/);
 });

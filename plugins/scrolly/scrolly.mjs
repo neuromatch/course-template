@@ -27,6 +27,8 @@ export const DEFAULT_PYODIDE_URL = 'https://cdn.jsdelivr.net/pyodide/v314.0.7/fu
 const ENGINE_ESM = '/plugins/scrolly/engine.mjs';
 const RUNNABLE_ESM = '/plugins/scrolly/runnable.mjs';
 const RUNNABLE_CSS = '/plugins/scrolly/runnable.css';
+// Page layout. engine.mjs copies it from its shadow root into <head>.
+const LAYOUT_CSS = '/plugins/scrolly/scrolly.css';
 const STEP = 'scrollyStep';
 const STAGE = 'scrollyStage';
 
@@ -367,6 +369,7 @@ export function buildScrolly(tree, { renders = {}, solutions = {}, config = {} }
   const engine = {
     type: 'anywidget',
     esm: ENGINE_ESM,
+    css: LAYOUT_CSS,
     class: 'scrolly-engine',
     id: 'scrolly-engine',
     model: {
