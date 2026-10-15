@@ -32,10 +32,14 @@ generated files and avoids CI commit loops.
 
 ## Workflow 2: `publish-book.yml`
 
-Runs after notebook generation finishes, or directly when config or static files
-change. In its temporary checkout it adds Colab/Kaggle badges to the executable
-pages, plus a hidden setup cell on pages with exercises so "Run all" doesn't stop
-at an unfinished exercise. Then it builds the MyST book and deploys it to GitHub Pages.
+Runs after notebook generation finishes, or directly when config, plugins,
+scripts or static files change. First it runs every scrollytelling page
+(`layout: scrolly`, see [W1D2 Tutorial 6](../W1D2_InteractiveContent/W1D2_Tutorial6.md))
+headless with `scripts/nma_scrolly.py --render`, so the site shows their real
+figures before readers start Python. A cell that raises fails this step. Then, in
+its temporary checkout, it adds Colab/Kaggle badges to the executable pages, plus a
+hidden setup cell on pages with exercises so "Run all" doesn't stop at an
+unfinished exercise. Finally it builds the MyST book and deploys it to GitHub Pages.
 
 Videos, slides and solution links need no extra step. The `plugins/nma.mjs`
 MyST plugin renders them during `myst build`, and a change under `plugins/`

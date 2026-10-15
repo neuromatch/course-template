@@ -9,6 +9,7 @@ on:
       - "requirements.txt"
       - "_static/**"
       - "plugins/**"
+      - "scripts/**"
       - "tests/js/**"
       - "projects/**"
       - "CNAME"
@@ -47,6 +48,12 @@ jobs:
       # Unit tests for plugins/ (config reader, feedback widget requests)
       - name: Test MyST plugins
         run: node --test tests/js/*.test.mjs
+
+      # Runs every scrolly page (layout: scrolly) headless and writes its
+      # outputs to _build/scrolly/, so the site shows real figures before
+      # readers start Python. A cell that raises fails the build.
+      - name: Pre-render scrolly pages
+        run: uv run python scripts/nma_scrolly.py --render
 
       # Adds Colab/Kaggle badges and, on pages with exercises, the hidden
       # run-all fallback cell to this checkout's copy of each executable

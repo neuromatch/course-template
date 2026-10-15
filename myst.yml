@@ -13,6 +13,7 @@ project:
     lite: true
   plugins:
     - plugins/nma.mjs
+    - plugins/scrolly/scrolly.mjs
   toc:
     - file: tutorials/intro.md
     - file: tutorials/W1D1_GettingStarted/chapter_intro.md
@@ -29,6 +30,7 @@ project:
         - file: tutorials/W1D2_InteractiveContent/W1D2_Tutorial3.md
         - file: tutorials/W1D2_InteractiveContent/W1D2_Tutorial4.md
         - file: tutorials/W1D2_InteractiveContent/W1D2_Tutorial5.md
+        - file: tutorials/W1D2_InteractiveContent/W1D2_Tutorial6.md
         - file: tutorials/W1D2_InteractiveContent/W1D2_Bonus.md
         - file: tutorials/W1D2_InteractiveContent/further_reading.md
     - file: tutorials/W1D3_PublishingAndCI/chapter_intro.md
@@ -41,6 +43,7 @@ project:
     - file: tutorials/W2D1_Examples/chapter_intro.md
       children:
         - file: tutorials/W2D1_Examples/W2D1_Tutorial1.md
+        - file: tutorials/W2D1_Examples/W2D1_Tutorial2.md
         - file: tutorials/W2D1_Examples/further_reading.md
     - file: projects/README.md
 
@@ -60,3 +63,7 @@ nma:
     url: https://pmyvdlilci.execute-api.us-east-1.amazonaws.com/klab
     project: neuromatch_cn
     user_key: y1x3mpx5
+  # Scrolly pages (layout: scrolly) run Python in the browser with Pyodide,
+  # loaded from here. The host must send CORS headers.
+  scrolly:
+    pyodide_url: https://cdn.jsdelivr.net/pyodide/v314.0.7/full/

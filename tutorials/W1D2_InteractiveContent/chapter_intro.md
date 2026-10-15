@@ -14,6 +14,7 @@ By the end of Day 2 you will be able to:
 - Explain why all content is written in Markdown and notebooks are generated
 - Embed lecture videos, slides and feedback widgets that work without a kernel
 - Write exercises with solutions and explanations for students and instructors
+- Build scrollytelling pages: a pinned stage of figures, videos and live Python beside scrolling text
 - Work within JupyterLite's package and compute limits
 
 ## Schedule
@@ -25,4 +26,5 @@ By the end of Day 2 you will be able to:
 | Tutorial 3 | Markdown is the only source | 20 min |
 | Tutorial 4 | Videos, slides and feedback | 15 min |
 | Tutorial 5 | Exercises and solutions | 15 min |
+| Tutorial 6 | Scrollytelling pages | 20 min |
 | Bonus | Working within JupyterLite's limits | open-ended |
