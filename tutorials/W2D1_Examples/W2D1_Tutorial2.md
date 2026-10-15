@@ -1,6 +1,9 @@
 ---
 title: "Tutorial 2: Linear Dynamical Systems (scrolly)"
 layout: scrolly
+site:
+  hide_toc: true
+  hide_outline: true
 kernelspec:
   name: python3
   display_name: Python 3

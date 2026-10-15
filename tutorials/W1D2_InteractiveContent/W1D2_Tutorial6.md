@@ -1,6 +1,9 @@
 ---
 title: "Tutorial 6: Scrollytelling Pages"
 layout: scrolly
+site:
+  hide_toc: true
+  hide_outline: true
 kernelspec:
   name: python3
   display_name: Python 3
@@ -53,12 +56,15 @@ A scrolly page is an ordinary tutorial `.md` file with one extra frontmatter lin
 :::
 ## `layout: scrolly` and `{step}`
 
-Add `layout: scrolly` to the frontmatter, then put a `{step}` marker wherever a new step starts. A step runs from its marker to the next one. Markers have no body: the content goes **after** the closing fence.
+Add `layout: scrolly` to the frontmatter, hide the side menus (recommended, see below), then put a `{step}` marker wherever a new step starts. A step runs from its marker to the next one. Markers have no body: the content goes **after** the closing fence.
 
 ````markdown
 ---
 title: "Tutorial 2: My topic"
 layout: scrolly
+site:
+  hide_toc: true
+  hide_outline: true
 kernelspec:
   name: python3
   display_name: Python 3
@@ -79,12 +85,7 @@ Text for the second card.
 
 MyST logs `extra key ignored: layout`, which is expected.
 
-The scrolly section stays between the table of contents and the "On this page" outline. When it is narrow, the stage sits above the cards instead of beside them. To give it the outline's space as well, hide the outline for that page:
-
-```yaml
-site:
-  hide_outline: true
-```
+`hide_toc` and `hide_outline` remove the table of contents and the "On this page" outline on this page only, so the scrolly section can use the whole window. Readers still have the top bar, the menu button on small screens, and the previous/next links at the bottom. If you keep the menus, the section fits between them, and when that is too narrow the stage sits above the cards instead of beside them.
 
 :::{step}
 :kicker: Options
@@ -399,7 +400,7 @@ Open this page's notebook from the badges at the top to see the result. A scroll
 
 [W2D1 Tutorial 2](../W2D1_Examples/W2D1_Tutorial2.md) is [Tutorial 1](../W2D1_Examples/W2D1_Tutorial1.md) converted this way:
 
-1. Copy the page and add `layout: scrolly`.
+1. Copy the page and add `layout: scrolly`, plus `site: hide_toc: true` and `hide_outline: true`.
 2. Merge setup, figure style and helpers into one `remove-cell` cell. Drop `%` magics and the ipywidgets import.
 3. Add a `{step}` before each idea that needs its own picture, with `:section:` at section starts and `:kicker:` labels.
 4. Rewrite `widgets.interact` demos with `# @param`.
