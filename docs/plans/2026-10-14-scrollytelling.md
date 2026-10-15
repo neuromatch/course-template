@@ -77,7 +77,41 @@ Design: `docs/plans/2026-10-14-scrollytelling-design.md`.
 - Copy Tutorial 1 into scrolly form (about 16 steps, see the design outline). Demos use `# @param`. A `remove-cell` setup runs imports, style and plotting helpers.
 - Update the TOC and the chapter_intro schedule. Commit.
 
-### Task 7: CI, docs, verification
-- `publish-book.yml`: run `--render` before `--prepare-site`. `generate-notebooks.yml` is unchanged (it already installs requirements).
-- AGENTS.md section on scrolly pages.
-- Run pytest, node --test, convert dry-run + real, `--render`, and `myst build --html` (no ⛔). Check the page in chromium at 1280 and 400 widths. Commit.
+### Task 7: CI wiring
+- `publish-book.yml`: run `uv run python scripts/nma_scrolly.py --render` before `--prepare-site`, and add `scripts/**` to its push paths if missing. `generate-notebooks.yml` is unchanged (it already installs requirements and runs pytest).
+- Commit.
+
+### Task 8: Documentation (how to use scrolly pages in the template)
+Authors learn the template from the book itself, so the main guide is a book page, backed by AGENTS.md for agents.
+
+- **New how-to page** `tutorials/W1D2_InteractiveContent/W1D2_Tutorial6.md`, "Tutorial 6: Scrollytelling Pages". Follow the style of Tutorials 4 and 5 (same day). It is static (no `kernelspec`), so every example goes inside a ```` ````markdown ```` fence and is never executed or validated as real content. Sections:
+  1. What a scrolly page is, and when to use it (a narrative walkthrough of figures and demos) or not (long reference material, heavy exercises).
+  2. Turning a page on: `layout: scrolly`, then `{step}` markers. A minimal three-step example.
+  3. `{step}` options: `hero`, `:section:`, `:kicker:`. `{stage}` with `:style: list`.
+  4. What goes on the stage vs the card (table from the design), and "the stage carries forward".
+  5. Code cells: the tag table (untagged / `hide-input` / `remove-input` / `remove-cell`), the shared namespace, and "earlier cells run first".
+  6. Interactive demos with `# @param` (slider + dropdown syntax). Show the before/after of turning a `@widgets.interact` demo into `# @param`, and say that notebooks get `widgets.interact` automatically.
+  7. Exercises, solutions, explanations, videos and feedback work unchanged (link to Tutorials 4 and 5), plus the solution fallback when running ahead.
+  8. Browser Python: the "Enable Python" pill, first load size, which packages work (Pyodide), loading data with `open_url`, and the `nma.scrolly.pyodide_url` setting.
+  9. Pre-rendered outputs: what `--render` does, that a raising cell fails CI, and how to preview locally (`uv run python scripts/nma_scrolly.py --render && uv run myst start`). Missing renders show "Run to see output".
+  10. Notebooks: what the Colab/Kaggle version looks like (linear, markers removed).
+  11. Converting an existing tutorial: a checklist, pointing at W2D1 Tutorial 1 → Tutorial 2 as the worked example.
+  12. CI errors you may see, and their fixes (the `validate()` messages).
+- Register it in the `myst.yml` TOC after W1D2 Tutorial 5, and add a row to the W1D2 `chapter_intro.md` schedule (`Tutorial 6 | Scrollytelling pages | 20 min`) and a line to its learning objectives.
+- `W1D2_InteractiveContent/further_reading.md`: links to the MyST plugin docs, the anywidget spec, and Pyodide.
+- `W1D3_PublishingAndCI/W1D3_Tutorial1.md`: add the `--render` step to the pipeline description of `publish-book.yml`.
+- `W2D1_Examples/chapter_intro.md`: describe Tutorial 2 as the scrolly version of Tutorial 1 and invite readers to compare them.
+- **AGENTS.md:**
+  - Architecture tree: `plugins/scrolly/`, `scripts/nma_scrolly.py`, `tests/fixtures/scrolly/`.
+  - Key files: entries for both.
+  - New "Scrollytelling pages" convention section: syntax, tag table, `# @param`, the rules shared by Python and JS (`cellKey`, param grammar, render file path), "never hand-write outputs".
+  - Content rules: add the scrolly validation rules.
+  - Build & CI: `--render` and local preview.
+  - Conversion checklist: a pointer for scrolly conversions.
+- **README.md:** one line under "For course authors" pointing to the scrollytelling tutorial.
+- Commit: `docs: explain scrollytelling pages in the template`.
+
+### Task 9: Verification
+- `uv run pytest -q`, `node --test tests/js/*.test.mjs`, `convert_to_notebooks.py --dry-run` and a real run (inspect the Tutorial 2 student and instructor notebooks), `nma_scrolly.py --render`, `convert_to_notebooks.py --prepare-site` on a scratch copy, `myst build --html` (no ⛔), then `git checkout -- tutorials/`.
+- Load the built site in chromium (`/usr/bin/chromium --headless --screenshot`) at 1280 and 400 widths, on Tutorial 2 and on the new W1D2 Tutorial 6 page. Confirm that the stage switches on scroll and that pre-rendered figures appear.
+- Commit any fixes.
