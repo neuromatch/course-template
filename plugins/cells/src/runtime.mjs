@@ -128,14 +128,21 @@ export class PageRuntime {
     this.emit({ index, state: 'running' });
     const res = await cell.execute(source); // null on internal failure
     this.ran.add(index);
-    const error = res === null || res === undefined ? { ename: 'InternalError' } : res.error?.[0] ?? null;
+    const raw = res === null || res === undefined ? { ename: 'InternalError' } : res.error?.[0] ?? null;
+    // thebe-lite reports the exception class as "<class 'NotImplementedError'>".
+    const error = raw && { ...raw, ename: String(raw.ename ?? 'Error').replace(/^<class '(.*)'>$/, '$1') };
     this.emit({ index, state: error ? 'error' : 'done', count: cell.executionCount, error });
     return { error };
   }
 
   async restart() {
     const k = await this.kernel;
-    await k.session.kernel.restart();
+    // session.kernel.restart() / session.restart() leave thebe-lite's notebook without a
+    // kernel (verified in the browser, thebe 0.5.0). A fresh session is the working restart.
+    await k.server.shutdownAllSessions();
+    const session = await k.server.startNewSession(k.rendermime);
+    k.nb.attachSession(session);
+    k.session = session;
     this.ran.clear();
     this.queue = Promise.resolve();
     this.emit({ kernel: 'ready', restarted: true });

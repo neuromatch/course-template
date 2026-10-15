@@ -427,7 +427,7 @@ git commit -m "feat: editable cell panel (CodeMirror 6 editor, slotted output, p
   - Runtime: `{… esm:'/plugins/cells/dist/runtime-widget.mjs', css:'/plugins/cells/page.css', class:'nma-cells-runtime', id:'nma-cells-runtime', model:{cells}}` in a first `block`.
   - These `/plugins/...` paths are MyST source paths, the same convention scrolly uses, not browser URLs.
 
-- [ ] **Step 1: Write failing plugin tests** in `tests/js/cells.test.mjs`, using a tree helper like the `code(value, tags)` one in `tests/js/scrolly.test.mjs`:
+- [x] **Step 1: Write failing plugin tests** in `tests/js/cells.test.mjs`, using a tree helper like the `code(value, tags)` one in `tests/js/scrolly.test.mjs`:
   - `buildBrowserPage` on `[p('intro'), code('import x', ['remove-cell']), code('a = 1'), code(EXERCISE), code('plt.plot()', ['hide-input'])]`:
     - returns 4
     - first child is the runtime block, whose model `cells` has indices 0 to 3 with modes `hidden, edit, edit, collapsed`, and `exercise` true only for index 2
@@ -438,26 +438,26 @@ git commit -m "feat: editable cell panel (CodeMirror 6 editor, slotted output, p
   - `buildColabPage`: the first child is a block containing an `admonition` of kind `important` whose title text is `Do this tutorial in Colab` and whose links are the given URLs. Code blocks remain.
   - `notebookUrls('<cwd>/tutorials/W2D1_Examples/W2D1_Tutorial1.md')` with `project.github` = `https://github.com/neuromatch/course-template` gives `colabUrl` `https://colab.research.google.com/github/neuromatch/course-template/blob/notebooks-branch/notebooks/W2D1_Examples/W2D1_Tutorial1.ipynb`. `kaggleUrl` ends with `raw.githubusercontent.com/neuromatch/course-template/notebooks-branch/notebooks/W2D1_Examples/W2D1_Tutorial1.ipynb`.
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `node --test tests/js/cells.test.mjs`
 Expected: FAIL
 
-- [ ] **Step 3: Implement `cells.mjs` and the `nma.mjs` exports.** Follow the spec's sketch, without `outputsOf` / `initial`. The transform returns early unless the frontmatter has `kernelspec:` and the page isn't scrolly. If the source can't be read, return without changes.
+- [x] **Step 3: Implement `cells.mjs` and the `nma.mjs` exports.** Follow the spec's sketch, without `outputsOf` / `initial`. The transform returns early unless the frontmatter has `kernelspec:` and the page isn't scrolly. If the source can't be read, return without changes.
 
-- [ ] **Step 4: Run JS tests**
+- [x] **Step 4: Run JS tests**
 
 Run: `node --test tests/js/*.test.mjs`
 Expected: all pass
 
-- [ ] **Step 5: Wire up the site.**
+- [x] **Step 5: Wire up the site.**
   - Register the plugin in `myst.yml`.
   - Power button CSS in `_static/custom.css`.
   - `requirements.txt` pins.
   - Create `tutorials/W2D1_Examples/W2D1_Tutorial3.md`: title `Tutorial 3: A heavy-compute tutorial (Colab)`, frontmatter `runtime: colab` + `kernelspec`, a short explanation that this is how authors mark Colab pages, and two small code cells (e.g. `import torch` and a tiny training loop). Add it to the TOC after W2D1 Tutorial 2.
   - Then check the content rules: `uv run python scripts/convert_to_notebooks.py --dry-run`. Expected: no validation errors.
 
-- [ ] **Step 6: Write the browser smoke test.**
+- [x] **Step 6: Write the browser smoke test.**
   - `tests/e2e/conftest.py`:
     - `pytest.importorskip("playwright")`.
     - Skip everything unless env `NMA_E2E_URL` is set.
@@ -474,7 +474,7 @@ Expected: all pass
     8. `test_edit_marks_output_stale`: run a simple non-exercise panel, then type a character. Its `.nma-cell-out` has class `is-stale`. Reset removes it.
     9. `test_restart`: run the last panel (`✓`), click `button.restart` on any panel, then run the last panel again. Status is `✓`, and the first exercise panel shows `FALLBACK_NOTE` again, so earlier cells re-ran after the restart.
 
-- [ ] **Step 7: Build and run the smoke test locally**
+- [x] **Step 7: Build and run the smoke test locally**
 
 ```bash
 uv run python scripts/convert_to_notebooks.py --prepare-site   # adds badges + fallback cells IN PLACE
@@ -486,12 +486,12 @@ NMA_E2E_URL=http://localhost:8765 uv run pytest -q tests/e2e
 
 Expected: 9 passed. `uv run playwright install chromium` first if needed. See the agent prompt for sandbox network notes.
 
-- [ ] **Step 8: Run the whole suite** (e2e skips without the env var)
+- [x] **Step 8: Run the whole suite** (e2e skips without the env var)
 
 Run: `uv run pytest -q && node --test tests/js/*.test.mjs`
 Expected: all pass, e2e skipped
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add plugins/cells/cells.mjs plugins/nma.mjs myst.yml _static/custom.css requirements.txt tutorials/W2D1_Examples/W2D1_Tutorial3.md tests/js/cells.test.mjs tests/e2e

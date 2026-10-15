@@ -59,11 +59,11 @@ test('statusText', () => {
 
 import { PageRuntime, pageRuntime, ensureThebeLoaded } from '../../plugins/cells/src/runtime.mjs';
 
-function fakeThebe({ failOn = [] } = {}) {
+function fakeThebe({ failOn = [], ename = 'NotImplementedError' } = {}) {
   const log = [];
   const cells = new Map();
   let count = 0;
-  const session = { kernel: { restart: async () => log.push(['restart']) } };
+  const session = {};
   const api = {
     makeEvents: () => ({}),
     makeConfiguration: (opts) => ({ opts, mathjax: {} }),
@@ -72,7 +72,10 @@ function fakeThebe({ failOn = [] } = {}) {
         log.push(['connect']);
         await new Promise((r) => setTimeout(r, 5));
       },
-      startNewSession: async () => session,
+      startNewSession: async () => {
+        log.push(['session']);
+        return session;
+      },
       shutdownAllSessions: async () => log.push(['shutdown']),
       dispose: () => log.push(['dispose']),
     }),
@@ -85,11 +88,11 @@ function fakeThebe({ failOn = [] } = {}) {
           async execute(src) {
             log.push(['exec', b.id, src]);
             this.executionCount = ++count;
-            return failOn.includes(b.id) ? { error: [{ ename: 'NotImplementedError' }] } : {};
+            return failOn.includes(b.id) ? { error: [{ ename }] } : {};
           },
         });
       }
-      return { attachSession: () => {}, getCellById: (id) => cells.get(id) };
+      return { attachSession: (s) => log.push(['attachSession', s]), getCellById: (id) => cells.get(id) };
     },
   };
   return { api, log };
@@ -159,6 +162,14 @@ test('an earlier error stops the run', async () => {
   assert.ok(events.some((e) => e.index === 1 && e.state === 'error'));
 });
 
+test("thebe's <class 'X'> exception names are normalised", async () => {
+  const { rt } = setup({ failOn: ['nma-cell-1'], ename: "<class 'NotImplementedError'>" });
+  const events = [];
+  rt.subscribe((e) => events.push(e));
+  await rt.run(1, 'a = 1');
+  assert.equal(events.find((e) => e.state === 'error').error.ename, 'NotImplementedError');
+});
+
 test('concurrent runs boot once and run each earlier cell once, in call order', async () => {
   const { rt, execs, log } = setup();
   const order = [];
@@ -198,11 +209,12 @@ test('register after boot attaches immediately', async () => {
   assert.ok(log.some((e) => e[0] === 'attach' && e[1] === 'nma-cell-2' && e[2] === el));
 });
 
-test('restart clears ran and restarts the kernel', async () => {
+test('restart clears ran and starts a fresh session', async () => {
   const { rt, execs, log } = setup();
   await rt.run(1, 'a = 1');
   await rt.restart();
-  assert.ok(log.some((e) => e[0] === 'restart'));
+  assert.ok(log.some((e) => e[0] === 'shutdown'));
+  assert.equal(log.filter((e) => e[0] === 'session').length, 2);
   await rt.run(1, 'a = 1');
   assert.equal(execs().filter(([id]) => id === 'nma-cell-0').length, 2);
 });
@@ -232,4 +244,90 @@ test('dispose waits for a pending boot', async () => {
 test('ensureThebeLoaded resolves at once when the globals exist', async () => {
   setup();
   await ensureThebeLoaded('https://x.org/build/p.mjs');
+});
+
+// ------------------------------------------------------------------ plugin
+
+import { buildBrowserPage, buildColabPage } from '../../plugins/cells/cells.mjs';
+import { notebookUrls } from '../../plugins/nma.mjs';
+
+const t = (value) => ({ type: 'text', value });
+const p = (value) => ({ type: 'paragraph', children: [t(value)] });
+const code = (value, tags) => ({
+  type: 'block',
+  kind: 'notebook-code',
+  ...(tags ? { data: { tags } } : {}),
+  children: [{ type: 'code', lang: 'python', executable: true, value }, { type: 'outputs', children: [] }],
+});
+const widgets = (tree, cls) => {
+  const found = [];
+  const walk = (n) => {
+    if (n.type === 'anywidget' && n.class === cls) found.push(n);
+    (n.children ?? []).forEach(walk);
+  };
+  walk(tree);
+  return found;
+};
+
+test('buildBrowserPage: manifest, panels, hidden cells without a panel', () => {
+  const intro = p('intro');
+  const tree = {
+    type: 'root',
+    children: [
+      { type: 'block', children: [intro] },
+      code('import x', ['remove-cell']),
+      code('a = 1'),
+      code(EXERCISE),
+      code('plt.plot()', ['hide-input']),
+    ],
+  };
+  assert.equal(buildBrowserPage(tree), 4);
+  const [runtime] = widgets(tree, 'nma-cells-runtime');
+  assert.equal(tree.children[0].children[0], runtime);
+  assert.deepEqual(runtime.model.cells.map((c) => c.mode), ['hidden', 'edit', 'edit', 'collapsed']);
+  assert.deepEqual(runtime.model.cells.map((c) => c.exercise), [false, false, true, false]);
+  assert.deepEqual(runtime.model.cells.map((c) => c.index), [0, 1, 2, 3]);
+  const panels = widgets(tree, 'nma-cell');
+  assert.deepEqual(panels.map((w) => w.id), ['nma-cell-1', 'nma-cell-2', 'nma-cell-3']);
+  assert.equal(panels[0].esm, '/plugins/cells/dist/panel.mjs');
+  assert.equal(panels[0].css, '/plugins/cells/cells.css');
+  assert.equal(runtime.esm, '/plugins/cells/dist/runtime-widget.mjs');
+  assert.equal(runtime.css, '/plugins/cells/page.css');
+  assert.ok(!JSON.stringify(tree).includes('notebook-code'));
+  assert.ok(JSON.stringify(tree).includes('intro'));
+});
+
+test('buildBrowserPage finds nested cells and keeps their order', () => {
+  const tree = {
+    type: 'root',
+    children: [code('first'), { type: 'container', children: [code('second'), code('third')] }],
+  };
+  assert.equal(buildBrowserPage(tree), 3);
+  const [runtime] = widgets(tree, 'nma-cells-runtime');
+  assert.deepEqual(runtime.model.cells.map((c) => c.code), ['first', 'second', 'third']);
+  assert.deepEqual(widgets(tree, 'nma-cell').map((w) => w.id), ['nma-cell-0', 'nma-cell-1', 'nma-cell-2']);
+});
+
+test('buildColabPage adds a banner and keeps the code blocks', () => {
+  const tree = { type: 'root', children: [code('a = 1')] };
+  buildColabPage(tree, { colabUrl: 'https://colab/x', kaggleUrl: 'https://kaggle/x' });
+  const banner = tree.children[0].children[0];
+  assert.equal(banner.type, 'admonition');
+  assert.equal(banner.kind, 'important');
+  assert.equal(banner.children[0].children[0].value, 'Do this tutorial in Colab');
+  const links = banner.children[1].children.filter((c) => c.type === 'link');
+  assert.deepEqual(links.map((l) => l.url), ['https://colab/x', 'https://kaggle/x']);
+  assert.ok(tree.children.some((c) => c.kind === 'notebook-code'));
+  assert.equal(widgets(tree, 'nma-cell').length, 0);
+});
+
+test('notebookUrls matches make_badge_html', () => {
+  const { colabUrl, kaggleUrl } = notebookUrls(join(process.cwd(), 'tutorials/W2D1_Examples/W2D1_Tutorial1.md'));
+  assert.equal(
+    colabUrl,
+    'https://colab.research.google.com/github/neuromatch/course-template/blob/notebooks-branch/notebooks/W2D1_Examples/W2D1_Tutorial1.ipynb',
+  );
+  assert.ok(
+    kaggleUrl.endsWith('raw.githubusercontent.com/neuromatch/course-template/notebooks-branch/notebooks/W2D1_Examples/W2D1_Tutorial1.ipynb'),
+  );
 });

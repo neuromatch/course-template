@@ -126,6 +126,20 @@ appendix):
 - Power button selector: `.myst-jp-nb-toolbar-power`. Theme toggle sets
   `html.light` / `html.dark`.
 
+### Implementation notes (2026-10-16, found while building)
+
+- **Restart:** `session.kernel.restart()` and `session.restart()` both leave
+  thebe-lite's notebook with "no kernel" (verified with Playwright against
+  thebe 0.5.0). `PageRuntime.restart()` instead calls
+  `server.shutdownAllSessions()`, then `server.startNewSession(rendermime)` and
+  `nb.attachSession(session)`. The execution count starts at 1 again.
+- **Exception names:** thebe-lite reports `error[0].ename` as
+  `<class 'NotImplementedError'>`. `PageRuntime.exec` strips the wrapper.
+- **Selectors in tests:** anywidget's shadow-root container has the same class
+  as its host (`nma-cell`), so Playwright's piercing `.nma-cell` matches twice
+  per cell. The e2e tests use `css:light=.nma-cell`.
+- **esbuild** needs `--out-extension:.js=.mjs` for `dist/*.mjs`.
+
 ## Architecture
 
 ```

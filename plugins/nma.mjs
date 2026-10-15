@@ -136,7 +136,7 @@ const solutionDirective = (name, doc) => ({
 });
 
 let cachedRepo;
-function githubRepo() {
+export function githubRepo() {
   if (cachedRepo === undefined) {
     let config = '';
     try {
@@ -151,12 +151,24 @@ function githubRepo() {
 }
 
 // tutorials/W2D1_Examples/W2D1_Tutorial1.md -> { relDir: 'W2D1_Examples', stem: 'W2D1_Tutorial1' }
-function pageLocation(filePath) {
+export function pageLocation(filePath) {
   const rel = relative(process.cwd(), filePath).split(sep).join('/');
   if (!rel.startsWith('tutorials/')) return null;
   const parts = rel.slice('tutorials/'.length).split('/');
   const stem = parts.pop().replace(/\.[^.]+$/, '');
   return { relDir: parts.join('/'), stem };
+}
+
+/** Colab and Kaggle URLs of a page's generated notebook (same as make_badge_html in convert_to_notebooks.py). */
+export function notebookUrls(filePath) {
+  const repo = githubRepo();
+  const location = pageLocation(filePath);
+  if (!repo || !location) return { colabUrl: 'https://colab.research.google.com/', kaggleUrl: 'https://www.kaggle.com/' };
+  const path = ['notebooks', location.relDir, `${location.stem}.ipynb`].filter(Boolean).join('/');
+  return {
+    colabUrl: `https://colab.research.google.com/github/${repo}/blob/${NOTEBOOKS_BRANCH}/${path}`,
+    kaggleUrl: `https://kaggle.com/kernels/welcome?src=https://raw.githubusercontent.com/${repo}/${NOTEBOOKS_BRANCH}/${path}`,
+  };
 }
 
 function solutionUrl(repo, relDir, filename) {
