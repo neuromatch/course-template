@@ -8,6 +8,8 @@ A course template built with [JupyterBook v2 (MyST)](https://mystmd.org).
 
 Fork this repository and follow the instructions in the book itself.
 Each day of this template teaches you how to build and publish your course.
+For scrollytelling pages (a pinned stage of figures and live Python beside
+scrolling text), see W1D2 Tutorial 6, "Scrollytelling Pages".
 
 ## After forking
 

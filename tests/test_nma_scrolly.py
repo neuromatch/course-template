@@ -299,3 +299,31 @@ def test_render_skips_non_scrolly_pages(tmp_path, monkeypatch):
     _render_tree(tmp_path, PLAIN_FRONT + "\n```{code-cell} python\n1 / 0\n```\n")
     assert nma_scrolly.render_all() == 0
     assert not (tmp_path / "_build" / "scrolly").exists()
+
+
+# --- the real scrolly pages ---------------------------------------------------------
+
+REPO = Path(__file__).resolve().parent.parent
+DOC_PAGE = REPO / "tutorials" / "W1D2_InteractiveContent" / "W1D2_Tutorial6.md"
+EXAMPLE_PAGE = REPO / "tutorials" / "W2D1_Examples" / "W2D1_Tutorial2.md"
+
+
+@pytest.mark.parametrize("page", [DOC_PAGE, EXAMPLE_PAGE], ids=lambda p: p.stem)
+def test_real_scrolly_pages_are_valid(page):
+    text = page.read_text()
+    assert is_scrolly(text)
+    assert validate(text) == []
+
+
+def test_doc_page_examples_are_literal():
+    # The how-to page shows {step}/{stage}/{code-cell} syntax inside ````markdown
+    # fences. Only its real markers may be found, and flattening must keep the
+    # examples intact.
+    text = DOC_PAGE.read_text()
+    real_steps = [m for m in find_markers(text) if m.kind == nma_scrolly.STEP]
+    assert len(real_steps) == 19      # the page's own steps, none from the examples
+    assert text.count(":::{step}") > 19  # ...although the examples contain more
+    flat = flatten_for_notebook(text)
+    assert "````markdown\n---\ntitle: \"Tutorial 2: My topic\"\nlayout: scrolly" in flat
+    assert ":::{step} hero\n:::\n# My topic" in flat  # example kept verbatim
+

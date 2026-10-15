@@ -275,3 +275,12 @@ test('the real myst.yml sets nma.scrolly.pyodide_url', () => {
   const text = readFileSync(join(here, '..', '..', 'myst.yml'), 'utf8');
   assert.match(readNmaConfig(text).scrolly?.pyodide_url ?? '', /^https:\/\/.+\/$/);
 });
+
+test('the how-to page: only its real exercise is paired, examples are ignored', () => {
+  const text = readFileSync(join(here, '..', '..', 'tutorials', 'W1D2_InteractiveContent', 'W1D2_Tutorial6.md'), 'utf8');
+  assert.ok(isScrolly(text));
+  const pairs = exercisePairs(text);
+  assert.equal(pairs.length, 1);
+  assert.match(pairs[0].exercise, /^def cube\(x\):/);
+  assert.equal(pairs[0].solution, 'def cube(x):\n  return x ** 3');
+});

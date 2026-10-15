@@ -22,3 +22,9 @@ title: Further Reading
 - [Jupytext: MyST Markdown notebooks](https://jupytext.readthedocs.io/en/latest/formats-markdown.html)
 - [Packages built in Pyodide](https://pyodide.org/en/stable/usage/packages-in-pyodide.html)
 - [micropip documentation](https://micropip.pyodide.org)
+
+## Scrollytelling pages
+
+- [MyST plugins guide](https://mystmd.org/guide/plugins) (how `plugins/scrolly/scrolly.mjs` adds directives and transforms)
+- [anywidget](https://anywidget.dev) (the widget format the stage panels use)
+- [Pyodide documentation](https://pyodide.org/en/stable/) (the Python runtime behind the panels)

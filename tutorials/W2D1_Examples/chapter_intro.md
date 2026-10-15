@@ -13,6 +13,11 @@ from the NMA Computational Neuroscience course. All elements -- videos, exercise
 solutions, interactive widgets, and feedback widgets -- have been preserved and
 reformatted into MyST syntax.
 
+**Tutorial 2** is the same tutorial as a scrollytelling page: a pinned stage of
+figures, videos and live Python beside text cards that scroll past. Open the two
+side by side to compare the layouts, and see
+[W1D2 Tutorial 6](../W1D2_InteractiveContent/W1D2_Tutorial6.md) for how it is built.
+
 ## Learning objectives
 
 By the end of this tutorial you will be able to:

@@ -23,10 +23,18 @@ scripts/
   nma_media.py              # Validates {nma-video}/{nma-slides}, expands them into notebook cells
   nma_solutions.py          # Validates {nma-solution}/{nma-explanation}, builds student/instructor notebooks
   nma_feedback.py           # Validates {nma-feedback} and the nma: settings, writes feedback cells
+  nma_scrolly.py            # Scrolly pages: validates, flattens for notebooks, --render pre-renders outputs
 plugins/
   nma.mjs                   # MyST plugin: media -> static embeds, solutions -> links, feedback -> widget
   nma-feedback.mjs          # Browser-side feedback widget (anywidget ESM), posts to datatops
+  scrolly/
+    scrolly.mjs             # MyST plugin: {step}/{stage} markers, stage/card layout on `layout: scrolly` pages
+    engine.mjs              # Browser: scroll tracking, active stage view, progress bar, Python pill
+    runnable.mjs            # Browser: runnable code panels on one shared Pyodide runtime
+    scrolly.css             # Page layout (attached to the engine widget, copied into <head>)
+    runnable.css            # Panel styles (inside each widget's shadow root)
 tests/                       # pytest for scripts/; tests/js/ is node --test for plugins/
+  fixtures/scrolly/          # cell_keys.json, params.json: shared by Python and JS tests
 _wheels/                     # Pre-built .whl files for Pyodide (CORS-friendly hosting)
 _static/
   custom.css                 # Custom CSS for the book theme
@@ -48,6 +56,7 @@ notebooks/                   # Generated files (gitignored, lives on notebooks-b
 - **`scripts/nma_media.py`** -- the Python side of the same directives. It validates them and, after jupytext, replaces each one with a hidden NMA `# @title Video …` / `# @title Tutorial slides` code cell in the generated notebook. Its URL templates must stay in sync with `plugins/nma.mjs`.
 - **`scripts/nma_solutions.py`** -- the Python side of `{nma-solution}`/`{nma-explanation}`. It validates them, splits each generated notebook into student and instructor versions, writes the solution files, and builds the site's run-all fallback cell. Its file naming and URL rules must stay in sync with `plugins/nma.mjs`.
 - **`scripts/nma_feedback.py`** / **`plugins/nma-feedback.mjs`** -- `{nma-feedback}`. The Python side validates the directive and the `nma:` block and writes the notebook feedback cells. The JS widget posts to datatops from the browser. `read_nma_block()` (Python) and `readNmaConfig()` (in `nma.mjs`) are two copies of the same line-based reader and must stay in sync. Shared fixtures in `tests/fixtures/nma_config/` test both.
+- **`scripts/nma_scrolly.py`** / **`plugins/scrolly/`** -- scrollytelling pages (`layout: scrolly`). The Python side validates pages, flattens them before jupytext (`flatten_for_notebook`), turns `# @param` cells into `widgets.interact` (`params_to_interact`), and pre-renders outputs with nbclient (`--render`). The plugin lays the page out and turns code cells into runnable Pyodide panels. `is_scrolly`/`isScrolly`, `cell_key`/`cellKey` and `parse_params`/`parseParams` are two copies of the same rules, tested against `tests/fixtures/scrolly/`.
 - **`requirements.txt`** -- Python dependencies: mystmd, jupytext, numpy, matplotlib, etc.
 - **`.nvmrc`** -- Node.js version (22). MyST requires Node >= 20.
 
@@ -82,6 +91,8 @@ A page without `kernelspec` is static (chapter intros, further reading, bonus pa
 - **Exercises need solutions.** Every top-level exercise code cell (an uncommented `raise NotImplementedError` line) must be directly followed by an `{nma-solution}`, and every `{nma-solution}` must directly follow an exercise. No `# to_remove` markers may be left in code cells. Solution bodies must be a single ```` ```python ```` fence, explanations can't be empty, and neither directive may be nested or take options.
 - **Media directives must be valid.** Every top-level `{nma-video}` needs a title and at least one of `:youtube:`/`:bilibili:`/`:osf:`. Every `{nma-slides}` needs an OSF id. Unknown options, body text and unclosed blocks are errors, reported with file and line.
 - **Feedback uses the directive.** `{nma-feedback}` takes a section name (`[A-Za-z0-9_]+`, unique per page), at the top level, with no options or body. No code cell may call `content_review(`, import `vibecheck`, or be an "Import feedback gadget" cell. If any page uses `{nma-feedback}`, `myst.yml` must have `nma.feedback.{url,project,user_key}`, and the `nma:` block must be plain `key: value` lines with string values.
+
+- **Scrolly pages must be valid.** `{step}`/`{stage}` only on pages with `layout: scrolly`, at the top level. `{step}` takes no argument or `hero`, only `:section:`/`:kicker:`, and no body. At most one `{stage}` per step (options `:style: list`, `:class:`), none before the first step. A `layout: scrolly` page needs at least one `{step}`. On scrolly pages, every `# @param` line must parse (see "Scrollytelling pages").
 
 There is no Binder, JupyterHub, or remote-kernel support. Code runs in the browser via JupyterLite, and Colab/Kaggle (via the generated notebooks) is the fallback for anything Pyodide can't run.
 
@@ -165,6 +176,37 @@ Markdown answer to a discussion question, math allowed: $a < 0$.
 - **Student notebook:** the same link as a markdown cell. **Instructor notebook** (`notebooks/<Day>/instructor/`): the solution as a code cell starting with `# Solution`, and the explanation as markdown under **Explanation**.
 - **Run-all fallback (site only):** `--prepare-site` adds a hidden `remove-cell` setup cell to pages with exercises. It registers an IPython input transformer: while a cell still has an uncommented `raise NotImplementedError` line, the matching reference solution runs instead (exact match, else the closest by `difflib` ≥ 0.6), so "Run all" in JupyterLite doesn't stop. The solutions are hidden, not secret.
 
+### Scrollytelling pages
+
+Opt in with `layout: scrolly` in the frontmatter (MyST warns `extra key ignored: layout`, which is expected). The page stays a flat tutorial. `{step}` markers split it into steps, and each step is a **card** (prose) plus a pinned **stage**. The how-to page is `tutorials/W1D2_InteractiveContent/W1D2_Tutorial6.md` (itself a scrolly page), and `tutorials/W2D1_Examples/W2D1_Tutorial2.md` is a full example.
+
+```markdown
+:::{step} hero
+:kicker: neuromatch academy
+:::
+# Title
+
+:::{step}
+:section: One dimension
+:kicker: Coding Exercise 1
+:::
+Card text. Code cells, images, figures, {nma-video}/{nma-slides} after the
+marker go on the stage; prose, math, solution links and {nma-feedback} on the card.
+
+:::{stage}
+:style: list
+1. Stage-only markdown
+:::
+```
+
+- A step with nothing for the stage keeps the previous stage. A `hero` step has no card. Content before the first `{step}` is a normal page header.
+- Code cells on the stage: untagged = editable panel, `hide-input` = code collapsed, `remove-input` = output only, `remove-cell` = invisible (runs before the first visible cell).
+- Panels share one Pyodide runtime (`nma.scrolly.pyodide_url` in `myst.yml`). Running a cell first runs earlier unrun cells. An earlier unfinished exercise runs its `{nma-solution}` instead. JupyterLite's power button is hidden on these pages.
+- Interactive demos use Colab form syntax, one top-level assignment per line: `a = -0.5  # @param {type:"slider", min:-2.5, max:1.5, step:0.25}` (`step` defaults to 1) or `option = 1  # @param [1, 2, 3, 4]` (the default must be in the list). Never use `@widgets.interact` on scrolly pages. Notebooks get `widgets.interact` automatically.
+- **Never hand-write outputs.** `scripts/nma_scrolly.py --render` runs each scrolly page's instructor notebook (exercise cells removed, `# @param` at defaults, cwd = page dir) and writes `_build/scrolly/<relDir>/<stem>.json` = `{cell_key: {stdout, images, error}}`. A raising cell fails CI with `file:line`. Exercise cells get no starting output.
+- Rules shared by Python and JS (keep in sync, fixtures in `tests/fixtures/scrolly/`): `cell_key` = first 16 hex chars of sha256 of the code with CRLF -> LF, trailing spaces/tabs stripped per line, outer blank lines stripped. The `# @param` grammar above, parsed to `{name, kind, value, min, max, step, options}`. The render file path.
+- Notebooks: markers are removed (a `:kicker:` becomes an italic line), `{stage}` blocks are unwrapped, and `# @param` cells become `widgets.interact`. Avoid "on the right"/"on the stage" in card text, since the notebook shows it too.
+
 ### Code cell tags
 
 ```markdown
@@ -210,6 +252,8 @@ uv run myst start          # Dev server at localhost:3000
 uv run myst build --html   # Full build to _build/html/
 ```
 
+For scrolly pages, run `uv run python scripts/nma_scrolly.py --render` first so the panels show real outputs (otherwise they show "Run to see output").
+
 ### Notebook conversion (local, optional)
 
 ```bash
@@ -224,7 +268,7 @@ This writes only to `notebooks/` (gitignored) and never modifies `.md` files. Th
 ### CI pipelines
 
 1. **`generate-notebooks.yml`** -- triggers on push to `main` when `tutorials/`, `scripts/`, `tests/`, `myst.yml`, or `requirements.txt` change. Runs `pytest`, converts `.md` -> `.ipynb` (expanding media directives into code cells), pushes to `notebooks-branch`.
-2. **`publish-book.yml`** -- triggers after `generate-notebooks.yml` completes or on push to `main` (including changes under `plugins/`). Runs `node --test tests/js/*.test.mjs`, then `convert_to_notebooks.py --prepare-site` (badges plus the exercise fallback cell) on its throwaway checkout, then builds the MyST book and deploys to GitHub Pages.
+2. **`publish-book.yml`** -- triggers after `generate-notebooks.yml` completes or on push to `main` (including changes under `plugins/` and `scripts/`). Runs `node --test tests/js/*.test.mjs`, then `nma_scrolly.py --render` (pre-renders scrolly pages), then `convert_to_notebooks.py --prepare-site` (badges plus the exercise fallback cell) on its throwaway checkout, then builds the MyST book and deploys to GitHub Pages.
 3. **`build-pyodide-wheels.yml`** -- manual trigger (`workflow_dispatch`). Builds pure-Python wheels for packages that lack them on PyPI, uploads as GitHub Release assets.
 
 ### Adding a new day
@@ -314,3 +358,5 @@ kernelspec:
 9. Add day directory, `chapter_intro.md`, `further_reading.md`
 10. Register in `myst.yml` TOC
 11. Test: `myst build --html` -- check for `⛔` errors
+
+For a scrollytelling version, follow the "Converting an existing tutorial" checklist in W1D2 Tutorial 6 (merge setup into one `remove-cell`, add `{step}` markers, rewrite demos with `# @param`, run `--render`).
