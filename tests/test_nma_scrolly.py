@@ -147,3 +147,73 @@ def test_bad_param_reported_with_page_line():
 def test_param_errors_inside_exercise_cells_too():
     text = FRONT + "\n:::{step}\n:::\n\n```{code-cell} python\na = 1  # @param [3]\nraise NotImplementedError\n```\n"
     assert any("# @param" in e for e in validate(text))
+
+
+# --- Task 2: notebooks ----------------------------------------------------------
+
+from nma_scrolly import flatten_for_notebook, params_to_interact, rewrite_notebook_params
+
+
+def test_flatten_removes_markers_and_unwraps_stage():
+    flat = flatten_for_notebook(PAGE)
+    assert "{step}" not in flat and "{stage}" not in flat
+    assert ":section:" not in flat and ":style:" not in flat
+    assert "*neuromatch academy*\n\n# Title" in flat
+    assert "*Exercise 1*\n\n### Heading" in flat
+    assert "\n1. one\n2. two\n" in flat
+    assert "More prose." in flat
+    # code cells and frontmatter are untouched
+    assert "```{code-cell} python\na = 1  # @param [1, 2]\nprint(a)\n```" in flat
+    assert flat.startswith(FRONT)
+
+
+def test_flatten_leaves_other_pages_and_examples_alone():
+    plain = PLAIN_FRONT + "\n:::{note}\nx\n:::\n"
+    assert flatten_for_notebook(plain) == plain
+    example = FRONT + "\n:::{step}\n:::\n\n````markdown\n:::{step}\n:kicker: K\n:::\n````\n"
+    assert "````markdown\n:::{step}\n:kicker: K\n:::\n````" in flatten_for_notebook(example)
+
+
+DEMO = '''# @title Demo
+# @markdown Move the sliders.
+a = -0.5   # @param {type:"slider", min:-2.5, max:1.5, step:0.25}
+n = 3      # @param {type:"slider", min:1, max:10}
+option = 'x'  # @param ['x', 'y']
+calls.append((a, n, option))'''
+
+
+def test_params_to_interact_shape():
+    code = params_to_interact(DEMO)
+    assert code.startswith("# @title Demo\n# @markdown Move the sliders.\nimport ipywidgets as widgets\n")
+    assert "a=widgets.FloatSlider(value=-0.5, min=-2.5, max=1.5, step=0.25" in code
+    assert "n=widgets.IntSlider(value=3, min=1, max=10, step=1" in code
+    assert "option=widgets.Dropdown(options=['x', 'y'], value='x')" in code
+    assert "def _demo(a, n, option):\n    calls.append((a, n, option))" in code
+    assert "@param" not in code
+
+
+def test_params_to_interact_runs_with_defaults():
+    calls = []
+    exec(params_to_interact(DEMO), {"calls": calls})
+    assert calls == [(-0.5, 3, "x")]
+
+
+def test_params_to_interact_without_params_is_unchanged():
+    assert params_to_interact("x = 1\nprint(x)") == "x = 1\nprint(x)"
+
+
+def test_params_to_interact_empty_body():
+    code = params_to_interact("a = 1  # @param [1, 2]")
+    assert code.rstrip().endswith("def _demo(a):\n    pass")
+
+
+def test_rewrite_notebook_params():
+    nb = {"cells": [
+        {"cell_type": "markdown", "source": ["a = 1  # @param [1, 2]"]},
+        {"cell_type": "code", "source": ["a = 1  # @param [1, 2]\n", "print(a)"], "metadata": {}},
+        {"cell_type": "code", "source": "print(2)", "metadata": {}},
+    ]}
+    assert rewrite_notebook_params(nb) == 1
+    assert nb["cells"][0]["source"] == ["a = 1  # @param [1, 2]"]
+    assert "widgets.interact" in "".join(nb["cells"][1]["source"])
+    assert nb["cells"][2]["source"] == "print(2)"

@@ -128,3 +128,88 @@ def test_build_notebooks_expands_feedback(tmp_path, monkeypatch):
         assert "feedback_prefix = 'W9D9_T1'" in sources[1]
         assert sources[-1] == '# @title Submit your feedback\ncontent_review(f"{feedback_prefix}_Some_Video")'
         assert not any("{nma-feedback}" in s for s in sources)
+
+
+SCROLLY_PAGE = """---
+title: T
+layout: scrolly
+kernelspec:
+  name: python3
+  display_name: Python 3
+---
+
+:::{step} hero
+:kicker: Hello
+:::
+# Title
+
+:::{step}
+:::
+Prose.
+
+:::{stage}
+- objective
+:::
+
+```{code-cell} python
+:tags: [hide-input]
+a = 1  # @param [1, 2]
+print(a)
+```
+
+```{code-cell} python
+def f():
+    raise NotImplementedError("x")
+```
+
+::::{nma-solution}
+```python
+def f():
+    return 1
+```
+::::
+"""
+
+
+def test_build_notebooks_flattens_scrolly_pages(tmp_path, monkeypatch):
+    import json
+
+    from convert_to_notebooks import build_notebooks, convert_md_to_notebook
+
+    monkeypatch.chdir(tmp_path)
+    page = tmp_path / "tutorials" / "D" / "T.md"
+    page.parent.mkdir(parents=True)
+    page.write_text(SCROLLY_PAGE)
+    out = tmp_path / "notebooks" / "D" / "T.ipynb"
+
+    convert_md_to_notebook(page.relative_to(tmp_path), out, dry_run=False)
+    build_notebooks(page.relative_to(tmp_path), out.relative_to(tmp_path), "org/repo", False, None)
+
+    assert page.read_text() == SCROLLY_PAGE  # source untouched
+    student = json.loads(out.read_text())["cells"]
+    text = "\n".join("".join(c["source"]) for c in student)
+    assert "{step}" not in text and "{stage}" not in text
+    assert "*Hello*" in text and "- objective" in text
+    assert "@widgets.interact(a=widgets.Dropdown(options=[1, 2], value=1))" in text
+    assert "Click for solution" in text
+    instructor = json.loads((out.parent / "instructor" / out.name).read_text())["cells"]
+    assert any("".join(c["source"]).startswith("# Solution") for c in instructor)
+
+
+def test_prepare_site_skips_fallback_on_scrolly_pages(tmp_path):
+    page = tmp_path / "T.md"
+    page.write_text(SCROLLY_PAGE)
+    prepare_site_md(page, "notebooks/D/T.ipynb", "org/repo", dry_run=False)
+    text = page.read_text()
+    assert "colab-badge.svg" in text
+    assert FALLBACK_SENTINEL not in text
+
+
+def test_validate_content_reports_scrolly_errors(tmp_path, monkeypatch):
+    from convert_to_notebooks import validate_content
+
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "tutorials").mkdir()
+    (tmp_path / "tutorials" / "P.md").write_text("---\ntitle: P\n---\n\n:::{step}\n:::\n")
+    errors = validate_content()
+    assert len(errors) == 1 and "P.md: line 5:" in errors[0] and "layout: scrolly" in errors[0]

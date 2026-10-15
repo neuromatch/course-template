@@ -274,3 +274,83 @@ def validate(text: str) -> list[str]:
             except ValueError as exc:
                 errors.append(f"line {offset + number + 1}: # @param {exc}")
     return errors
+
+
+# --- notebooks ---------------------------------------------------------------------
+
+def flatten_for_notebook(text: str) -> str:
+    """
+    The page as a linear tutorial, for jupytext. {step} markers are removed
+    (a :kicker: becomes an italic line) and {stage} blocks are unwrapped into
+    plain markdown. Other pages are returned unchanged. Assumes validate() passed.
+    """
+    if not is_scrolly(text):
+        return text
+    lines = text.split("\n")
+    for b in reversed([m for m in find_markers(text) if not m.nested and m.end != -1]):
+        if b.kind == STEP:
+            kicker = b.options.get("kicker", "").strip()
+            replacement = [f"*{kicker}*", ""] if kicker else []
+        else:
+            replacement = ["", *b.body_lines, ""]
+        lines[b.start:b.end + 1] = replacement
+    return "\n".join(lines)
+
+
+FORM_LINE_RE = re.compile(r"^#\s*@(title|markdown)\b")
+
+
+def _widget(p: dict) -> str:
+    if p["kind"] == "dropdown":
+        return f"widgets.Dropdown(options={p['options']!r}, value={p['value']!r})"
+    numbers = [p[k] for k in ("value", "min", "max", "step")]
+    cls = "IntSlider" if all(isinstance(v, int) and not isinstance(v, bool) for v in numbers) else "FloatSlider"
+    return (f"widgets.{cls}(value={p['value']!r}, min={p['min']!r}, max={p['max']!r}, "
+            f"step={p['step']!r}, continuous_update=False)")
+
+
+def params_to_interact(code: str) -> str:
+    """
+    Turn a cell with `# @param` lines into an ipywidgets `interact` demo for
+    notebooks. Leading `# @title` / `# @markdown` lines stay on top so Colab
+    still shows the cell as a form. Cells without params are returned as is.
+    """
+    params = parse_params(code)
+    if not params:
+        return code
+    lines = code.replace("\r\n", "\n").split("\n")
+    head = []
+    while lines and FORM_LINE_RE.match(lines[0]):
+        head.append(lines.pop(0))
+    body = [line for line in lines if not is_param_line(line)]
+    while body and not body[0].strip():
+        body.pop(0)
+    while body and not body[-1].strip():
+        body.pop()
+    body = [f"    {line}" if line.strip() else "" for line in body] or ["    pass"]
+    controls = ", ".join(f"{p['name']}={_widget(p)}" for p in params)
+    names = ", ".join(p["name"] for p in params)
+    return "\n".join([
+        *head,
+        "import ipywidgets as widgets",
+        "",
+        "",
+        f"@widgets.interact({controls})",
+        f"def _demo({names}):",
+        *body,
+    ])
+
+
+def rewrite_notebook_params(nb: dict) -> int:
+    """Apply params_to_interact to every code cell in place. Returns the count."""
+    count = 0
+    for cell in nb["cells"]:
+        if cell.get("cell_type") != "code":
+            continue
+        source = cell.get("source", "")
+        text = "".join(source) if isinstance(source, list) else source
+        new = params_to_interact(text)
+        if new != text:
+            cell["source"] = new.splitlines(keepends=True)
+            count += 1
+    return count

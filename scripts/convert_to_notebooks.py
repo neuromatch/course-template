@@ -7,7 +7,9 @@ Usage:
 
 Default mode (used by generate-notebooks.yml). For each .md file in tutorials/
 that has a kernelspec frontmatter:
-  1. Convert to .ipynb via jupytext
+  1. Convert to .ipynb via jupytext. Scrolly pages (`layout: scrolly`) are
+     flattened first: {step} markers removed, {stage} blocks unwrapped, and
+     `# @param` cells become widgets.interact demos (scripts/nma_scrolly.py)
   2. Replace {nma-video}/{nma-slides} directives with NMA code cells
      (scripts/nma_media.py)
   3. Replace {nma-feedback} directives with "Submit your feedback" cells and
@@ -26,7 +28,8 @@ inserting after the frontmatter:
   - the Colab + Kaggle badge HTML
   - for pages with exercises, a hidden setup cell that runs the reference
     solution when an unfinished exercise is executed, so "Run all" in
-    JupyterLite doesn't stop at the first exercise
+    JupyterLite doesn't stop at the first exercise (not on scrolly pages,
+    whose own runtime does this)
   Only run it on a throwaway checkout (CI). Never commit the result.
 
 Both modes first validate the content rules and exit non-zero on any violation:
@@ -40,6 +43,8 @@ Both modes first validate the content rules and exit non-zero on any violation:
   - {nma-feedback} directives must be valid, myst.yml must define
     nma.feedback if any page uses them, and no hand-written vibecheck
     feedback cells may be left
+  - {step}/{stage} markers and `# @param` lines must be valid
+    (scripts/nma_scrolly.py)
 
 The GitHub repo URL is read from myst.yml (project.github) so badge URLs update
 automatically when the template is forked.
@@ -52,11 +57,13 @@ import json
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 import yaml
 
 import nma_feedback
+import nma_scrolly
 import nma_solutions
 from nma_media import expand_notebook, find_directives, validate_directive
 
@@ -191,6 +198,8 @@ def validate_content(check_injected: bool = True) -> list[str]:
             errors.append(f"{path}: {problem}")
         for problem in nma_feedback.validate(text) + nma_feedback.legacy_cell_errors(text):
             errors.append(f"{path}: {problem}")
+        for problem in nma_scrolly.validate(text):
+            errors.append(f"{path}: {problem}")
         if not has_config and not config_problems and nma_feedback.find_directives(text):
             errors.append(
                 f"{path}: uses {{nma-feedback}} but myst.yml has no complete "
@@ -269,7 +278,9 @@ def prepare_site_md(
     body = FALLBACK_BLOCK_RE.sub("", body)
 
     header = [make_badge_html(notebook_rel_path, github_repo)]
-    pairs = nma_solutions.exercise_pairs(body)
+    # Scrolly pages don't run in JupyterLite; their runtime substitutes
+    # solutions itself (plugins/scrolly/runnable.mjs).
+    pairs = [] if nma_scrolly.is_scrolly(content) else nma_solutions.exercise_pairs(body)
     if pairs:
         header.append(nma_solutions.fallback_md_block(pairs))
         print(f"    Added run-all fallback for {len(pairs)} exercise(s)")
@@ -296,6 +307,30 @@ def make_badge_cell(notebook_rel_path: str, github_repo: str) -> dict:
     }
 
 
+def run_jupytext(md_file: Path, out_path: Path) -> subprocess.CompletedProcess:
+    """
+    Run jupytext on md_file. Scrolly pages are flattened into a temporary copy
+    first (nma_scrolly.flatten_for_notebook); the source is never modified.
+    """
+    text = md_file.read_text(encoding="utf-8")
+    with tempfile.TemporaryDirectory() as tmp:
+        source = md_file
+        if nma_scrolly.is_scrolly(text):
+            source = Path(tmp) / md_file.name
+            source.write_text(nma_scrolly.flatten_for_notebook(text), encoding="utf-8")
+        return subprocess.run(
+            [
+                sys.executable, "-m", "jupytext",
+                "--from", "md:myst",
+                "--to", "notebook",
+                "--output", str(out_path),
+                str(source),
+            ],
+            capture_output=True,
+            text=True,
+        )
+
+
 def convert_md_to_notebook(md_file: Path, out_path: Path, dry_run: bool) -> None:
     """Convert a MyST .md file to .ipynb using jupytext."""
     print(f"  Converting: {md_file} -> {out_path}")
@@ -303,17 +338,7 @@ def convert_md_to_notebook(md_file: Path, out_path: Path, dry_run: bool) -> None
         return
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    result = subprocess.run(
-        [
-            sys.executable, "-m", "jupytext",
-            "--from", "md:myst",
-            "--to", "notebook",
-            "--output", str(out_path),
-            str(md_file),
-        ],
-        capture_output=True,
-        text=True,
-    )
+    result = run_jupytext(md_file, out_path)
     if result.returncode != 0:
         print(f"  ERROR: jupytext failed for {md_file}", file=sys.stderr)
         print(result.stderr, file=sys.stderr)
@@ -353,6 +378,11 @@ def build_notebooks(source_file: Path, out_path: Path, github_repo: str, dry_run
     count = expand_notebook(nb)
     if count:
         print(f"  Expanded {count} video/slides directive(s)")
+
+    if nma_scrolly.is_scrolly(source_file.read_text(encoding="utf-8")):
+        count = nma_scrolly.rewrite_notebook_params(nb)
+        if count:
+            print(f"  Turned {count} # @param cell(s) into widgets.interact")
 
     if feedback_config is not None:
         prefix = nma_feedback.page_prefix(source_file.read_text(encoding="utf-8"), source_file.stem)
