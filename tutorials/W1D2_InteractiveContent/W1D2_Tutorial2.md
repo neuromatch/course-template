@@ -9,7 +9,7 @@ kernelspec:
 
 MyST renders interactive outputs from Altair, Plotly, and ipywidgets natively.
 These work both in the static build (pre-rendered from stored outputs) and live
-via JupyterLite when the power button is activated.
+via JupyterLite when you run the cell (▶ Run).
 
 ## Interactive Altair chart
 
@@ -40,7 +40,7 @@ points & bars
 
 ## ipywidgets slider
 
-With the JupyterLite kernel active, this slider is live and interactive.
+Once you run this cell, the slider is live and interactive.
 
 JupyterLite uses Pyodide (Python in WebAssembly), which requires packages to be
 loaded via `micropip` before importing. The setup cell below handles this — it is
@@ -112,5 +112,5 @@ On any other page in the book, embed this output with:
 ## Summary
 
 - Altair charts are interactive in the static build — no kernel needed
-- ipywidgets require the JupyterLite kernel to be active
+- ipywidgets need the cell to be run first (▶ Run)
 - Label outputs with `#| label: fig-name` to reuse them across pages

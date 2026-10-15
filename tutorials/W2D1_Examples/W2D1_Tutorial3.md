@@ -5,6 +5,7 @@ kernelspec:
   name: python3
   display_name: Python 3
 ---
+
 This page shows how an author marks a tutorial that is too heavy for the browser. Add `runtime: colab` to the frontmatter. The page then shows its code read-only, with a banner that links to Colab and Kaggle, instead of editable cells that can't run here.
 
 Use it for tutorials that need PyTorch, a GPU, large datasets or long training runs.

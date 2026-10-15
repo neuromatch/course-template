@@ -24,6 +24,7 @@ scripts/
   nma_solutions.py          # Validates {nma-solution}/{nma-explanation}, builds student/instructor notebooks
   nma_feedback.py           # Validates {nma-feedback} and the nma: settings, writes feedback cells
   nma_scrolly.py            # Scrolly pages: validates, flattens for notebooks, --render pre-renders outputs
+  nma_cells.py              # `runtime:` frontmatter (browser | colab): runtime_of + validation
 plugins/
   nma.mjs                   # MyST plugin: media -> static embeds, solutions -> links, feedback -> widget
   nma-feedback.mjs          # Browser-side feedback widget (anywidget ESM), posts to datatops
@@ -33,7 +34,15 @@ plugins/
     runnable.mjs            # Browser: runnable code panels on one shared Pyodide runtime
     scrolly.css             # Page layout (attached to the engine widget, copied into <head>)
     runnable.css            # Panel styles (inside each widget's shadow root)
+  cells/
+    cells.mjs               # MyST plugin: editable cells on browser pages, Colab banner on `runtime: colab` pages
+    src/model.mjs           # Pure helpers (modes, fallback marker, runtimeOf), unit-tested
+    src/runtime.mjs         # Browser: one thebe-lite kernel per page, run queue, restart
+    src/{editor,panel,runtime-widget}.mjs   # CodeMirror 6 editor, panel widget, hidden manifest widget
+    cells.css / page.css    # Panel styles (shadow root) / page rules (copied into <head>)
+    dist/                   # GENERATED esbuild bundles, committed (npm run build in plugins/cells)
 tests/                       # pytest for scripts/; tests/js/ is node --test for plugins/
+  e2e/                       # Playwright smoke test of the built site (needs NMA_E2E_URL)
   fixtures/scrolly/          # cell_keys.json, params.json: shared by Python and JS tests
 _wheels/                     # Pre-built .whl files for Pyodide (CORS-friendly hosting)
 _static/
@@ -57,7 +66,8 @@ notebooks/                   # Generated files (gitignored, lives on notebooks-b
 - **`scripts/nma_solutions.py`** -- the Python side of `{nma-solution}`/`{nma-explanation}`. It validates them, splits each generated notebook into student and instructor versions, writes the solution files, and builds the site's run-all fallback cell. Its file naming and URL rules must stay in sync with `plugins/nma.mjs`.
 - **`scripts/nma_feedback.py`** / **`plugins/nma-feedback.mjs`** -- `{nma-feedback}`. The Python side validates the directive and the `nma:` block and writes the notebook feedback cells. The JS widget posts to datatops from the browser. `read_nma_block()` (Python) and `readNmaConfig()` (in `nma.mjs`) are two copies of the same line-based reader and must stay in sync. Shared fixtures in `tests/fixtures/nma_config/` test both.
 - **`scripts/nma_scrolly.py`** / **`plugins/scrolly/`** -- scrollytelling pages (`layout: scrolly`). The Python side validates pages, flattens them before jupytext (`flatten_for_notebook`), turns `# @param` cells into `widgets.interact` (`params_to_interact`), and pre-renders outputs with nbclient (`--render`). The plugin lays the page out and turns code cells into runnable Pyodide panels. `is_scrolly`/`isScrolly`, `cell_key`/`cellKey` and `parse_params`/`parseParams` are two copies of the same rules, tested against `tests/fixtures/scrolly/`.
-- **`requirements.txt`** -- Python dependencies: mystmd, jupytext, numpy, matplotlib, etc.
+- **`scripts/nma_cells.py`** / **`plugins/cells/`** -- editable cells (see "Editable cells"). `runtime_of`/`runtimeOf` are two copies of the same rule, tested against `tests/fixtures/cells/runtime.json`. `NO_FALLBACK_MARKER` in `nma_solutions.py` and `model.mjs` must match.
+- **`requirements.txt`** -- Python dependencies: mystmd (pinned: the panels use its bundled thebe 0.5.0 API), jupytext, numpy, matplotlib, playwright (e2e), etc.
 - **`.nvmrc`** -- Node.js version (22). MyST requires Node >= 20.
 
 ## Key Conventions
@@ -76,7 +86,7 @@ kernelspec:
 ```
 
 This means:
-- JupyterLite power button appears (in-browser execution)
+- every code cell becomes an editable, runnable panel (see "Editable cells"), unless the page sets `runtime: colab`
 - `convert_to_notebooks.py` generates a `.ipynb` from it
 - CI injects Colab/Kaggle badges
 
@@ -92,9 +102,23 @@ A page without `kernelspec` is static (chapter intros, further reading, bonus pa
 - **Media directives must be valid.** Every top-level `{nma-video}` needs a title and at least one of `:youtube:`/`:bilibili:`/`:osf:`. Every `{nma-slides}` needs an OSF id. Unknown options, body text and unclosed blocks are errors, reported with file and line.
 - **Feedback uses the directive.** `{nma-feedback}` takes a section name (`[A-Za-z0-9_]+`, unique per page), at the top level, with no options or body. No code cell may call `content_review(`, import `vibecheck`, or be an "Import feedback gadget" cell. If any page uses `{nma-feedback}`, `myst.yml` must have `nma.feedback.{url,project,user_key}`, and the `nma:` block must be plain `key: value` lines with string values.
 
+- **`runtime` must be valid.** Frontmatter `runtime:` is `browser` (default) or `colab`, and `colab` can't be combined with `layout: scrolly`.
 - **Scrolly pages must be valid.** `{step}`/`{stage}` only on pages with `layout: scrolly`, at the top level. `{step}` takes no argument or `hero`, only `:section:`/`:kicker:`, and no body. At most one `{stage}` per step (options `:style: list`, `:class:`), none before the first step. A `layout: scrolly` page needs at least one `{step}`. On scrolly pages, every `# @param` line must parse (see "Scrollytelling pages").
 
-There is no Binder, JupyterHub, or remote-kernel support. Code runs in the browser via JupyterLite, and Colab/Kaggle (via the generated notebooks) is the fallback for anything Pyodide can't run.
+There is no Binder, JupyterHub, or remote-kernel support. Code runs in the browser (editable cells on JupyterLite's kernel), and Colab/Kaggle (via the generated notebooks) is the fallback for anything Pyodide can't run.
+
+### Editable cells
+
+Every visible code cell on a **browser page** (has `kernelspec`, not `layout: scrolly`, not `runtime: colab`) is a CodeMirror 6 editor with a **▶ Run** button (Shift-Enter / Ctrl-Enter too). It runs on the JupyterLite kernel that MyST already ships (thebe-lite, Pyodide 0.27), one kernel per page. The JupyterLite power button is hidden site-wide in `_static/custom.css`. Keep `project.jupyter.lite: true`, since MyST only emits the thebe assets with it.
+
+- **Colab pages.** A heavy tutorial adds `runtime: colab` to its frontmatter (MyST warns `extra key ignored: runtime`, expected). It shows read-only code and an "important" admonition, *Do this tutorial in Colab*, that links to Colab and Kaggle. No fallback cell is added. `tutorials/W2D1_Examples/W2D1_Tutorial3.md` is an example.
+- **How a Run works.** Like a notebook: earlier cells that haven't run go first, then the target. An earlier *unfinished* exercise runs its `{nma-solution}` through the kernel-side fallback cell from `--prepare-site`. The cell the student explicitly runs gets a trailing `# nma-no-fallback` line, which switches the fallback off for that cell, so a partly edited exercise shows `NotImplementedError` and never the solution. Running stops at the first earlier cell that fails.
+- **Modes by tag.** none = editor + output, `hide-input`/`hide-cell` = editor behind "Show code", `remove-input` = output only (Run button), `remove-cell` = no panel, runs as an earlier cell. Exercises get an accent colour and the label "Exercise · fill in, then run".
+- **Edits live in memory only**, per page (Reset restores the original). Changing page disposes the kernel and starts a fresh one when you come back. **Restart** starts a new kernel session.
+- **Styling.** CSS variables with light and dark defaults (`html.dark`/`html.light`), overridable from `_static/custom.css`: `--nma-cell-{bg,fg}-{light,dark}`, `--nma-cell-border`, `--nma-cell-radius`, `--nma-cell-accent`, `--nma-cell-exercise-accent`, `--nma-cell-bar-{bg,fg}-{light,dark}`, `--nma-cell-gutter-{bg,fg}-{light,dark}`, `--nma-cell-active-line-{light,dark}`, `--nma-cell-font-family`, `--nma-cell-font-size-value`, `--nma-tok-{keyword,string,number,comment,function,definition}-{light,dark}`. Example: `:root { --nma-cell-accent-value: #2a9d8f; --nma-tok-keyword-light: #b5179e; } html.dark { --nma-tok-keyword-dark: #f72585; }`.
+- **Outside services** (students' browsers must reach them): `cdn.jsdelivr.net` (Pyodide 0.27, widget JS), `cdnjs.cloudflare.com` (`require.js`, MathJax, font-awesome), `pypi.org`/`files.pythonhosted.org` (`micropip`). Scrolly pages load their own, newer Pyodide, so package availability can differ.
+- **Bundles.** `plugins/cells/dist/*.mjs` are generated and committed. After changing `plugins/cells/src/`, run `cd plugins/cells && npm ci && npm run build` and commit `dist/`. CI fails if it is stale. Browser code must never use root-absolute URLs (forks deploy under `github.io/<repo>/`): derive them from `import.meta.url`.
+- **Browser smoke test.** `uv run playwright install chromium`, build the site as in "Local preview" (with `--prepare-site`, then `git checkout -- tutorials/`), serve `_build/html` (`python3 -m http.server 8765`), then `NMA_E2E_URL=http://localhost:8765 uv run pytest -q tests/e2e`. If `cdnjs` is blocked, also set `NMA_E2E_REQUIREJS=<path to require.js>` (see `tests/e2e/conftest.py`).
 
 ### Badges
 
@@ -213,7 +237,7 @@ marker go on the stage; prose, math, solution links and {nma-feedback} on the ca
 
 ```markdown
 ```{code-cell} python
-# Regular cell -- fully visible, editable in JupyterLite
+# Regular cell -- fully visible, editable and runnable on the page
 ```
 
 ```{code-cell} python
@@ -270,7 +294,7 @@ This writes only to `notebooks/` (gitignored) and never modifies `.md` files. Th
 ### CI pipelines
 
 1. **`generate-notebooks.yml`** -- triggers on push to `main` when `tutorials/`, `scripts/`, `tests/`, `myst.yml`, or `requirements.txt` change. Runs `pytest`, converts `.md` -> `.ipynb` (expanding media directives into code cells), pushes to `notebooks-branch`.
-2. **`publish-book.yml`** -- triggers after `generate-notebooks.yml` completes or on push to `main` (including changes under `plugins/` and `scripts/`). Runs `node --test tests/js/*.test.mjs`, then `nma_scrolly.py --render` (pre-renders scrolly pages), then `convert_to_notebooks.py --prepare-site` (badges plus the exercise fallback cell) on its throwaway checkout, then builds the MyST book and deploys to GitHub Pages.
+2. **`publish-book.yml`** -- triggers after `generate-notebooks.yml` completes or on push to `main` (including changes under `plugins/` and `scripts/`). Checks that `plugins/cells/dist/` is up to date, runs `node --test tests/js/*.test.mjs`, then `nma_scrolly.py --render` (pre-renders scrolly pages), then `convert_to_notebooks.py --prepare-site` (badges plus the exercise fallback cell) on its throwaway checkout, then builds the MyST book, runs the browser smoke test (`tests/e2e`) against it and deploys to GitHub Pages.
 3. **`build-pyodide-wheels.yml`** -- manual trigger (`workflow_dispatch`). Builds pure-Python wheels for packages that lack them on PyPI, uploads as GitHub Release assets.
 
 ### Adding a new day

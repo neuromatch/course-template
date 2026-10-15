@@ -553,21 +553,21 @@ git commit -m "ci: check the editable-cells bundle and smoke-test cells in a bro
 - Modify: the W1D2 interactive-content tutorials that describe the power button / JupyterLite (find them with `grep -n -i -E "power button|jupyterlite|thebe" tutorials/W1D2_InteractiveContent/*.md tutorials/intro.md`)
 - Modify: `README.md` if it mentions the power button
 
-- [ ] **Step 1: AGENTS.md.**
+- [x] **Step 1: AGENTS.md.**
   - Architecture tree: `plugins/cells/`, `scripts/nma_cells.py`, `tests/e2e/`.
   - Key files: `cells.mjs`, `runtime.mjs`.
   - New section **"Editable cells"**: browser vs Colab pages, the `runtime: colab` frontmatter rule and its validation, how a Run works (earlier cells, fallback, `nma-no-fallback`), modes per tag, the CSS tokens table with an override example, outside services (jsdelivr, cdnjs, PyPI), the Pyodide 0.27 note, `npm run build` + committed `dist/` + CI freshness check, the `mystmd==1.11.0` pin and why, and how to run the e2e test locally.
   - Replace statements that code runs via the JupyterLite power button ("Executable vs static pages", "There is no Binder…", "Pyodide / JupyterLite") with the panel behaviour.
   - Add to "Content rules": the `runtime` values.
 
-- [ ] **Step 2: Tutorials/README.** Replace power-button instructions with "edit the cell and press ▶ Run (or Shift-Enter)" and mention `runtime: colab` where authoring is explained. Keep each edit small.
+- [x] **Step 2: Tutorials/README.** Replace power-button instructions with "edit the cell and press ▶ Run (or Shift-Enter)" and mention `runtime: colab` where authoring is explained. Keep each edit small.
 
-- [ ] **Step 3: Check that the content still validates and builds**
+- [x] **Step 3: Check that the content still validates and builds**
 
 Run: `uv run python scripts/convert_to_notebooks.py --dry-run && uv run myst build --html 2>&1 | grep -c "⛔"`
 Expected: no validation errors, and no more `⛔` lines than before this plan (W1D1 Tutorial 3's existing `.txt` image warning is known).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add AGENTS.md README.md tutorials

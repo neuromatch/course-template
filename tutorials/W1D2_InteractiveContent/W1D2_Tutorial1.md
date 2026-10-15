@@ -10,10 +10,15 @@ kernelspec:
 This book uses **JupyterLite** to run Python directly in your browser.
 No server, no installation required — everything runs via WebAssembly (WASM).
 
-## How to activate in-browser execution
+## How to run code in the browser
 
-Click the **power button** (⚡) at the top right of this page.
-After ~10 seconds of initialisation, all code cells become live and editable.
+Every code cell on this page is an editor. Edit the code and press **▶ Run**
+(or Shift-Enter). The first run takes ~10 seconds while Python starts. Running a
+cell first runs the cells above it that haven't run yet, as in a notebook.
+
+A heavy tutorial (for example one that needs PyTorch) can opt out with
+`runtime: colab` in its frontmatter. The page then shows its code read-only,
+with a banner that links to Colab and Kaggle.
 
 ## Try it: basic computation
 
@@ -65,8 +70,8 @@ project:
     lite: true
 ```
 
-Pages without `kernelspec` (like `further_reading.md`) show no power button —
-the JupyterLite kernel is only activated for pages that declare a `kernelspec`.
+Pages without `kernelspec` (like `further_reading.md`) stay static — only pages
+that declare a `kernelspec` get editable, runnable cells.
 
 ```{note}
 JupyterLite runs Python via Pyodide (WebAssembly). Core scientific packages
