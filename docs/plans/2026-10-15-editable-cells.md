@@ -508,7 +508,7 @@ git commit -m "feat: editable cells on browser pages, Colab banner on runtime: c
 
 **Interfaces:** none new.
 
-- [ ] **Step 1: Add the bundle freshness check** after "Install dependencies":
+- [x] **Step 1: Add the bundle freshness check** after "Install dependencies":
 
 ```yaml
       - uses: actions/setup-node@v4
@@ -519,7 +519,7 @@ git commit -m "feat: editable cells on browser pages, Colab banner on runtime: c
         run: npm ci && npm run build && git diff --exit-code dist/
 ```
 
-- [ ] **Step 2: Add the smoke test** after "Build MyST book" and before "Add CNAME":
+- [x] **Step 2: Add the smoke test** after "Build MyST book" and before "Add CNAME":
 
 ```yaml
       - name: Browser smoke test (editable cells)
@@ -530,14 +530,14 @@ git commit -m "feat: editable cells on browser pages, Colab banner on runtime: c
           NMA_E2E_URL=http://localhost:8765 uv run pytest -q tests/e2e
 ```
 
-- [ ] **Step 3: Validate the YAML**
+- [x] **Step 3: Validate the YAML**
 
 Run: `python3 -c "import yaml; [yaml.safe_load(open(f)) for f in ['.github/workflows/publish-book.yml', '.github/workflows/generate-notebooks.yml']]"`
 Expected: no output
 
-- [ ] **Step 4: Prove the freshness check fails on a stale bundle.** Append a comment to `plugins/cells/src/panel.mjs`, run `cd plugins/cells && npm run build && git diff --exit-code dist/` (expected: exit 1), then `git checkout -- src dist`.
+- [x] **Step 4: Prove the freshness check fails on a stale bundle.** Append a comment to `plugins/cells/src/panel.mjs`, run `cd plugins/cells && npm run build && git diff --exit-code dist/` (expected: exit 1), then `git checkout -- src dist`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add .github/workflows/publish-book.yml
