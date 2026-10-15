@@ -178,7 +178,7 @@ Markdown answer to a discussion question, math allowed: $a < 0$.
 
 ### Scrollytelling pages
 
-Opt in with `layout: scrolly` in the frontmatter, plus `site: {hide_toc: true, hide_outline: true}` (MyST warns `extra key ignored: layout`, which is expected). The page stays a flat tutorial. `{step}` markers split it into steps, and each step is a **card** (prose) plus a pinned **stage**. The how-to page is `tutorials/W1D2_InteractiveContent/W1D2_Tutorial6.md` (itself a scrolly page), and `tutorials/W2D1_Examples/W2D1_Tutorial2.md` is a full example.
+Opt in with `layout: scrolly` in the frontmatter, plus `site: {hide_outline: true}` (MyST warns `extra key ignored: layout`, which is expected). The page stays a flat tutorial. `{step}` markers split it into steps, and each step is a **card** (prose) plus a pinned **stage**. The how-to page is `tutorials/W1D2_InteractiveContent/W1D2_Tutorial6.md` (itself a scrolly page), and `tutorials/W2D1_Examples/W2D1_Tutorial2.md` is a full example.
 
 ```markdown
 :::{step} hero
@@ -199,7 +199,8 @@ marker go on the stage; prose, math, solution links and {nma-feedback} on the ca
 :::
 ```
 
-- The section is placed between the book theme's TOC sidebar and "On this page" outline (`.scrolly-col` in `scrolly.css`), and its layout uses container queries on its own width: stage beside the cards from 760px (`WIDE` in `engine.mjs`), stacked below that. Scrolly pages should set frontmatter `site: hide_toc: true` and `hide_outline: true` (both theme options): each hidden menu gives the section its space, and with both hidden it spans the window.
+- The section is placed between the book theme's TOC sidebar and "On this page" outline (`.scrolly-col` in `scrolly.css`), and its layout uses container queries on its own width: stage beside the cards from 760px (`WIDE` in `engine.mjs`), stacked below that. Scrolly pages should set frontmatter `site: hide_outline: true` to give the section the outline's space, but not `hide_toc`: with it the theme leaves the TOC out of the page entirely (no sidebar, and the small-screen menu opens empty), so readers can't move to another page mid-story.
+- Engine (HUD), stage and steps share one grid cell (`grid-area: 1 / 1`), not negative margins. A sticky element with `margin-bottom: -height` keeps sticking a screen past its parent and covered the footer prev/next links (regression test in `tests/js/scrolly.test.mjs`).
 - A step with nothing for the stage keeps the previous stage. A `hero` step has no card. Content before the first `{step}` is a normal page header.
 - Code cells on the stage: untagged = editable panel, `hide-input` = code collapsed, `remove-input` = output only, `remove-cell` = invisible (runs before the first visible cell).
 - Panels share one Pyodide runtime (`nma.scrolly.pyodide_url` in `myst.yml`). Running a cell first runs earlier unrun cells. An earlier unfinished exercise runs its `{nma-solution}` instead. JupyterLite's power button is hidden on these pages.
