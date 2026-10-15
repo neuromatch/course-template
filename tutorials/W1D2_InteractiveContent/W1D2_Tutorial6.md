@@ -79,6 +79,13 @@ Text for the second card.
 
 MyST logs `extra key ignored: layout`, which is expected.
 
+The scrolly section stays between the table of contents and the "On this page" outline. When it is narrow, the stage sits above the cards instead of beside them. To give it the outline's space as well, hide the outline for that page:
+
+```yaml
+site:
+  hide_outline: true
+```
+
 :::{step}
 :kicker: Options
 :::

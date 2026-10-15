@@ -199,6 +199,7 @@ marker go on the stage; prose, math, solution links and {nma-feedback} on the ca
 :::
 ```
 
+- The section is placed between the book theme's TOC sidebar and "On this page" outline (`.scrolly-col` in `scrolly.css`), and its layout uses container queries on its own width: stage beside the cards from 760px (`WIDE` in `engine.mjs`), stacked below that. Frontmatter `site: hide_outline: true` lets it use the outline's column too.
 - A step with nothing for the stage keeps the previous stage. A `hero` step has no card. Content before the first `{step}` is a normal page header.
 - Code cells on the stage: untagged = editable panel, `hide-input` = code collapsed, `remove-input` = output only, `remove-cell` = invisible (runs before the first visible cell).
 - Panels share one Pyodide runtime (`nma.scrolly.pyodide_url` in `myst.yml`). Running a cell first runs earlier unrun cells. An earlier unfinished exercise runs its `{nma-solution}` instead. JupyterLite's power button is hidden on these pages.
