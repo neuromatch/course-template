@@ -264,7 +264,7 @@ git commit -m "feat: editable cells pure helpers (modes, fallback marker, runtim
   - `restart()` calls `ready.session.kernel.restart()`, clears `ran`, sets `this.queue = Promise.resolve()` and emits `{kernel:'ready', restarted:true}`.
   - `window` and `location` are read inside functions only, never at module top level, so tests can set globals.
 
-- [ ] **Step 1: Write the fake thebe and failing tests.** The fake records calls:
+- [x] **Step 1: Write the fake thebe and failing tests.** The fake records calls:
 
 ```js
 function fakeThebe({ failOn = [] } = {}) {
@@ -319,19 +319,19 @@ const CELLS = [
   - **Review Focus 3:** `pageRuntime()` returns the same instance for the same path. After `location.pathname = '/q/'` it returns a new instance, and the old one logs `shutdown` and `dispose`. Also when the old one's boot is still pending (`dispose()` awaits it).
   - `ensureThebeLoaded` resolves immediately when the globals exist (no DOM needed).
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `node --test tests/js/cells.test.mjs`
 Expected: FAIL (`runtime.mjs` missing)
 
-- [ ] **Step 3: Implement `runtime.mjs`.** `makeConfiguration({ useJupyterLite: true }, events)`. Call order verified in the spike: `makeEvents`, `makeConfiguration`, `makeServer`, `connectToJupyterLiteServer`, `makeRenderMimeRegistry(config.mathjax)`, `setupNotebookFromBlocks(blocks, config, rendermime)`, `startNewSession(rendermime)`, `nb.attachSession(session)`. `cell.execute(source)` returns `null` on an internal failure (treat that as error `InternalError`) or `{error?: [{ename}]}`.
+- [x] **Step 3: Implement `runtime.mjs`.** `makeConfiguration({ useJupyterLite: true }, events)`. Call order verified in the spike: `makeEvents`, `makeConfiguration`, `makeServer`, `connectToJupyterLiteServer`, `makeRenderMimeRegistry(config.mathjax)`, `setupNotebookFromBlocks(blocks, config, rendermime)`, `startNewSession(rendermime)`, `nb.attachSession(session)`. `cell.execute(source)` returns `null` on an internal failure (treat that as error `InternalError`) or `{error?: [{ename}]}`.
 
-- [ ] **Step 4: Run all JS tests**
+- [x] **Step 4: Run all JS tests**
 
 Run: `node --test tests/js/*.test.mjs`
 Expected: all pass
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add plugins/cells/src/runtime.mjs tests/js/cells.test.mjs

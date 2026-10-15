@@ -54,3 +54,182 @@ test('statusText', () => {
   assert.equal(statusText({ state: 'error', count: 4, error: { ename: 'NotImplementedError' } }), '[4] ✗ NotImplementedError');
   assert.equal(statusText({ state: 'error', count: null, error: { ename: 'X' } }), '[ ] ✗ X');
 });
+
+// ------------------------------------------------------------------ runtime
+
+import { PageRuntime, pageRuntime, ensureThebeLoaded } from '../../plugins/cells/src/runtime.mjs';
+
+function fakeThebe({ failOn = [] } = {}) {
+  const log = [];
+  const cells = new Map();
+  let count = 0;
+  const session = { kernel: { restart: async () => log.push(['restart']) } };
+  const api = {
+    makeEvents: () => ({}),
+    makeConfiguration: (opts) => ({ opts, mathjax: {} }),
+    makeServer: () => ({
+      connectToJupyterLiteServer: async () => {
+        log.push(['connect']);
+        await new Promise((r) => setTimeout(r, 5));
+      },
+      startNewSession: async () => session,
+      shutdownAllSessions: async () => log.push(['shutdown']),
+      dispose: () => log.push(['dispose']),
+    }),
+    makeRenderMimeRegistry: () => ({}),
+    setupNotebookFromBlocks: (blocks) => {
+      for (const b of blocks) {
+        cells.set(b.id, {
+          executionCount: null,
+          attachToDOM(el) { log.push(['attach', b.id, el]); },
+          async execute(src) {
+            log.push(['exec', b.id, src]);
+            this.executionCount = ++count;
+            return failOn.includes(b.id) ? { error: [{ ename: 'NotImplementedError' }] } : {};
+          },
+        });
+      }
+      return { attachSession: () => {}, getCellById: (id) => cells.get(id) };
+    },
+  };
+  return { api, log };
+}
+
+const EXERCISE = 'def f():\n    raise NotImplementedError("x")';
+const CELLS = [
+  { index: 0, code: 'setup()', mode: 'hidden', exercise: false },
+  { index: 1, code: 'a = 1', mode: 'edit', exercise: false },
+  { index: 2, code: EXERCISE, mode: 'edit', exercise: true },
+  { index: 3, code: 'f()', mode: 'edit', exercise: false },
+];
+
+function setup(opts) {
+  const fake = fakeThebe(opts);
+  globalThis.window = { thebeCore: { api: fake.api }, thebeLite: {} };
+  globalThis.location = { pathname: '/p/' };
+  const rt = new PageRuntime('/p/');
+  rt.setCells(CELLS);
+  const execs = () => fake.log.filter((e) => e[0] === 'exec').map((e) => [e[1], e[2]]);
+  return { ...fake, rt, execs };
+}
+
+test('run executes earlier cells first, only the target gets the marker', async () => {
+  const { rt, execs } = setup();
+  await rt.run(3, 'f()');
+  assert.deepEqual(execs(), [
+    ['nma-cell-0', 'setup()'],
+    ['nma-cell-1', 'a = 1'],
+    ['nma-cell-2', EXERCISE],
+    ['nma-cell-3', withNoFallback('f()')],
+  ]);
+  assert.ok(!execs().slice(0, 3).some(([, s]) => s.includes(NO_FALLBACK_MARKER)));
+});
+
+test('run uses edits for earlier cells', async () => {
+  const { rt, execs } = setup();
+  rt.edits[1] = 'a = 2';
+  await rt.run(3, 'f()');
+  assert.deepEqual(execs()[1], ['nma-cell-1', 'a = 2']);
+});
+
+test('already-run cells are skipped', async () => {
+  const { rt, execs } = setup();
+  await rt.run(1, 'a = 1');
+  await rt.run(3, 'f()');
+  const ids = execs().map(([id]) => id);
+  assert.equal(ids.filter((i) => i === 'nma-cell-0').length, 1);
+  assert.equal(ids.filter((i) => i === 'nma-cell-1').length, 1);
+});
+
+test('the explicitly run exercise carries the marker, earlier cells do not', async () => {
+  const { rt, execs } = setup();
+  await rt.run(2, EXERCISE);
+  const e = Object.fromEntries(execs());
+  assert.ok(e['nma-cell-2'].includes(NO_FALLBACK_MARKER));
+  assert.ok(!e['nma-cell-0'].includes(NO_FALLBACK_MARKER));
+  assert.ok(!e['nma-cell-1'].includes(NO_FALLBACK_MARKER));
+});
+
+test('an earlier error stops the run', async () => {
+  const { rt, execs } = setup({ failOn: ['nma-cell-1'] });
+  const events = [];
+  rt.subscribe((e) => events.push(e));
+  await rt.run(3, 'f()');
+  assert.deepEqual(execs().map(([id]) => id), ['nma-cell-0', 'nma-cell-1']);
+  assert.ok(events.some((e) => e.index === 1 && e.state === 'error'));
+});
+
+test('concurrent runs boot once and run each earlier cell once, in call order', async () => {
+  const { rt, execs, log } = setup();
+  const order = [];
+  await Promise.all([
+    rt.run(3, 'f()').then(() => order.push('a')),
+    rt.run(3, 'f()').then(() => order.push('b')),
+    rt.run(1, 'a = 1').then(() => order.push('c')),
+  ]);
+  assert.equal(log.filter((e) => e[0] === 'connect').length, 1);
+  const ids = execs().map(([id]) => id);
+  const n = (id) => ids.filter((i) => i === id).length;
+  assert.equal(n('nma-cell-0'), 1);
+  assert.equal(n('nma-cell-2'), 1);
+  assert.equal(n('nma-cell-3'), 2); // explicit runs
+  assert.equal(n('nma-cell-1'), 2); // implicit once, then the explicit run(1)
+  assert.deepEqual(order, ['a', 'b', 'c']);
+});
+
+test('register twice (hydration): the latest element is attached, once', async () => {
+  const { rt, log } = setup();
+  const elA = { name: 'A' };
+  const elB = { name: 'B' };
+  const offA = rt.register(1, elA);
+  rt.register(1, elB);
+  offA(); // must not drop elB
+  await rt.boot();
+  const attaches = log.filter((e) => e[0] === 'attach' && e[1] === 'nma-cell-1');
+  assert.equal(attaches.length, 1);
+  assert.equal(attaches[0][2], elB);
+});
+
+test('register after boot attaches immediately', async () => {
+  const { rt, log } = setup();
+  await rt.boot();
+  const el = {};
+  rt.register(2, el);
+  assert.ok(log.some((e) => e[0] === 'attach' && e[1] === 'nma-cell-2' && e[2] === el));
+});
+
+test('restart clears ran and restarts the kernel', async () => {
+  const { rt, execs, log } = setup();
+  await rt.run(1, 'a = 1');
+  await rt.restart();
+  assert.ok(log.some((e) => e[0] === 'restart'));
+  await rt.run(1, 'a = 1');
+  assert.equal(execs().filter(([id]) => id === 'nma-cell-0').length, 2);
+});
+
+test('pageRuntime is per path; a path change disposes the old runtime', async () => {
+  const { log } = setup();
+  const a = pageRuntime();
+  assert.equal(pageRuntime(), a);
+  a.setCells(CELLS);
+  await a.boot();
+  location.pathname = '/q/';
+  const b = pageRuntime();
+  assert.notEqual(a, b);
+  await new Promise((r) => setTimeout(r, 20));
+  assert.ok(log.some((e) => e[0] === 'shutdown'));
+  assert.ok(log.some((e) => e[0] === 'dispose'));
+});
+
+test('dispose waits for a pending boot', async () => {
+  const { rt, log } = setup();
+  const booting = rt.boot();
+  await rt.dispose();
+  await booting;
+  assert.ok(log.some((e) => e[0] === 'shutdown') && log.some((e) => e[0] === 'dispose'));
+});
+
+test('ensureThebeLoaded resolves at once when the globals exist', async () => {
+  setup();
+  await ensureThebeLoaded('https://x.org/build/p.mjs');
+});
