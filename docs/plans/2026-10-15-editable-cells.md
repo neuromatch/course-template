@@ -216,7 +216,7 @@ git commit -m "feat: fallback transformer skips cells marked nma-no-fallback"
   - `thebeScriptUrls(bundleUrl: string): {core: string, lite: string}`: `new URL('../thebe-core.min.js', bundleUrl).href` and the same for `thebe-lite.min.js`.
   - `statusText(event): string`: maps runtime events to the exact copy in Global Constraints (`{state:'running'}` → `Running…`, `{state:'done', count:3}` → `[3] ✓`, `{state:'error', count:4, error:{ename:'NotImplementedError'}}` → `[4] ✗ NotImplementedError`, `{state:'error', count:null, error:{ename:'X'}}` → `[ ] ✗ X`).
 
-- [ ] **Step 1: Write failing tests** in `tests/js/cells.test.mjs`:
+- [x] **Step 1: Write failing tests** in `tests/js/cells.test.mjs`:
   - shared fixture loop over `tests/fixtures/cells/runtime.json` → `runtimeOf(c.text) === c.runtime`
   - `modeOf`: `[]`→`edit`, `['remove-cell']`→`hidden`, `['remove-input']`→`output`, `['hide-input']`→`collapsed`, `['hide-cell']`→`collapsed`, `['remove-cell','hide-input']`→`hidden`
   - `isExercise`: true for `'def f():\n    raise NotImplementedError("x")'`, false for `'# raise NotImplementedError'` and `'x = 1'`
@@ -224,19 +224,19 @@ git commit -m "feat: fallback transformer skips cells marked nma-no-fallback"
   - `thebeScriptUrls('https://org.github.io/repo/build/panel-abc.mjs')` → `{core: 'https://org.github.io/repo/thebe-core.min.js', lite: 'https://org.github.io/repo/thebe-lite.min.js'}`, and at the root, `'https://x.org/build/p.mjs'` → `'https://x.org/thebe-core.min.js'`
   - `statusText` cases above
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `node --test tests/js/cells.test.mjs`
 Expected: FAIL (module not found)
 
-- [ ] **Step 3: Implement `model.mjs`** (bodies follow from the tests and the spec's `model.mjs` sketch).
+- [x] **Step 3: Implement `model.mjs`** (bodies follow from the tests and the spec's `model.mjs` sketch).
 
-- [ ] **Step 4: Run all JS tests**
+- [x] **Step 4: Run all JS tests**
 
 Run: `node --test tests/js/*.test.mjs`
 Expected: all pass
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add plugins/cells/src/model.mjs tests/js/cells.test.mjs
