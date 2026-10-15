@@ -103,6 +103,7 @@ body:has(.scrolly) .myst-jp-nb-toolbar-power { display: none !important; }
 .scrolly-card {
   pointer-events: auto;
   max-width: 32rem;
+  min-width: 0; /* flex item in .scrolly-step: don't grow to the widest code line */
   background: var(--nm-cream);
   color: var(--nm-ink);
   border-radius: 14px;
@@ -122,6 +123,7 @@ body:has(.scrolly) .myst-jp-nb-toolbar-power { display: none !important; }
 .scrolly-card a { color: var(--nm-purple); }
 .scrolly-card .katex-display { overflow-x: auto; overflow-y: hidden; }
 .scrolly-card details { margin: 0.5rem 0; }
+.scrolly-card pre { max-width: 100%; overflow-x: auto; }
 .scrolly-card .nma-solution-link p { margin: 0.4rem 0; }
 .scrolly-kicker { margin: 0 0 0.1rem; }
 .scrolly-kicker p { margin: 0; font-weight: 600; font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--nm-purple) !important; }
