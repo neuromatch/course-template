@@ -284,3 +284,21 @@ test('the how-to page: only its real exercise is paired, examples are ignored', 
   assert.match(pairs[0].exercise, /^def cube\(x\):/);
   assert.equal(pairs[0].solution, 'def cube(x):\n  return x ** 3');
 });
+
+// ---- layout regressions (scrolly.css) ----
+// Innermost `selector { decls }` rules; @media/@container wrappers are skipped.
+const cssRules = (css) =>
+  [...css.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ sel: m[1].trim(), body: m[2] }));
+const scrollyCss = readFileSync(join(here, '..', '..', 'plugins', 'scrolly', 'scrolly.css'), 'utf8');
+
+test('the pinned stage and HUD stop at the end of the section (no negative margins)', () => {
+  // A sticky element with margin-bottom: -height has a 0px margin box, so it
+  // keeps sticking for a whole screen past the section and covers the footer.
+  for (const { sel, body } of cssRules(scrollyCss)) {
+    if (!/\.scrolly-(stage|engine)\b/.test(sel)) continue;
+    assert.doesNotMatch(body, /margin[^:;]*:[^;]*-/, `negative margin in "${sel}"`);
+    assert.doesNotMatch(body, /(^|[\s;])height:\s*0\s*[;}]?/, `zero height in "${sel}"`);
+  }
+  const stacked = cssRules(scrollyCss).filter(({ body }) => /grid-area:\s*1\s*\/\s*1/.test(body)).map((r) => r.sel).join(' ');
+  for (const part of ['scrolly-engine', 'scrolly-stage', 'scrolly-steps']) assert.match(stacked, new RegExp(part), `${part} not in the shared grid cell`);
+});

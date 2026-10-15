@@ -11,8 +11,9 @@
 
 /* ---- placement in the article grid ----
    Default: between the menus. Each menu a page hides (frontmatter
-   `site: hide_toc: true` / `hide_outline: true`) gives the section its space;
-   with both hidden it spans the whole window (recommended). */
+   `site: hide_outline: true`, recommended, or `hide_toc: true`) gives the
+   section its space. Scrolly pages keep the TOC: with hide_toc the theme
+   leaves it out of the page and readers can't navigate mid-story. */
 .article-grid > .scrolly-col { grid-column: page; container: scrolly / inline-size; }
 @media (min-width: 1024px) {
   .article-grid > .scrolly-col { grid-column: page-start / body-end; }
@@ -57,14 +58,21 @@
 /* JupyterLite is not used on scrolly pages: the panels run their own Python. */
 body:has(.scrolly) .myst-jp-nb-toolbar-power { display: none !important; }
 
-/* ---- pinned layout ---- */
-.scrolly[data-ready="true"] { padding: 0; }
-.scrolly[data-ready="true"] .scrolly-engine { position: sticky; top: var(--scrolly-top); height: 0; z-index: 6; }
+/* ---- pinned layout ----
+   Engine (HUD), stage and steps share one grid cell instead of overlapping
+   through negative margins. A sticky element stops when its margin box reaches
+   the end of its parent; with `margin-bottom: -height` that box is 0px tall,
+   so the stage would stick for a whole screen past the section and cover the
+   page footer (prev/next links). In the grid each one has its real height. */
+.scrolly[data-ready="true"] { padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); }
+.scrolly[data-ready="true"] > :is(.scrolly-engine, .scrolly-stage, .scrolly-steps) { grid-area: 1 / 1; min-width: 0; }
+.scrolly[data-ready="true"] .scrolly-engine { align-self: start; position: sticky; top: var(--scrolly-top); height: 52px; z-index: 6; pointer-events: none; }
 .scrolly[data-ready="true"] .scrolly-stage {
+  align-self: start;
   position: sticky;
   top: var(--scrolly-top);
   height: calc(100vh - var(--scrolly-top));
-  margin: 0 0 calc(-1 * (100vh - var(--scrolly-top)));
+  margin: 0;
   overflow: hidden;
   z-index: 0;
   border-radius: 12px;
@@ -151,7 +159,7 @@ body:has(.scrolly) .myst-jp-nb-toolbar-power { display: none !important; }
 /* ---- narrow sections: stage on top, cards below it ----
    Keep the 760px breakpoint in sync with WIDE in engine.mjs. */
 @container scrolly (max-width: 759.98px) {
-  .scrolly[data-ready="true"] .scrolly-stage { height: 55vh; margin-bottom: -55vh; }
+  .scrolly[data-ready="true"] .scrolly-stage { height: 55vh; }
   .scrolly[data-ready="true"] .scrolly-view, .scrolly[data-ready="true"] .scrolly-view.is-hero { inset: 46px 12px 10px 12px; }
   .scrolly[data-ready="true"] .scrolly-step { width: 100%; min-height: 70vh; display: block; padding: calc(55vh + 12px) 12px 0; }
   .scrolly[data-ready="true"] .scrolly-step + .scrolly-step { padding-top: 0; }
