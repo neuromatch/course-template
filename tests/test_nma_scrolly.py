@@ -217,3 +217,85 @@ def test_rewrite_notebook_params():
     assert nb["cells"][0]["source"] == ["a = 1  # @param [1, 2]"]
     assert "widgets.interact" in "".join(nb["cells"][1]["source"])
     assert nb["cells"][2]["source"] == "print(2)"
+
+
+# --- Task 3: pre-render -------------------------------------------------------------
+
+RENDER_PAGE = FRONT + '''
+```{code-cell} python
+:tags: [remove-cell]
+import matplotlib.pyplot as plt
+from pathlib import Path
+here = Path.cwd().name
+```
+
+:::{step}
+:::
+Prose.
+
+```{code-cell} python
+print("hello from", here)
+```
+
+```{code-cell} python
+:tags: [remove-input]
+plt.plot([0, 1], [1, 0])
+plt.show()
+```
+
+```{code-cell} python
+def f(x):
+    raise NotImplementedError("Student exercise")
+```
+
+::::{nma-solution}
+```python
+def f(x):
+    return 2 * x
+```
+::::
+
+```{code-cell} python
+k = 3  # @param [1, 3]
+print(f(k))
+6 * 7
+```
+'''
+
+
+def _render_tree(tmp_path, page_text):
+    page = tmp_path / "tutorials" / "Day" / "T.md"
+    page.parent.mkdir(parents=True)
+    page.write_text(page_text)
+    return page
+
+
+def test_render_page_writes_outputs(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _render_tree(tmp_path, RENDER_PAGE)
+    assert nma_scrolly.render_all() == 0
+    data = json.loads((tmp_path / "_build" / "scrolly" / "Day" / "T.json").read_text())
+
+    hello = data[cell_key('print("hello from", here)')]
+    assert hello == {"stdout": "hello from Day\n", "images": [], "error": None}  # cwd = page dir
+    plot = data[cell_key("plt.plot([0, 1], [1, 0])\nplt.show()")]
+    assert len(plot["images"]) == 1 and plot["images"][0].startswith("iVBOR")  # base64 PNG
+    demo = data[cell_key("k = 3  # @param [1, 3]\nprint(f(k))\n6 * 7")]
+    assert demo["stdout"] == "6\n42\n"  # solution used, param default, last expression
+    exercise = 'def f(x):\n    raise NotImplementedError("Student exercise")'
+    assert cell_key(exercise) not in data
+
+
+def test_render_failure_names_page_and_line(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    _render_tree(tmp_path, FRONT + "\n:::{step}\n:::\n\n```{code-cell} python\nx = 1\n```\n\n```{code-cell} python\n1 / 0\n```\n")
+    assert nma_scrolly.render_all() == 1
+    err = capsys.readouterr().err
+    assert "tutorials/Day/T.md:16:" in err and "ZeroDivisionError" in err
+
+
+def test_render_skips_non_scrolly_pages(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _render_tree(tmp_path, PLAIN_FRONT + "\n```{code-cell} python\n1 / 0\n```\n")
+    assert nma_scrolly.render_all() == 0
+    assert not (tmp_path / "_build" / "scrolly").exists()

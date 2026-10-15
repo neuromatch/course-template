@@ -35,6 +35,7 @@ The website side is plugins/scrolly/scrolly.mjs. These rules must match it:
 
 import hashlib
 import re
+import sys
 
 from nma_solutions import Block, find_blocks
 
@@ -354,3 +355,149 @@ def rewrite_notebook_params(nb: dict) -> int:
             cell["source"] = new.splitlines(keepends=True)
             count += 1
     return count
+
+
+# --- pre-render (CI) ----------------------------------------------------------------
+#
+# `python scripts/nma_scrolly.py --render` runs every scrolly page with a
+# kernelspec headless and writes its outputs to
+# _build/scrolly/<relDir>/<stem>.json = {cell_key: {stdout, images, error}}.
+# plugins/scrolly/scrolly.mjs embeds them so readers see real figures before
+# starting Python.
+
+TUTORIALS_DIR = "tutorials"
+RENDER_DIR = "_build/scrolly"
+RENDER_TIMEOUT = 300
+
+
+def render_path(rel_dir: str, stem: str):
+    from pathlib import Path
+    return Path(RENDER_DIR, *([rel_dir] if rel_dir else []), f"{stem}.json")
+
+
+def _source_cells(text: str) -> dict:
+    """cell_key -> 1-based page line of the code cell's opening fence."""
+    return {cell_key("\n".join(b.body_lines)): b.start + 1
+            for b in find_blocks(text, ()) if b.kind in ("code-cell", "exercise") and not b.nested}
+
+
+def _outputs(cell: dict) -> dict:
+    stdout, images = "", []
+    for out in cell.get("outputs", []):
+        kind = out.get("output_type")
+        if kind == "stream" and out.get("name") == "stdout":
+            stdout += out.get("text", "")
+        elif kind in ("display_data", "execute_result"):
+            data = out.get("data", {})
+            if "image/png" in data:
+                images.append(data["image/png"].replace("\n", ""))
+            elif kind == "execute_result" and "text/plain" in data:
+                stdout += data["text/plain"].rstrip("\n") + "\n"
+    return {"stdout": stdout, "images": images, "error": None}
+
+
+def execution_notebook(page, rel_dir: str, repo: str = "org/repo") -> dict:
+    """
+    The page's instructor notebook, ready to run: flattened, solutions filled
+    in, `# @param` cells left as plain assignments (so they run with their
+    defaults), and exercise cells removed (the `# Solution` cell after each
+    one defines the same names).
+    """
+    import json
+    import tempfile
+    from pathlib import Path
+
+    import convert_to_notebooks
+    import nma_solutions
+
+    with tempfile.TemporaryDirectory() as tmp:
+        out = Path(tmp) / "nb.ipynb"
+        result = convert_to_notebooks.run_jupytext(page, out)
+        if result.returncode != 0:
+            raise RuntimeError(f"jupytext failed:\n{result.stderr}")
+        nb = json.loads(out.read_text(encoding="utf-8"))
+    _, instructor, _ = nma_solutions.split_notebook(nb, page.stem, rel_dir, repo)
+    cells = []
+    for cell in instructor["cells"]:
+        if cell.get("cell_type") != "code":
+            continue
+        source = nma_solutions.text_of_cell(cell)
+        if any(nma_solutions.EXERCISE_RE.match(line) for line in source.splitlines()):
+            continue
+        cells.append({**cell, "source": source, "outputs": [], "execution_count": None})
+    return {**instructor, "cells": cells}
+
+
+def render_page(page, rel_dir: str) -> tuple[dict | None, str | None]:
+    """Run one page. Returns (render data, None) or (None, error message)."""
+    import nbformat
+    from nbclient import NotebookClient
+    from nbclient.exceptions import CellExecutionError
+
+    text = page.read_text(encoding="utf-8")
+    lines_by_key = _source_cells(text)
+    nb = nbformat.from_dict(execution_notebook(page, rel_dir))
+    client = NotebookClient(nb, timeout=RENDER_TIMEOUT, kernel_name="python3",
+                            resources={"metadata": {"path": str(page.parent)}})
+    try:
+        client.execute()
+    except CellExecutionError as exc:
+        for cell in nb.cells:
+            errors = [o for o in cell.get("outputs", []) if o.get("output_type") == "error"]
+            if errors:
+                key = cell_key(cell.source)
+                where = f"{page.as_posix()}:{lines_by_key.get(key, '?')}"
+                if key not in lines_by_key:
+                    where += f" (generated cell starting {cell.source.splitlines()[0]!r})"
+                return None, f"{where}: {errors[0]['ename']}: {errors[0]['evalue']}"
+        return None, f"{page.as_posix()}: {exc}"
+
+    data = {}
+    for cell in nb.cells:
+        key = cell_key(cell.source)
+        if key in lines_by_key:
+            data[key] = _outputs(cell)
+    return data, None
+
+
+def render_all(root: str = TUTORIALS_DIR) -> int:
+    """Render every scrolly page with a kernelspec under `root`. Returns an exit code."""
+    import json
+    from pathlib import Path
+
+    import convert_to_notebooks
+
+    failed = False
+    for page in sorted(Path(root).rglob("*.md")):
+        text = page.read_text(encoding="utf-8")
+        if not (is_scrolly(text) and convert_to_notebooks.has_kernelspec(page)):
+            continue
+        rel = page.relative_to(root)
+        rel_dir = rel.parent.as_posix() if rel.parent != Path(".") else ""
+        print(f"Rendering {page}")
+        data, error = render_page(page, rel_dir)
+        if error:
+            print(f"  ERROR {error}", file=sys.stderr)
+            failed = True
+            continue
+        out = render_path(rel_dir, page.stem)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps(data), encoding="utf-8")
+        print(f"  Wrote {out} ({len(data)} cell(s))")
+    return 1 if failed else 0
+
+
+def main() -> None:
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Scrollytelling page tools")
+    parser.add_argument("--render", action="store_true",
+                        help=f"run scrolly pages headless and write their outputs to {RENDER_DIR}/")
+    args = parser.parse_args()
+    if not args.render:
+        parser.error("nothing to do (use --render)")
+    sys.exit(render_all())
+
+
+if __name__ == "__main__":
+    main()
