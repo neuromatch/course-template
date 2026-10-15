@@ -9,14 +9,21 @@
    (container queries), not the viewport's: stage beside the cards when there
    is room, stage above the cards otherwise. */
 
-/* ---- placement in the article grid ---- */
+/* ---- placement in the article grid ----
+   Default: between the menus. Each menu a page hides (frontmatter
+   `site: hide_toc: true` / `hide_outline: true`) gives the section its space;
+   with both hidden it spans the whole window (recommended). */
 .article-grid > .scrolly-col { grid-column: page; container: scrolly / inline-size; }
-@media (min-width: 1024px) { .article-grid > .scrolly-col { grid-column: page-start / body-end; } }
-@media (min-width: 1280px) { .article-grid > .scrolly-col { grid-column: body; } }
-/* A page that hides the outline (frontmatter `site: hide_outline: true`)
-   frees the right margin, so the section can use it. */
-@media (min-width: 1024px) { .article-grid:not(:has(> .lg\:col-margin-right)) > .scrolly-col { grid-column: page; } }
-@media (min-width: 1280px) { .article-grid:not(:has(> .lg\:col-margin-right)) > .scrolly-col { grid-column: body-start / page-end; } }
+@media (min-width: 1024px) {
+  .article-grid > .scrolly-col { grid-column: page-start / body-end; }
+  .article-grid:not(:has(> .lg\:col-margin-right)) > .scrolly-col { grid-column: screen-inset; }
+}
+@media (min-width: 1280px) {
+  .article-grid > .scrolly-col { grid-column: body; }
+  .article-grid:not(:has(> .lg\:col-margin-right)) > .scrolly-col { grid-column: body-start / page-end; }
+  body:has(.myst-primary-sidebar.lg\:hidden) .article-grid > .scrolly-col { grid-column: page-start / body-end; }
+  body:has(.myst-primary-sidebar.lg\:hidden) .article-grid:not(:has(> .lg\:col-margin-right)) > .scrolly-col { grid-column: screen-inset; }
+}
 
 .scrolly {
   --scrolly-top: 60px;
