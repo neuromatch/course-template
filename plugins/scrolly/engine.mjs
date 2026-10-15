@@ -21,6 +21,10 @@ const STYLE = `
 .py[data-state="error"] { background: var(--nm-salmon, #fb7a7a); border-color: var(--nm-salmon, #fb7a7a); }
 `;
 
+// Section width (px) from which the stage sits beside the cards.
+// Keep in sync with the @container breakpoint in scrolly.css.
+const WIDE = 760;
+
 const PY_LABELS = { idle: 'Enable Python ▸', ready: 'Python ready', error: 'Python failed. Retry' };
 
 /** Copy the layout stylesheet link from the shadow root into <head> (once). */
@@ -84,13 +88,17 @@ function render({ model, el }) {
     barEl.style.width = `${((i + 1) / steps.length) * 100}%`;
   }
 
-  const wide = window.matchMedia('(min-width: 900px)');
   let io;
+  let lastKey = '';
   function observe() {
-    if (io) io.disconnect();
     const H = window.innerHeight;
+    const wide = container.clientWidth >= WIDE;
+    const key = `${H}|${wide}`;
+    if (io && key === lastKey) return;
+    lastKey = key;
+    if (io) io.disconnect();
     const top = parseFloat(getComputedStyle(container).getPropertyValue('--scrolly-top')) || 0;
-    const line = wide.matches ? Math.round(H * 0.5) : Math.round(top + 0.55 * H + 48);
+    const line = wide ? Math.round(H * 0.5) : Math.round(top + 0.55 * H + 48);
     io = new IntersectionObserver(
       (entries) => entries.forEach((e) => e.isIntersecting && activate(steps.indexOf(e.target.closest('.scrolly-step')))),
       { rootMargin: `-${line}px 0px -${Math.max(0, H - line - 1)}px 0px`, threshold: 0 },
@@ -98,7 +106,8 @@ function render({ model, el }) {
     steps.forEach((s) => io.observe(s.querySelector('.scrolly-card') || s));
   }
   window.addEventListener('resize', observe);
-  wide.addEventListener('change', observe);
+  const ro = new ResizeObserver(observe); // the section's width changes with the menus, not just the window
+  ro.observe(container);
 
   const showPy = (state, msg) => {
     pyBtn.hidden = false;
@@ -123,7 +132,7 @@ function render({ model, el }) {
   return () => {
     if (io) io.disconnect();
     window.removeEventListener('resize', observe);
-    wide.removeEventListener('change', observe);
+    ro.disconnect();
     window.removeEventListener('nma-py', onPy);
   };
 }

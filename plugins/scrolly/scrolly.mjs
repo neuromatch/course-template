@@ -4,7 +4,7 @@
 // in the tree. On pages with `layout: scrolly` in the frontmatter, a
 // document-stage transform regroups the top-level nodes into
 //
-//   block.col-screen > div.scrolly > engine widget
+//   block.scrolly-col > div.scrolly > engine widget
 //                                  + div.scrolly-stage > div.scrolly-view (one per stage)
 //                                  + div.scrolly-steps > div.scrolly-step > div.scrolly-card
 //
@@ -382,7 +382,8 @@ export function buildScrolly(tree, { renders = {}, solutions = {}, config = {} }
     },
   };
   const section = div('scrolly', [engine, div('scrolly-stage', views), div('scrolly-steps', cards)]);
-  tree.children = [...header, { type: 'block', class: 'col-screen', children: [section] }];
+  // .scrolly-col (scrolly.css) places the section between the TOC sidebar and the outline.
+  tree.children = [...header, { type: 'block', class: 'scrolly-col', children: [section] }];
   return messages;
 }
 

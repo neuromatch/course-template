@@ -147,7 +147,7 @@ test('buildScrolly keeps content before the first step as a header', () => {
   const { tree } = build();
   assert.equal(tree.children.length, 2);
   assert.deepEqual(tree.children[0], { type: 'block', children: [p('badges')] });
-  assert.equal(tree.children[1].class, 'col-screen');
+  assert.equal(tree.children[1].class, 'scrolly-col');
 });
 
 test('buildScrolly engine model', () => {

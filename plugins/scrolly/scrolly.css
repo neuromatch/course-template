@@ -1,7 +1,22 @@
 /* Scrollytelling page layout (plugins/scrolly/).
    Attached to the engine widget so MyST bundles it; engine.mjs copies it
    into <head>. Without JavaScript the page is a plain linear document; the
-   pinned layout switches on when the engine sets data-ready. */
+   pinned layout switches on when the engine sets data-ready.
+
+   The section sits between the book theme's menus: the TOC sidebar
+   (col-margin-left, from 1280px) and the "On this page" outline
+   (col-margin-right, from 1024px). Its layout follows its own width
+   (container queries), not the viewport's: stage beside the cards when there
+   is room, stage above the cards otherwise. */
+
+/* ---- placement in the article grid ---- */
+.article-grid > .scrolly-col { grid-column: page; container: scrolly / inline-size; }
+@media (min-width: 1024px) { .article-grid > .scrolly-col { grid-column: page-start / body-end; } }
+@media (min-width: 1280px) { .article-grid > .scrolly-col { grid-column: body; } }
+/* A page that hides the outline (frontmatter `site: hide_outline: true`)
+   frees the right margin, so the section can use it. */
+@media (min-width: 1024px) { .article-grid:not(:has(> .lg\:col-margin-right)) > .scrolly-col { grid-column: page; } }
+@media (min-width: 1280px) { .article-grid:not(:has(> .lg\:col-margin-right)) > .scrolly-col { grid-column: body-start / page-end; } }
 
 .scrolly {
   --scrolly-top: 60px;
@@ -36,7 +51,7 @@
 body:has(.scrolly) .myst-jp-nb-toolbar-power { display: none !important; }
 
 /* ---- pinned layout ---- */
-.scrolly[data-ready="true"] { padding: 0; border-radius: 0; margin-block: 0; }
+.scrolly[data-ready="true"] { padding: 0; }
 .scrolly[data-ready="true"] .scrolly-engine { position: sticky; top: var(--scrolly-top); height: 0; z-index: 6; }
 .scrolly[data-ready="true"] .scrolly-stage {
   position: sticky;
@@ -45,6 +60,7 @@ body:has(.scrolly) .myst-jp-nb-toolbar-power { display: none !important; }
   margin: 0 0 calc(-1 * (100vh - var(--scrolly-top)));
   overflow: hidden;
   z-index: 0;
+  border-radius: 12px;
   background:
     radial-gradient(ellipse 60% 50% at 78% 20%, rgba(68, 67, 156, 0.55), transparent 70%),
     radial-gradient(ellipse 40% 40% at 10% 95%, rgba(0, 137, 247, 0.16), transparent 70%);
@@ -65,7 +81,7 @@ body:has(.scrolly) .myst-jp-nb-toolbar-power { display: none !important; }
 .scrolly[data-ready="true"] .scrolly-view.is-active { opacity: 1; visibility: visible; }
 .scrolly[data-ready="true"] .scrolly-view.is-hero { left: 28px; }
 .scrolly[data-ready="true"] .scrolly-steps { position: relative; z-index: 1; pointer-events: none; }
-.scrolly[data-ready="true"] .scrolly-step { min-height: 90vh; width: 40%; display: flex; align-items: center; margin: 0; padding-left: max(24px, 4vw); padding-right: 12px; }
+.scrolly[data-ready="true"] .scrolly-step { min-height: 90vh; width: 40%; display: flex; align-items: center; margin: 0; padding-left: max(20px, 3cqi); padding-right: 12px; }
 .scrolly[data-ready="true"] .scrolly-step.is-hero { display: block; width: 100%; min-height: 105vh; padding: 0; }
 
 /* ---- cards ---- */
@@ -112,21 +128,22 @@ body:has(.scrolly) .myst-jp-nb-toolbar-power { display: none !important; }
 .scrolly-view.is-list li { counter-increment: chip; display: grid; grid-template-columns: 2.6rem 1fr; align-items: center; gap: 0.9rem; font-size: 1.05rem; line-height: 1.45; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(185, 184, 255, 0.2); border-radius: 12px; padding: 0.75rem 1rem; margin: 0; }
 .scrolly-view.is-list li::before { content: counter(chip); display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border-radius: 50%; background: var(--nm-mint); color: var(--nm-indigo); font-weight: 700; font-size: 1.1rem; }
 .scrolly-view.is-list li > p { margin: 0; }
-.scrolly-view.is-list :is(h2, h3, h4) { margin: 0 0 0.5rem; font-size: clamp(1.5rem, 2.6vw, 2.2rem); font-weight: 700; }
+.scrolly-view.is-list :is(h2, h3, h4) { margin: 0 0 0.5rem; font-size: clamp(1.4rem, 4cqi, 2.2rem); font-weight: 700; }
 
 /* ---- hero (title and closing screens) ----
    MyST re-levels headings, so the title is styled by position, not by tag. */
-.scrolly-view.is-hero { max-width: 72rem; margin-inline: auto; padding: 0 clamp(0.5rem, 5vw, 4rem); }
+.scrolly-view.is-hero { max-width: 72rem; margin-inline: auto; padding: 0 clamp(0.5rem, 5cqi, 4rem); }
 .scrolly-view.is-hero .scrolly-kicker p { font-size: 0.85rem; letter-spacing: 0.32em; color: var(--nm-mint) !important; margin-bottom: 0.6rem; }
 .scrolly-view.is-hero :is(h1, h2, h3, h4, h5, h6) { display: block; margin: 0; padding: 0; border: 0; }
-.scrolly-view.is-hero :is(h1, h2, h3, h4, h5, h6):not(:is(h1, h2, h3, h4, h5, h6) ~ *) { font-weight: 700; font-size: clamp(2.2rem, 5.6vw, 4.6rem); line-height: 1.05; color: #fff; }
+.scrolly-view.is-hero :is(h1, h2, h3, h4, h5, h6):not(:is(h1, h2, h3, h4, h5, h6) ~ *) { font-weight: 700; font-size: clamp(2rem, 8cqi, 4.6rem); line-height: 1.05; color: #fff; }
 .scrolly-view.is-hero :is(h1, h2, h3, h4, h5, h6) ~ :is(h1, h2, h3, h4, h5, h6) { font-weight: 500; font-size: 1.15rem; color: var(--nm-lilac); margin: 0.9rem 0 0.3rem; }
 .scrolly-view.is-hero :is(h1, h2, h3, h4, h5, h6) em { font-style: normal; background: linear-gradient(90deg, var(--nm-salmon), var(--nm-mint)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .scrolly-view.is-hero p { margin: 0.5rem 0; font-size: 0.98rem; line-height: 1.5; max-width: 52rem; }
 .scrolly-view.is-hero p strong { color: var(--nm-salmon); }
 
-/* ---- narrow screens: stage on top, cards below it ---- */
-@media (max-width: 899px) {
+/* ---- narrow sections: stage on top, cards below it ----
+   Keep the 760px breakpoint in sync with WIDE in engine.mjs. */
+@container scrolly (max-width: 759.98px) {
   .scrolly[data-ready="true"] .scrolly-stage { height: 55vh; margin-bottom: -55vh; }
   .scrolly[data-ready="true"] .scrolly-view, .scrolly[data-ready="true"] .scrolly-view.is-hero { inset: 46px 12px 10px 12px; }
   .scrolly[data-ready="true"] .scrolly-step { width: 100%; min-height: 70vh; display: block; padding: calc(55vh + 12px) 12px 0; }
