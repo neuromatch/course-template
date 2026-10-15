@@ -28,3 +28,4 @@ By the end of this tutorial you will be able to:
 | Tutorial | Topic | Duration |
 |----------|-------|----------|
 | Tutorial 1 | Linear dynamical systems | 1 hour |
+| Tutorial 2 | Linear dynamical systems (scrollytelling version) | 1 hour |
