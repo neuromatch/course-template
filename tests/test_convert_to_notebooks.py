@@ -213,3 +213,20 @@ def test_validate_content_reports_scrolly_errors(tmp_path, monkeypatch):
     (tmp_path / "tutorials" / "P.md").write_text("---\ntitle: P\n---\n\n:::{step}\n:::\n")
     errors = validate_content()
     assert len(errors) == 1 and "P.md: line 5:" in errors[0] and "layout: scrolly" in errors[0]
+
+
+def test_prepare_site_skips_fallback_on_colab_pages(tmp_path):
+    page = tmp_path / "T.md"
+    page.write_text(PAGE.replace("title: T\n", "title: T\nruntime: colab\n"))
+    text = prepare(page)
+    assert FALLBACK_SENTINEL not in text
+    assert "colab.research.google.com" in text  # badges still added
+
+
+def test_validate_content_reports_runtime_errors(tmp_path, monkeypatch):
+    from convert_to_notebooks import validate_content
+
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "tutorials").mkdir()
+    (tmp_path / "tutorials" / "P.md").write_text("---\ntitle: P\nruntime: gpu\n---\n")
+    assert any("runtime: 'gpu'" in e for e in validate_content())

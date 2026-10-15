@@ -56,6 +56,9 @@ def _frontmatter_text(text: str) -> str:
     return text[3:end] if end != -1 else ""
 
 
+frontmatter_text = _frontmatter_text  # public alias (used by nma_cells)
+
+
 def is_scrolly(text: str) -> bool:
     """True if the frontmatter has a plain top-level `layout: scrolly` line."""
     return bool(LAYOUT_RE.search(_frontmatter_text(text)))

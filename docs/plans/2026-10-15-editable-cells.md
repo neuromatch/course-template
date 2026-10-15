@@ -75,7 +75,7 @@ because its code sketches are the reference for every task below. Its appendix
 - Produces: `nma_cells.RUNTIMES = ("browser", "colab")`, `nma_cells.runtime_of(text: str) -> str` (the raw value, or `"browser"` if absent), `nma_cells.validate(text: str) -> list[str]`.
 - Produces: `tests/fixtures/cells/runtime.json`, a list of `{"name", "text", "runtime"}` that Task 3's `runtimeOf` must also pass.
 
-- [ ] **Step 1: Write the shared fixture** `tests/fixtures/cells/runtime.json` with these cases (`text` → `runtime`):
+- [x] **Step 1: Write the shared fixture** `tests/fixtures/cells/runtime.json` with these cases (`text` → `runtime`):
   - `"---\ntitle: T\n---\n"` → `"browser"`
   - `"---\nruntime: colab\n---\n"` → `"colab"`
   - `"---\nruntime: 'colab'  # heavy\n---\n"` → `"colab"`
@@ -84,7 +84,7 @@ because its code sketches are the reference for every task below. Its appendix
   - `"---\ntitle: T\n---\nruntime: colab\n"` → `"browser"` (not in frontmatter)
   - `"---\nsite:\n  runtime: colab\n---\n"` → `"browser"` (nested key)
 
-- [ ] **Step 2: Write failing tests** in `tests/test_nma_cells.py`:
+- [x] **Step 2: Write failing tests** in `tests/test_nma_cells.py`:
 
 ```python
 FIXTURES = Path(__file__).parent / "fixtures" / "cells"
@@ -121,23 +121,23 @@ def test_validate_content_reports_runtime_errors(tmp_path, monkeypatch):
     assert any("runtime: 'gpu'" in e for e in validate_content())
 ```
 
-- [ ] **Step 3: Run them to verify they fail**
+- [x] **Step 3: Run them to verify they fail**
 
 Run: `uv run pytest -q tests/test_nma_cells.py tests/test_convert_to_notebooks.py`
 Expected: FAIL (`ModuleNotFoundError: nma_cells`, the colab prepare test fails)
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
   - `scripts/nma_cells.py`: `RUNTIME_RE = re.compile(r"""^runtime:\s*(['"]?)([A-Za-z]+)\1\s*(#.*)?$""", re.M)` searched in `nma_scrolly.frontmatter_text(text)`. `validate` exactly as in the spec, but without the `execute:` rule.
   - `nma_scrolly.py`: add `frontmatter_text = _frontmatter_text` (public alias, old name kept).
   - `convert_to_notebooks.py`: call `nma_cells.validate(text)` in `validate_content` next to `nma_scrolly.validate`. In `prepare_site_md`, `skip = nma_scrolly.is_scrolly(content) or nma_cells.runtime_of(content) == "colab"` and `pairs = [] if skip else ...`.
   - Update the docstring of `prepare_site_md`.
 
-- [ ] **Step 5: Run the full Python suite**
+- [x] **Step 5: Run the full Python suite**
 
 Run: `uv run pytest -q`
 Expected: all pass
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add scripts/nma_cells.py scripts/nma_scrolly.py scripts/convert_to_notebooks.py tests/test_nma_cells.py tests/fixtures/cells/runtime.json tests/test_convert_to_notebooks.py
