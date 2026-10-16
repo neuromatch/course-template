@@ -72,6 +72,18 @@ notebooks/                   # Generated files (gitignored, lives on notebooks-b
 
 ## Key Conventions
 
+### Frontmatter reference
+
+| Key | Values | Read by | Effect |
+|---|---|---|---|
+| `title` | string | MyST | Page title (always set it). |
+| `kernelspec` | `name: python3`, `display_name: Python 3` | MyST, scripts, plugins | Makes the page executable: editable cells, generated notebooks, badges. Required if the page has a `{code-cell}`. |
+| `runtime` | `browser` (default), `colab` | `nma_cells.py`, `cells.mjs` | `colab` = read-only code plus a Colab/Kaggle banner, no fallback cell. Not with `layout: scrolly`. |
+| `layout` | `scrolly` | `nma_scrolly.py`, `scrolly.mjs` | Scrollytelling page. Pair with `site: {hide_outline: true}`. |
+| `feedback_prefix` | string | `nma_feedback.py`, `nma.mjs` | Overrides the prefix of `{nma-feedback}` ids. |
+
+MyST logs `extra key ignored` for `runtime`, `layout` and `feedback_prefix`; that is expected. The user-facing version of this table is `tutorials/W1D1_GettingStarted/W1D1_Tutorial4.md`: keep both in sync when a key is added.
+
 ### Executable vs static pages
 
 A page with `kernelspec` in its YAML frontmatter is executable:
