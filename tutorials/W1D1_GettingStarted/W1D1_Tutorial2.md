@@ -23,6 +23,20 @@ Each day's `chapter_intro.md` is the parent entry, and its title becomes the day
 label in the sidebar. Don't wrap it in a separate `title:` group. If you do, the day
 shows up twice in the sidebar, once as the group and once as the intro page.
 
+## Logo and course title above the TOC
+
+The top of the sidebar, above the TOC, shows the site logo and a short title. Set
+them in `myst.yml` under `site.options`:
+
+    site:
+      options:
+        logo: _static/your_logo.svg
+        logo_dark: _static/your_logo_dark.svg   # optional, used in dark mode
+        logo_text: Your Course Title             # appears next to the logo
+
+`logo_text` is the course name shown beside the logo — handy when the logo is an
+icon rather than a full wordmark. Leave it out to show the logo on its own.
+
 ## Naming convention
 
 Follow the Neuromatch naming convention for all tutorial files:

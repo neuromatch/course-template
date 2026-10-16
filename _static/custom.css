@@ -36,30 +36,32 @@ h1, h2, h3, h4, h5, h6 {
 
 /* -------------------------------------------------------------------------
  * Book theme colours — light mode (:root) overrides the theme defaults.
- * Primary accent is Neuromatch Purple; links hover to Blue.
+ * Highlight accent is Neuromatch Blue: it stands out clearly from the
+ * near-black body text, where Purple read too close to it. Purple is kept
+ * for the inverse (header/hero) surface so it still anchors the brand.
  * ---------------------------------------------------------------------- */
 :root {
-  --myst-color-primary: #45429C;
-  --myst-color-primary-hover: #008CBF;
+  --myst-color-primary: #008CBF;
+  --myst-color-primary-hover: #006B8F;
 
-  --myst-color-link: #45429C;
-  --myst-color-link-hover: #008CBF;
-  --myst-color-link-underline: #BDCFCF;
+  --myst-color-link: #008CBF;
+  --myst-color-link-hover: #006B8F;
+  --myst-color-link-underline: #008CBF;
 
-  --myst-color-active: #45429C;
-  --myst-color-active-bg: rgba(69, 66, 156, 0.15);
+  --myst-color-active: #008CBF;
+  --myst-color-active-bg: rgba(0, 140, 191, 0.15);
   --myst-color-active-surface: #F7F8FA;
 
-  --myst-color-focus-ring: #45429C;
+  --myst-color-focus-ring: #008CBF;
   --myst-color-focus-outline: #BDCFCF;
 
-  --myst-color-accent-text: #45429C;
+  --myst-color-accent-text: #008CBF;
   --myst-color-accent-surface: #F7F8FA;
   --myst-color-accent-surface-border: #BDCFCF;
-  --myst-color-accent-surface-text: #45429C;
+  --myst-color-accent-surface-text: #006B8F;
 
   --myst-color-inverse-bg: #45429C;
-  --myst-color-code: #45429C;
+  --myst-color-code: #008CBF;
 
   /* Neutrals */
   --myst-color-text: #1A1A1A;
@@ -74,12 +76,12 @@ h1, h2, h3, h4, h5, h6 {
 
   /* Admonition accents on brand */
   --myst-color-info: #008CBF;
-  --myst-color-info-text: #008CBF;
+  --myst-color-info-text: #006B8F;
   --myst-color-tip: #45429C;
   --myst-color-tip-text: #45429C;
 
   /* Interactive code panels (plugins/cells) — light */
-  --nma-cell-accent-light: #45429C;
+  --nma-cell-accent-light: #008CBF;
   --nma-cell-exercise-accent-light: #FA7A7A;
   --nma-cell-font-family: var(--nma-font-sans);
 }

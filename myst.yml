@@ -57,6 +57,7 @@ site:
     style: _static/custom.css
     logo: _static/nma-logo.svg
     logo_dark: _static/nma-logo-dark.svg
+    logo_text: Neuromatch Course Template
     favicon: _static/nma-favicon.png
 
 # Neuromatch settings. Read by plugins/nma.mjs and scripts/, not by MyST
