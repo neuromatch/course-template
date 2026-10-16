@@ -84,6 +84,15 @@ h1, h2, h3, h4, h5, h6 {
   --nma-cell-accent-light: #008CBF;
   --nma-cell-exercise-accent-light: #FA7A7A;
   --nma-cell-font-family: var(--nma-font-sans);
+
+  /* Syntax highlighting tokens (CodeMirror cells) — light.
+     Brand-derived palette, chosen for AA contrast on the light cell bg. */
+  --nma-tok-keyword-light: #45429C;   /* Purple     */
+  --nma-tok-function-light: #006B8F;  /* deep Blue  */
+  --nma-tok-definition-light: #006B8F;
+  --nma-tok-string-light: #0E7C86;    /* deep teal  */
+  --nma-tok-number-light: #B5484B;    /* deep blush */
+  --nma-tok-comment-light: #7A7A7A;   /* Mid grey   */
 }
 
 /* -------------------------------------------------------------------------
@@ -132,7 +141,60 @@ html.dark,
   /* Interactive code panels (plugins/cells) — dark */
   --nma-cell-accent-dark: #35B4DC;
   --nma-cell-exercise-accent-dark: #FA7A7A;
+
+  /* Syntax highlighting tokens (CodeMirror cells) — dark.
+     Lighter brand tints for contrast on the dark cell bg. */
+  --nma-tok-keyword-dark: #B9B8FF;    /* lilac       */
+  --nma-tok-function-dark: #5EC8EC;   /* bright blue */
+  --nma-tok-definition-dark: #5EC8EC;
+  --nma-tok-string-dark: #5EFBD7;     /* mint        */
+  --nma-tok-number-dark: #FF9E9E;     /* light blush */
+  --nma-tok-comment-dark: #9AA7A7;    /* muted teal  */
 }
 
-/* Editable cells (plugins/cells) replace JupyterLite's power button site-wide. */
-.myst-jp-nb-toolbar-power { display: none !important; }
+/* -------------------------------------------------------------------------
+ * Static code blocks (highlight.js) — brand palette matching the CodeMirror
+ * token colours above, so the two highlighters look consistent. Light is the
+ * default (no html class); dark is html.dark. Selectors are one step more
+ * specific than the theme's so they win.
+ * ---------------------------------------------------------------------- */
+html:not(.dark) .hljs-keyword,
+html:not(.dark) .hljs-literal,
+html:not(.dark) .hljs-selector-tag,
+html:not(.dark) .hljs-name,
+html:not(.dark) .hljs-symbol,
+html:not(.dark) .hljs-tag { color: #45429C; }
+html:not(.dark) .hljs-built_in,
+html:not(.dark) .hljs-type,
+html:not(.dark) .hljs-title,
+html:not(.dark) .hljs-section { color: #006B8F; }
+html:not(.dark) .hljs-string,
+html:not(.dark) .hljs-quote,
+html:not(.dark) .hljs-attr,
+html:not(.dark) .hljs-attribute { color: #0E7C86; }
+html:not(.dark) .hljs-number,
+html:not(.dark) .hljs-meta { color: #B5484B; }
+html:not(.dark) .hljs-comment { color: #7A7A7A; font-style: italic; }
+
+html.dark .hljs-keyword,
+html.dark .hljs-literal,
+html.dark .hljs-selector-tag,
+html.dark .hljs-name,
+html.dark .hljs-symbol,
+html.dark .hljs-tag { color: #B9B8FF; }
+html.dark .hljs-built_in,
+html.dark .hljs-type,
+html.dark .hljs-title,
+html.dark .hljs-section { color: #5EC8EC; }
+html.dark .hljs-string,
+html.dark .hljs-quote,
+html.dark .hljs-attr,
+html.dark .hljs-attribute { color: #5EFBD7; }
+html.dark .hljs-number,
+html.dark .hljs-meta { color: #FF9E9E; }
+html.dark .hljs-comment { color: #9AA7A7; font-style: italic; }
+
+/* Editable cells (plugins/cells) replace JupyterLite's power button site-wide.
+   Hide the whole toolbar wrapper, not just the power button — the wrapper/inner
+   otherwise leaves a small ghost dot. */
+.myst-jp-nb-toolbar { display: none !important; }

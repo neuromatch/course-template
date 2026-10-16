@@ -11,9 +11,9 @@ MyST supports a full range of scientific publishing features natively.
 
 ## Figures with captions
 
-```{figure} https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Binh_dinh_at_dusk.jpg/320px-Binh_dinh_at_dusk.jpg
+```{figure} ../../_static/example_figure.png
 :label: fig-example
-:alt: A landscape photograph used as a placeholder figure
+:alt: An example figure used to demonstrate the figure directive
 :width: 60%
 
 A figure with a caption and a label. Reference it elsewhere with {numref}`fig-example`.

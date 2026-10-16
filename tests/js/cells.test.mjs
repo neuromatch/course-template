@@ -153,6 +153,33 @@ test('the explicitly run exercise carries the marker, earlier cells do not', asy
   assert.ok(!e['nma-cell-1'].includes(NO_FALLBACK_MARKER));
 });
 
+test('runAll executes every cell top to bottom, fallback left on everywhere', async () => {
+  const { rt, execs } = setup();
+  const res = await rt.runAll();
+  assert.deepEqual(execs(), [
+    ['nma-cell-0', 'setup()'],
+    ['nma-cell-1', 'a = 1'],
+    ['nma-cell-2', EXERCISE],
+    ['nma-cell-3', 'f()'],
+  ]);
+  assert.ok(!execs().some(([, s]) => s.includes(NO_FALLBACK_MARKER)));
+  assert.equal(res.failedIndex, null);
+});
+
+test('runAll applies in-memory edits', async () => {
+  const { rt, execs } = setup();
+  rt.edits[1] = 'a = 2';
+  await rt.runAll();
+  assert.deepEqual(execs()[1], ['nma-cell-1', 'a = 2']);
+});
+
+test('runAll stops at the first cell that errors', async () => {
+  const { rt, execs } = setup({ failOn: ['nma-cell-1'] });
+  const res = await rt.runAll();
+  assert.deepEqual(execs().map(([id]) => id), ['nma-cell-0', 'nma-cell-1']);
+  assert.equal(res.failedIndex, 1);
+});
+
 test('an earlier error stops the run', async () => {
   const { rt, execs } = setup({ failOn: ['nma-cell-1'] });
   const events = [];
