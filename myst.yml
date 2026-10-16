@@ -55,6 +55,9 @@ site:
   options:
     folders: true
     style: _static/custom.css
+    logo: _static/nma-logo.svg
+    logo_dark: _static/nma-logo-dark.svg
+    favicon: _static/nma-favicon.png
 
 # Neuromatch settings. Read by plugins/nma.mjs and scripts/, not by MyST
 # (MyST logs "extra key ignored: nma", which is expected).

@@ -1,13 +1,136 @@
 /* Neuromatch course template custom styles
  *
- * This file is loaded on every page of the book.
- * Add CSS here to customise colours, fonts, spacing, etc.
+ * This file is loaded on every page of the book (site.options.style).
+ * It applies the Neuromatch brand: colour palette, typography, and the
+ * accents used by the interactive code panels (plugins/cells, plugins/scrolly).
  *
- * Example: change the primary colour
- * :root {
- *   --color-primary: #FF6B6B;
- * }
+ * Brand palette (Neuromatch Brand Book 2026):
+ *   Primary   Purple     #45429C
+ *             Blue       #008CBF
+ *             Light teal #BDCFCF
+ *   Accent    Blush      #FA7A7A
+ *   Neutrals  Off white  #F7F8FA   Light grey #E6E6E6
+ *             Mid grey   #7A7A7A   Black      #1A1A1A
  */
+
+/* -------------------------------------------------------------------------
+ * Typography — Rubik (brand font), Arial/system sans as the fallback.
+ * ---------------------------------------------------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,400;0,500;0,700;1,400&display=swap');
+
+:root {
+  --nma-font-sans: 'Rubik', Arial, ui-sans-serif, system-ui, sans-serif;
+}
+
+body,
+button,
+input,
+select,
+textarea {
+  font-family: var(--nma-font-sans);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--nma-font-sans);
+}
+
+/* -------------------------------------------------------------------------
+ * Book theme colours — light mode (:root) overrides the theme defaults.
+ * Primary accent is Neuromatch Purple; links hover to Blue.
+ * ---------------------------------------------------------------------- */
+:root {
+  --myst-color-primary: #45429C;
+  --myst-color-primary-hover: #008CBF;
+
+  --myst-color-link: #45429C;
+  --myst-color-link-hover: #008CBF;
+  --myst-color-link-underline: #BDCFCF;
+
+  --myst-color-active: #45429C;
+  --myst-color-active-bg: rgba(69, 66, 156, 0.15);
+  --myst-color-active-surface: #F7F8FA;
+
+  --myst-color-focus-ring: #45429C;
+  --myst-color-focus-outline: #BDCFCF;
+
+  --myst-color-accent-text: #45429C;
+  --myst-color-accent-surface: #F7F8FA;
+  --myst-color-accent-surface-border: #BDCFCF;
+  --myst-color-accent-surface-text: #45429C;
+
+  --myst-color-inverse-bg: #45429C;
+  --myst-color-code: #45429C;
+
+  /* Neutrals */
+  --myst-color-text: #1A1A1A;
+  --myst-color-prose-body: #1A1A1A;
+  --myst-color-text-secondary: #7A7A7A;
+  --myst-color-text-tertiary: #7A7A7A;
+  --myst-color-bg-secondary: #F7F8FA;
+  --myst-color-surface: #F7F8FA;
+  --myst-color-surface-hover: #E6E6E6;
+  --myst-color-border: #E6E6E6;
+  --myst-color-border-strong: #BDCFCF;
+
+  /* Admonition accents on brand */
+  --myst-color-info: #008CBF;
+  --myst-color-info-text: #008CBF;
+  --myst-color-tip: #45429C;
+  --myst-color-tip-text: #45429C;
+
+  /* Interactive code panels (plugins/cells) — light */
+  --nma-cell-accent-light: #45429C;
+  --nma-cell-exercise-accent-light: #FA7A7A;
+  --nma-cell-font-family: var(--nma-font-sans);
+}
+
+/* -------------------------------------------------------------------------
+ * Book theme colours — dark mode. Accent shifts to the brighter Neuromatch
+ * Blue so it stays legible on the dark background.
+ * ---------------------------------------------------------------------- */
+html.dark,
+.dark {
+  --myst-color-primary: #008CBF;
+  --myst-color-primary-hover: #35B4DC;
+
+  --myst-color-link: #35B4DC;
+  --myst-color-link-hover: #BDCFCF;
+  --myst-color-link-underline: #008CBF;
+
+  --myst-color-active: #35B4DC;
+  --myst-color-active-bg: rgba(0, 140, 191, 0.25);
+
+  --myst-color-focus-ring: #35B4DC;
+  --myst-color-focus-outline: #35B4DC;
+
+  --myst-color-accent-text: #BDCFCF;
+  --myst-color-accent-surface-text: #BDCFCF;
+
+  --myst-color-inverse-bg: #008CBF;
+  --myst-color-code: #35B4DC;
+
+  --myst-color-info: #35B4DC;
+  --myst-color-info-text: #35B4DC;
+  --myst-color-tip: #35B4DC;
+  --myst-color-tip-text: #35B4DC;
+
+  /* Dark neutrals (must be restated: the :root overrides above otherwise
+     leak into dark mode, since custom.css loads after the theme and
+     :root / .dark have equal specificity). */
+  --myst-color-text: #F7F8FA;
+  --myst-color-prose-body: #E6E6E6;
+  --myst-color-text-secondary: #BDCFCF;
+  --myst-color-text-tertiary: #7A7A7A;
+  --myst-color-bg-secondary: #232323;
+  --myst-color-surface: #232323;
+  --myst-color-surface-hover: #2E2E2E;
+  --myst-color-border: #3A3A3A;
+  --myst-color-border-strong: #4A4A4A;
+
+  /* Interactive code panels (plugins/cells) — dark */
+  --nma-cell-accent-dark: #35B4DC;
+  --nma-cell-exercise-accent-dark: #FA7A7A;
+}
 
 /* Editable cells (plugins/cells) replace JupyterLite's power button site-wide. */
 .myst-jp-nb-toolbar-power { display: none !important; }
