@@ -123,6 +123,25 @@ export class PageRuntime {
     return job;
   }
 
+  /**
+   * Run every cell top-to-bottom, like a notebook "Run all". Edits are applied
+   * and the kernel-side fallback stays on for all cells, so an unfinished
+   * exercise runs its solution instead of stopping the run. Serialized through
+   * the same queue as single-cell runs; stops at the first cell that errors.
+   */
+  runAll() {
+    const job = this.queue.then(async () => {
+      const k = await this.boot();
+      for (const c of this.cells) {
+        const res = await this.exec(k, c.index, this.edits[c.index] ?? c.code);
+        if (res.error) return { error: res.error, failedIndex: c.index };
+      }
+      return { error: null, failedIndex: null };
+    });
+    this.queue = job.catch(() => {});
+    return job;
+  }
+
   async exec(k, index, source) {
     const cell = k.nb.getCellById(thebeId(index));
     this.emit({ index, state: 'running' });

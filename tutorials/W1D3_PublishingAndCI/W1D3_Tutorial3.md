@@ -26,10 +26,16 @@ Place your logo file in `_static/` and reference it in `myst.yml`:
 ```yaml
 site:
   options:
-    logo: _static/your_logo.png
+    logo: _static/your_logo.svg
+    logo_dark: _static/your_logo_dark.svg   # optional, shown in dark mode
+    logo_text: Your Course Title             # optional, shown next to the logo
 ```
 
 SVG and PNG both work. The logo appears in the top-left of the sidebar.
+`logo_dark` swaps in a light version of the logo when the reader is in dark mode,
+and `logo_text` puts the course title beside the logo — handy when the logo is an
+icon rather than a full wordmark. See Tutorial 2 for the same options in the
+context of the sidebar and table of contents.
 
 ## Custom CSS
 
