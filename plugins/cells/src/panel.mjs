@@ -18,19 +18,22 @@ export default {
     const root = el.getRootNode();
     const host = root.host;
 
-    el.innerHTML = `
+    // Append, don't replace: el also holds the <link> that loads cells.css.
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `
       <div class="cell${exercise ? ' is-exercise' : ''}" data-mode="${mode}">
-        <div class="bar">
-          <span class="label">${exercise ? 'Exercise · fill in, then run' : LABEL[mode]}</span>
+        <div class="head"><span class="label">${exercise ? 'Exercise · fill in, then run' : LABEL[mode]}</span></div>
+        <div class="editor"${mode === 'collapsed' ? ' hidden' : ''}></div>
+        <div class="actions">
           <button class="run" type="button" aria-label="Run cell">▶ Run</button>
           ${mode !== 'output' ? '<button class="reset" type="button">Reset</button>' : ''}
           ${mode === 'collapsed' ? '<button class="toggle" type="button" aria-expanded="false">Show code</button>' : ''}
           <button class="restart" type="button" hidden>Restart</button>
           <span class="status" role="status" aria-live="polite"></span>
         </div>
-        <div class="editor"${mode === 'collapsed' ? ' hidden' : ''}></div>
-        <slot name="out"></slot>
+        <div class="output"><slot name="out"></slot></div>
       </div>`;
+    el.appendChild(wrap.firstElementChild);
 
     // Keep data-theme in sync with the site's light/dark switch (no :host-context in Firefox).
     const syncTheme = () =>
@@ -116,6 +119,7 @@ export default {
       unregister();
       editor?.destroy();
       out.remove();
+      el.querySelector('.cell')?.remove();
     };
   },
 };

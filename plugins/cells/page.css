@@ -1,6 +1,8 @@
 /* Page-level rules for editable cells. runtime-widget.mjs copies this file into <head>. */
 .nma-cells-runtime { display: none; }
-.nma-cell-out { margin: 0; }
-.nma-cell-out .nma-hint { margin: 0.5rem 0.75rem; opacity: 0.7; font-size: 0.85rem; }
+/* The output area is slotted into the panel, so it needs a little air only when it has content. */
+.nma-cell-out { margin: 0; padding: 0; }
+.nma-cell-out:not(:empty) { padding: 0.65rem 1.1rem 0.8rem; }
+.nma-cell-out .nma-hint { margin: 0; opacity: 0.7; font-size: 0.85rem; font-style: italic; }
 .nma-cell-out.is-stale { opacity: 0.55; }
-.nma-cell-out.is-stale::before { content: 'Edited · run to update'; display: block; font-size: 0.75rem; }
+.nma-cell-out.is-stale::before { content: 'Edited · run to update'; display: block; font-size: 0.75rem; margin-bottom: 0.3rem; }

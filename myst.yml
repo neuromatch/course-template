@@ -22,6 +22,7 @@ project:
         - file: tutorials/W1D1_GettingStarted/W1D1_Tutorial1.md
         - file: tutorials/W1D1_GettingStarted/W1D1_Tutorial2.md
         - file: tutorials/W1D1_GettingStarted/W1D1_Tutorial3.md
+        - file: tutorials/W1D1_GettingStarted/W1D1_Tutorial4.md
         - file: tutorials/W1D1_GettingStarted/W1D1_Bonus.md
         - file: tutorials/W1D1_GettingStarted/further_reading.md
     - file: tutorials/W1D2_InteractiveContent/chapter_intro.md

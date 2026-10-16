@@ -1,42 +1,50 @@
-/* Editable cell panel. Lives in each panel's shadow root.
-   Public tokens (set them on :root / html.dark in _static/custom.css):
-   --nma-cell-{bg,fg}-{light,dark}, --nma-cell-border, --nma-cell-radius,
-   --nma-cell-accent, --nma-cell-exercise-accent, --nma-cell-bar-{bg,fg}-{light,dark},
-   --nma-cell-gutter-{bg,fg}-{light,dark}, --nma-cell-active-line-{light,dark},
-   --nma-cell-font, --nma-cell-font-size,
+/* Editable cell panel (in each panel's shadow root), styled like the scrolly codebox.
+   Public tokens, set on :root / html.dark in _static/custom.css:
+   --nma-cell-{bg,fg}-{light,dark}, --nma-cell-head-{bg,fg}-{light,dark},
+   --nma-cell-bar-bg-{light,dark}, --nma-cell-gutter-{bg,fg}-{light,dark},
+   --nma-cell-active-line-{light,dark}, --nma-cell-out-bg-{light,dark},
+   --nma-cell-border, --nma-cell-radius, --nma-cell-accent-value,
+   --nma-cell-exercise-accent, --nma-cell-font-family, --nma-cell-font-size-value,
    --nma-tok-{keyword,string,number,comment,function,definition}-{light,dark}. */
 :host {
   display: block;
-  margin: 1rem 0;
-  --_bg: var(--nma-cell-bg-light, #fbfbfe);
-  --_fg: var(--nma-cell-fg-light, #1f1d3a);
-  --_bar-bg: var(--nma-cell-bar-bg-light, #eeeef8);
-  --_bar-fg: var(--nma-cell-bar-fg-light, #3a3868);
-  --_gutter-bg: var(--nma-cell-gutter-bg-light, #f1f1f9);
-  --_gutter-fg: var(--nma-cell-gutter-fg-light, #8886a8);
-  --_active: var(--nma-cell-active-line-light, rgba(94, 92, 214, 0.08));
-  --_keyword: var(--nma-tok-keyword-light, #6b3fc4);
-  --_string: var(--nma-tok-string-light, #0b7a5a);
-  --_number: var(--nma-tok-number-light, #b4540b);
-  --_comment: var(--nma-tok-comment-light, #7a7897);
-  --_function: var(--nma-tok-function-light, #1c5fb8);
-  --_definition: var(--nma-tok-definition-light, #1c5fb8);
+  margin: 1.25rem 0;
+  --_bg: var(--nma-cell-bg-light, #14131f);
+  --_fg: var(--nma-cell-fg-light, #ecebff);
+  --_head-bg: var(--nma-cell-head-bg-light, #22214a);
+  --_head-fg: var(--nma-cell-head-fg-light, #b9b8ff);
+  --_bar-bg: var(--nma-cell-bar-bg-light, #1b1a36);
+  --_out-bg: var(--nma-cell-out-bg-light, #ffffff);
+  --_gutter-bg: var(--nma-cell-gutter-bg-light, #14131f);
+  --_gutter-fg: var(--nma-cell-gutter-fg-light, #6d6c9e);
+  --_active: var(--nma-cell-active-line-light, rgba(185, 184, 255, 0.07));
+  --_keyword: var(--nma-tok-keyword-light, #fb7a7a);
+  --_string: var(--nma-tok-string-light, #5efbd7);
+  --_number: var(--nma-tok-number-light, #b9b8ff);
+  --_comment: var(--nma-tok-comment-light, #8b8ac7);
+  --_function: var(--nma-tok-function-light, #7cc4ff);
+  --_definition: var(--nma-tok-definition-light, #7cc4ff);
 }
 :host([data-theme='dark']) {
-  --_bg: var(--nma-cell-bg-dark, #1b1a2e);
-  --_fg: var(--nma-cell-fg-dark, #e8e7ff);
-  --_bar-bg: var(--nma-cell-bar-bg-dark, #22214a);
-  --_bar-fg: var(--nma-cell-bar-fg-dark, #d6d5ff);
-  --_gutter-bg: var(--nma-cell-gutter-bg-dark, #201f3c);
-  --_gutter-fg: var(--nma-cell-gutter-fg-dark, #7f7da8);
-  --_active: var(--nma-cell-active-line-dark, rgba(94, 251, 215, 0.07));
-  --_keyword: var(--nma-tok-keyword-dark, #c3a6ff);
+  --_bg: var(--nma-cell-bg-dark, #14131f);
+  --_fg: var(--nma-cell-fg-dark, #ecebff);
+  --_head-bg: var(--nma-cell-head-bg-dark, #22214a);
+  --_head-fg: var(--nma-cell-head-fg-dark, #b9b8ff);
+  --_bar-bg: var(--nma-cell-bar-bg-dark, #1b1a36);
+  --_out-bg: var(--nma-cell-out-bg-dark, #0e0d18);
+  --_gutter-bg: var(--nma-cell-gutter-bg-dark, #14131f);
+  --_gutter-fg: var(--nma-cell-gutter-fg-dark, #6d6c9e);
+  --_active: var(--nma-cell-active-line-dark, rgba(185, 184, 255, 0.07));
+  --_keyword: var(--nma-tok-keyword-dark, #fb7a7a);
   --_string: var(--nma-tok-string-dark, #5efbd7);
-  --_number: var(--nma-tok-number-dark, #ffb86b);
-  --_comment: var(--nma-tok-comment-dark, #8b89b3);
-  --_function: var(--nma-tok-function-dark, #8ab8ff);
-  --_definition: var(--nma-tok-definition-dark, #8ab8ff);
+  --_number: var(--nma-tok-number-dark, #b9b8ff);
+  --_comment: var(--nma-tok-comment-dark, #8b8ac7);
+  --_function: var(--nma-tok-function-dark, #7cc4ff);
+  --_definition: var(--nma-tok-definition-dark, #7cc4ff);
 }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
 .cell {
   --nma-cell-bg: var(--_bg);
   --nma-cell-fg: var(--_fg);
@@ -49,33 +57,55 @@
   --nma-tok-comment: var(--_comment);
   --nma-tok-function: var(--_function);
   --nma-tok-definition: var(--_definition);
-  --nma-cell-font: var(--nma-cell-font-family, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
-  --nma-cell-font-size: var(--nma-cell-font-size-value, 0.875rem);
-  --nma-cell-accent: var(--nma-cell-accent-value, #5e5cd6);
-  border: 1px solid var(--nma-cell-border, rgba(42, 41, 82, 0.18));
-  border-left: 4px solid var(--nma-cell-accent);
-  border-radius: var(--nma-cell-radius, 8px);
+  --nma-cell-font: var(--nma-cell-font-family, ui-monospace, 'Cascadia Code', SFMono-Regular, Menlo, Consolas, monospace);
+  --nma-cell-font-size: var(--nma-cell-font-size-value, 0.85rem);
+  --nma-cell-accent: var(--nma-cell-accent-value, #5efbd7);
+  --_accent: var(--nma-cell-accent);
+  border: 1px solid var(--nma-cell-border, rgba(185, 184, 255, 0.35));
+  border-radius: var(--nma-cell-radius, 12px);
   overflow: hidden;
   background: var(--_bg);
   color: var(--_fg);
+  box-shadow: 0 6px 22px rgba(20, 19, 50, 0.18);
+  text-align: left;
+  font-family: system-ui, sans-serif;
 }
-.cell.is-exercise { border-left-color: var(--nma-cell-exercise-accent, #e8a33d); }
-.bar {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
-  padding: 0.35rem 0.7rem; background: var(--_bar-bg); color: var(--_bar-fg);
-  font: 600 0.78rem system-ui, sans-serif;
+.cell.is-exercise { --_accent: var(--nma-cell-exercise-accent, #ffc46b); border-color: var(--_accent); }
+
+.head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.45rem 1rem; background: var(--_head-bg); color: var(--_head-fg);
+  font: 600 0.72rem system-ui, sans-serif; letter-spacing: 0.1em; text-transform: uppercase;
 }
-.label { margin-right: auto; letter-spacing: 0.02em; }
-button {
-  font: inherit; color: inherit; background: transparent; cursor: pointer;
-  border: 1px solid currentColor; border-radius: 999px; padding: 0.1rem 0.75rem;
+.cell.is-exercise .head { color: var(--_accent); }
+
+.editor .cm-editor { max-height: 60vh; padding: 0.35rem 0; }
+.editor .cm-scroller { overflow: auto; line-height: 1.6; }
+.editor .cm-content { padding: 0.5rem 0; }
+.editor .cm-line { padding: 0 1.1rem 0 0.5rem; }
+.editor .cm-gutters { padding-left: 0.4rem; }
+.editor .cm-editor.cm-focused { outline: none; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--_accent) 55%, transparent); }
+
+.actions {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem;
+  padding: 0.5rem 1rem; background: var(--_bar-bg);
+  border-top: 1px solid rgba(185, 184, 255, 0.2);
 }
-button:hover { background: rgba(127, 127, 160, 0.18); }
-button:focus-visible { outline: 2px solid var(--nma-cell-accent); outline-offset: 2px; }
-button.run { background: var(--nma-cell-accent); border-color: var(--nma-cell-accent); color: #fff; }
-button.run:hover { filter: brightness(1.1); }
-button[hidden], .editor[hidden] { display: none; }
-.status { font-weight: 500; opacity: 0.85; min-width: 4ch; }
-.editor .cm-editor { max-height: 70vh; }
-.editor .cm-scroller { overflow: auto; }
+.cell[data-mode='output'] .actions { border-top: 0; }
+.actions button {
+  box-sizing: border-box; height: 2rem; min-width: 5.25rem; padding: 0 1rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  font: 600 0.78rem system-ui, sans-serif; line-height: 1; white-space: nowrap;
+  border-radius: 999px; cursor: pointer;
+  background: transparent; color: #b9b8ff; border: 1px solid rgba(185, 184, 255, 0.5);
+  transition: background 0.12s, filter 0.12s;
+}
+.actions button:hover { background: rgba(185, 184, 255, 0.14); }
+.actions button:focus-visible { outline: 2px solid var(--_accent); outline-offset: 2px; }
+.actions button.run { background: var(--_accent); border-color: var(--_accent); color: #2a2952; }
+.actions button.run:hover { background: var(--_accent); filter: brightness(1.08); }
+.status { font: 500 0.78rem ui-monospace, Consolas, monospace; color: #b4b3e6; margin-left: auto; }
+
+.output { background: var(--_out-bg); border-top: 1px solid rgba(185, 184, 255, 0.2); }
+.output:has(slot[name='out']) { min-height: 0; }
 slot[name='out'] { display: block; }

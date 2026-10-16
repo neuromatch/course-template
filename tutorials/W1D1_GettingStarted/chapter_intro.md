@@ -12,6 +12,7 @@ By the end of Day 1 you will be able to:
 - Understand the structure of a Neuromatch course book
 - Use figures, math, admonitions, and cross-references
 - Organise your table of contents in `myst.yml`
+- Choose the right page type with frontmatter (`kernelspec`, `runtime`, `layout`)
 
 ## Schedule
 
@@ -20,4 +21,5 @@ By the end of Day 1 you will be able to:
 | Tutorial 1 | Writing content in MyST Markdown | 30 min |
 | Tutorial 2 | Structuring your table of contents | 20 min |
 | Tutorial 3 | Rich outputs: figures, math, cross-refs | 30 min |
+| Tutorial 4 | Page types and frontmatter | 20 min |
 | Bonus | Advanced MyST: tabs, dropdowns, proofs | open-ended |
