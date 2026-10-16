@@ -333,12 +333,31 @@ design:
 - Courses can opt into live updates.
 - Deliver as an extractable folder inside this repo first.
 
+## Registry setup (decided: publish from the user's npm/PyPI accounts)
+
+Checked 2026-10-16: npm scope `@neuromatch` does not exist ("Scope not
+found"); `@neuromatch/course-kit`, PyPI `neuromatch-course-kit` and `nma-kit`
+are all free. One-time steps, done after extraction to `neuromatch/course-kit`:
+
+1. npm: create the free org `neuromatch` from the user's account. Publish
+   the first version by hand (`npm publish --access public` in `js/`), because
+   npm trusted publishing can only be configured on an existing package. Then
+   add a trusted publisher: repo `neuromatch/course-kit`, workflow
+   `release.yml`. After that CI publishes without a token.
+2. PyPI: add a *pending publisher* for project `neuromatch-course-kit`
+   (repo `neuromatch/course-kit`, workflow `release.yml`, environment
+   `release`). The first CI release creates the project.
+3. Add a second owner/maintainer on both registries.
+
+Trusted publishing is bound to the repo and workflow, not to a personal
+account; the user's account owns the packages.
+
 ## My calls (please check)
 
 - Names: repo `neuromatch/course-kit`, npm `@neuromatch/course-kit`, PyPI
   `neuromatch-course-kit`, CLI `nma-kit`.
-- Distribution via npm + PyPI + jsDelivr (needs Neuromatch org accounts on
-  npm and PyPI).
+- Distribution via npm + PyPI + jsDelivr (user confirmed they can publish;
+  see "Registry setup").
 - The template defaults to `@v1`. The workflow ref is the only update knob,
   and `prepare-site` pins the plugin URL to the CLI's version on CI.
 - Merge the three plugins into one bundle.
