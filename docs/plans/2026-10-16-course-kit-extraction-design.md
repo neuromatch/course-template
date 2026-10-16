@@ -89,7 +89,7 @@ The template becomes the kit's first user: content, `myst.yml`, branding,
 ## Architecture
 
 ```
-neuromatch/course-kit          (one repo, one version, tags vX.Y.Z + floating vX)
+neuromatch/course-kit          (one repo, one version, tags vX.Y.Z + floating v0.MINOR/vMAJOR)
 ├── js/        → npm  @neuromatch/course-kit      (bundled MyST plugin + widget assets + nma.yml)
 ├── python/    → PyPI neuromatch-course-kit        (CLI `nma-kit`, pins mystmd/jupytext/nbclient)
 └── .github/workflows/course-*.yml                 (reusable workflows, `workflow_call`)
@@ -97,20 +97,41 @@ neuromatch/course-kit          (one repo, one version, tags vX.Y.Z + floating vX
 course repo (template or a real course)
 ├── myst.yml           extend: <kit nma.yml URL>   + course settings, toc, nma: block
 ├── requirements.txt   content deps only (numpy, matplotlib, …)
-├── .github/workflows/course.yml   → uses: neuromatch/course-kit/.github/workflows/course-publish.yml@v1
+├── .github/workflows/course.yml   → uses: neuromatch/course-kit/.github/workflows/course-publish.yml@v0.1
 └── tutorials/, _static/, _wheels/, projects/
 ```
 
 ### MyST plugin (`js/`)
 
-- One entry point, `js/src/index.mjs`, that exports the directives and
-  transforms of today's `nma.mjs`, `scrolly/scrolly.mjs` and `cells/cells.mjs`.
-  esbuild bundles it to `dist/nma.mjs` (Node target, `node:` builtins
-  external). The relative imports between the three plugins become normal
-  module imports inside the bundle.
-- Browser assets (`nma-feedback.mjs`, `scrolly/engine.mjs`,
-  `scrolly/runnable.mjs`, `cells/dist/panel.mjs`, `runtime-widget.mjs`, all
-  CSS) are built into `dist/assets/` and published in the same npm package.
+- **Organised as separate plugins, shipped as one bundle** (user decision).
+  Each feature is its own folder with its own MyST plugin object, browser
+  assets and tests; today's `nma.mjs`, which mixes three features, is split:
+
+  ```
+  js/src/
+    shared/      config.mjs (readNmaConfig, settings), paths.mjs (githubRepo,
+                 pageLocation, notebookUrls), assets.mjs (assetUrl)
+    media/       plugin.mjs ({nma-video}, {nma-slides})
+    solutions/   plugin.mjs ({nma-solution}, {nma-explanation}, link transform)
+    feedback/    plugin.mjs ({nma-feedback} + transform), assets/widget.mjs
+    scrolly/     plugin.mjs ({step}, {stage}, transform), assets/{engine,runnable}.mjs, *.css
+    cells/       plugin.mjs (transform), src/ (CodeMirror panel, runtime), assets/*.css
+    index.mjs    imports every plugin and merges directives and transforms
+  ```
+
+  Plugins depend only on `shared/`, never on each other (today `cells`
+  imports from `nma.mjs` and `scrolly.mjs`; those helpers move to
+  `shared/`). `index.mjs` keeps today's transform order: media, solutions,
+  feedback, then scrolly, then cells.
+- esbuild bundles `index.mjs` to one `dist/nma.mjs` (Node target, `node:`
+  builtins external), because MyST loads a remote plugin as a single file.
+  Courses list one plugin. Per-plugin bundles (so a course could load only
+  some) are possible later from the same sources but are not built now.
+- Browser assets (feedback widget, scrolly engine/runnable, cells
+  panel/runtime-widget, all CSS) are built into `dist/assets/<plugin>/` and
+  published in the same npm package. The Python side mirrors the same
+  feature names (`nma_kit.media`, `.solutions`, `.feedback`, `.scrolly`,
+  `.cells`).
 - **Asset URLs are baked at build time** via an esbuild `define`
   (`__NMA_ASSET_BASE__`):
   - release build: `https://cdn.jsdelivr.net/npm/@neuromatch/course-kit@<exact version>/dist/assets/`.
@@ -128,7 +149,7 @@ course repo (template or a real course)
     jupyter:
       lite: true
     plugins:
-      - https://cdn.jsdelivr.net/npm/@neuromatch/course-kit@1.4.2/dist/nma.mjs
+      - https://cdn.jsdelivr.net/npm/@neuromatch/course-kit@0.1.3/dist/nma.mjs
   ```
 
   Keep it to what the kit needs (`jupyter.lite: true` is required for the
@@ -203,10 +224,10 @@ on:
 jobs:
   check:
     if: github.event_name == 'pull_request'
-    uses: neuromatch/course-kit/.github/workflows/course-check.yml@v1
+    uses: neuromatch/course-kit/.github/workflows/course-check.yml@v0.1
   publish:
     if: github.event_name != 'pull_request'
-    uses: neuromatch/course-kit/.github/workflows/course-publish.yml@v1
+    uses: neuromatch/course-kit/.github/workflows/course-publish.yml@v0.1
     permissions: { contents: write, pages: write, id-token: write }
 ```
 
@@ -224,7 +245,7 @@ jobs:
   bumps the one version in `package.json`, `pyproject.toml` and the default
   `KIT_VERSION` inside the reusable workflows. Merging it tags `vX.Y.Z`,
   publishes to npm and PyPI (trusted publishing, no long-lived tokens), and
-  moves the floating `vX` tag.
+  moves the floating tags (see "Versioning").
 
 ## Versioning and live updates
 
@@ -235,22 +256,31 @@ prepare-site` rewrites the course's `extend:` URL to the same exact version
 before `myst build`, in CI's throwaway checkout, just as it already adds
 badges. So the CLI, the plugin and the assets always come from one release.
 
-| Course wants | Workflow ref | What happens |
-|---|---|---|
-| Live updates, safe (recommended, template default) | `@v1` | Every build uses the newest 1.x release. Breaking changes need a v2 and an opt-in |
-| Bleeding edge (kit maintainers, the template while iterating) | `@main` | Uses the kit's `main`. Builder: `main` installs the CLI from git at that commit, and `prepare-site` points `extend:` at a dev build |
-| Frozen (a finished course) | `@v1.4.2` or a commit SHA | Never changes. Dependabot (`github-actions` ecosystem) can propose bumps |
+**Start at 0.1.0 (user decision)** and stay on 0.x until the kit is stable.
+Semver treats every 0.x minor as potentially breaking, so release-please is
+configured with `bump-minor-pre-major: true` (a breaking change bumps
+0.1.x → 0.2.0) and `bump-patch-for-minor-pre-major: true` (features and
+fixes bump the patch). A 0.MINOR line is therefore the compatible line, and
+the release workflow moves a floating **`v0.MINOR`** tag (e.g. `v0.1`) as
+well as `v0`. From 1.0.0 on, the floating tag that matters is `vMAJOR`.
+
+| Course wants | Workflow ref (0.x) | After 1.0 | What happens |
+|---|---|---|---|
+| Live updates, safe (recommended, template default) | `@v0.1` | `@v1` | Every build uses the newest release of that compatible line. Breaking changes ship as 0.2 (or v2) and need an opt-in |
+| Live updates including breaking changes | `@v0` | (not offered) | Newest 0.x, whatever it is. Only for courses tracking the kit closely |
+| Bleeding edge (kit maintainers) | `@main` | `@main` | Uses the kit's `main`. Builder: `main` installs the CLI from git at that commit, and `prepare-site` points `extend:` at a dev build |
+| Frozen (a finished course) | `@v0.1.3` or a commit SHA | `@v1.4.2` | Never changes. Dependabot (`github-actions` ecosystem) can propose bumps |
 
 **About "latest":**
-- GitHub Actions has no automatic `latest` ref, so `@v1` is "latest within
-  v1".
-- npm/jsDelivr do have `@latest`, but jsDelivr caches alias URLs (`@1`,
+- GitHub Actions has no automatic `latest` ref, so the floating tags above
+  are "latest within a line".
+- npm/jsDelivr do have `@latest`, but jsDelivr caches alias URLs (`@0.1`,
   `@latest`) for **7 days**, and purging needs API access granted by email.
   `@latest` also crosses major versions.
 
 The design therefore never depends on alias URLs at build time. Courses
 should not put `@latest` in `myst.yml`. The `extend:` URL committed in
-`myst.yml` (`…@1/dist/nma.yml`) is only used by local previews and is
+`myst.yml` (`…@0.1/dist/nma.yml`) is only used by local previews and is
 replaced with an exact version on CI. The workflow also accepts
 `kit-version: latest` as an explicit override, which resolves the newest
 version on PyPI at build time.
@@ -288,9 +318,9 @@ course-kit/
   (keeps history), push to `neuromatch/course-kit`. Or just copy the
   folder.
 
-**Phase 2, after extraction and the first release (v1.0.0).** The template's
+**Phase 2, after extraction and the first release (v0.1.0).** The template's
 `myst.yml` uses `extend:` with the kit URL. Its workflow becomes
-`templates/course.yml` at `@v1`. `course-kit/` is deleted from the template.
+`templates/course.yml` at `@v0.1`. `course-kit/` is deleted from the template.
 
 ## Spike first (before the bulk of phase 1)
 
@@ -323,10 +353,13 @@ design:
 - A PR to the template runs `course-check`. A failing check blocks deploy.
 - One push to `main` produces one deploy.
 - A fresh fork with no `notebooks-branch` publishes on its first push.
-- After extraction: a kit patch release reaches a course on `@v1` with no
-  course commit. A course on `@v1.0.0` is unaffected.
+- After extraction: a kit patch release reaches a course on `@v0.1` with no
+  course commit. A course on `@v0.1.0` is unaffected.
 
 ## Decided by the user
+
+- Start at version 0.1.0; stay on 0.x until stable.
+- Plugins organised separately in the kit, shipped as one bundle.
 
 - One kit, separate from the template, versioned; template and courses use
   it.
@@ -358,7 +391,7 @@ account; the user's account owns the packages.
   `neuromatch-course-kit`, CLI `nma-kit`.
 - Distribution via npm + PyPI + jsDelivr (user confirmed they can publish;
   see "Registry setup").
-- The template defaults to `@v1`. The workflow ref is the only update knob,
+- The template defaults to `@v0.1`. The workflow ref is the only update knob,
   and `prepare-site` pins the plugin URL to the CLI's version on CI.
 - Merge the three plugins into one bundle.
 - Use a real YAML parser on both sides, but keep rejecting non-string `nma:`
