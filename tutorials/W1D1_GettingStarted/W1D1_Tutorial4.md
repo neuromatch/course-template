@@ -99,7 +99,7 @@ MyST only knows its own keys, so it logs `extra key ignored: <key>` for `runtime
 
 ## What CI checks
 
-`scripts/convert_to_notebooks.py` validates frontmatter before anything else and fails with the file name and line:
+`nma-kit check` (from the course kit, run by CI) validates frontmatter and fails with the file name and line:
 
 - `runtime` is `browser` or `colab`.
 - `runtime: colab` and `layout: scrolly` are not combined.

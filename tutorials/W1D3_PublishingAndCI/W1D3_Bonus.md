@@ -61,6 +61,6 @@ and register them under a "Project Booklet" section in the TOC:
 ## Splitting content across repos
 
 For large courses where content lives in separate repos, fetch content into
-`tutorials/` at build time using a `git clone` step in `generate-notebooks.yml`
-before the conversion script runs. Document the fetch step clearly in the
+`tutorials/` at build time using a `git clone` step in `.github/workflows/course.yml`
+before `nma-kit check` runs. Document the fetch step clearly in the
 workflow file.

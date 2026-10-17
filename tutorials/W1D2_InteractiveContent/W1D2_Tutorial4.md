@@ -92,7 +92,7 @@ datatops project that the Neuromatch notebooks already use.
 
 ## What the notebook gets
 
-`scripts/convert_to_notebooks.py` replaces each directive with a hidden code
+`nma-kit notebooks` replaces each directive with a hidden code
 cell (`cellView: form`, `hide-input`). For videos, that cell builds the
 YouTube/Bilibili `ipywidgets` Tab used in all Neuromatch notebooks. For
 slides, it shows an OSF `IFrame` and prints the download link. For feedback,
@@ -102,17 +102,19 @@ installs `vibecheck` and sets `feedback_prefix`.
 
 ## How it works
 
-| Where | File | Job |
-|---|---|---|
-| Website | `plugins/nma.mjs` (registered in `myst.yml` under `project.plugins`) | Turns directives into iframes and tabs during `myst build` |
-| Notebooks | `scripts/nma_media.py` | Validates directives and replaces them with code cells |
-| Website | `plugins/nma-feedback.mjs` | The feedback widget, loaded in the browser through MyST's `anywidget` node |
-| Notebooks | `scripts/nma_feedback.py` | Validates `{nma-feedback}` and the `nma:` settings, writes the feedback cells |
+Both sides live in the course kit (`course-kit/` in this template):
 
-Adding a new video host means editing both files. Add the embed and page URL
-in `VIDEO_SOURCES` in `nma.mjs`, and add the option and label in
-`VIDEO_SOURCES` in `nma_media.py`, plus a branch in the generated
-`PlayVideo` class.
+| Where | Course kit file | Job |
+|---|---|---|
+| Website | `js/src/media/plugin.mjs` (part of the kit's MyST plugin, listed in `myst.yml` under `project.plugins`) | Turns directives into iframes and tabs during `myst build` |
+| Notebooks | `python/src/nma_kit/media.py` | Validates directives and replaces them with code cells |
+| Website | `js/src/feedback/plugin.mjs` and `js/src/feedback/assets/widget.mjs` | The feedback widget, loaded in the browser through MyST's `anywidget` node |
+| Notebooks | `python/src/nma_kit/feedback.py` | Validates `{nma-feedback}` and the `nma:` settings, writes the feedback cells |
+
+Adding a new video host is a course kit change in both files: add the embed
+and page URL in `VIDEO_SOURCES` in `media/plugin.mjs`, and the option and label
+in `VIDEO_SOURCES` in `media.py`, plus a branch in the generated `PlayVideo`
+class.
 
 ## Converting an existing NMA notebook
 
