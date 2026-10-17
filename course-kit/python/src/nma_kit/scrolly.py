@@ -368,7 +368,7 @@ def rewrite_notebook_params(nb: dict) -> int:
 # js/src/scrolly/plugin.mjs embeds them so readers see real figures before
 # starting Python.
 
-TUTORIALS_DIR = "tutorials"
+from nma_kit.config import DEFAULT_TUTORIALS_DIR as TUTORIALS_DIR  # noqa: E402
 RENDER_DIR = "_build/scrolly"
 RENDER_TIMEOUT = 300
 
@@ -499,7 +499,9 @@ def main() -> None:
     args = parser.parse_args()
     if not args.render:
         parser.error("nothing to do (use --render)")
-    sys.exit(render_all())
+    from nma_kit.config import read_settings
+
+    sys.exit(render_all(read_settings().tutorials_dir))
 
 
 if __name__ == "__main__":

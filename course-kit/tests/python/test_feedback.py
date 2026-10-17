@@ -62,14 +62,22 @@ def test_load_config():
 @pytest.mark.parametrize("block, message", [
     ("nma:\n  feedback:\n    url: u\n    project: p\n", "missing user_key"),
     ("nma:\n  feedback:\n    url: u\n    project: p\n    user_key: ''\n", "missing user_key"),
-    ("nma:\n  feedback: {url: u, project: p, user_key: k}\n", "plain `key: value` lines"),
-    ("nma:\n  feedback:\n    url: u\n    project: p\n    user_key: 12345\n", "plain `key: value` lines"),
-    ("nma:\n  feedback:\n    url: &u u\n    project: *u\n    user_key: k\n", "plain `key: value` lines"),
-    ("nma: [1]\n", "plain `key: value` lines"),
+    ("nma:\n  feedback:\n    url: u\n    project: p\n    user_key: 12345\n", "string values"),
+    ("nma: [1]\n", "string values"),
 ])
 def test_config_errors(block, message):
     errors = config_errors("version: 1\n" + block)
     assert any(message in e for e in errors), errors
+
+
+@pytest.mark.parametrize("block", [
+    "nma:\n  feedback: {url: u, project: p, user_key: k}\n",
+    "nma:\n  feedback:\n    url: &u u\n    project: *u\n    user_key: k\n",
+])
+def test_yaml_forms_with_string_values_are_accepted(block):
+    # Both sides parse the block with a YAML library, so any YAML spelling of
+    # string values is fine.
+    assert config_errors("version: 1\n" + block) == []
 
 
 def test_config_errors_ignore_missing_block():

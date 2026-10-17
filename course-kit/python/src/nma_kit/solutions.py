@@ -223,17 +223,17 @@ def validate(text: str) -> list[str]:
 
 # File naming. Keep in sync with js/src/solutions/plugin.mjs.
 FILE_PATTERNS = {SOLUTION: "{stem}_Solution_{n}.py", EXPLANATION: "{stem}_Explanation_{n}.md"}
-NOTEBOOKS_BRANCH = "notebooks-branch"
+NOTEBOOKS_BRANCH = "notebooks-branch"  # default; courses override with nma.notebooks.branch
 
 
 def solution_filename(stem: str, kind: str, n: int) -> str:
     return FILE_PATTERNS[kind].format(stem=stem, n=n)
 
 
-def solution_url(repo: str, rel_dir: str, filename: str) -> str:
-    """GitHub URL of a solution file. rel_dir is the page's folder under tutorials/."""
+def solution_url(repo: str, rel_dir: str, filename: str, branch: str = NOTEBOOKS_BRANCH) -> str:
+    """GitHub URL of a solution file. rel_dir is the page's folder under the tutorials dir."""
     path = "/".join(p for p in ("notebooks", rel_dir, "solutions", filename) if p)
-    return f"https://github.com/{repo}/blob/{NOTEBOOKS_BRANCH}/{path}"
+    return f"https://github.com/{repo}/blob/{branch}/{path}"
 
 
 @dataclass
@@ -303,7 +303,8 @@ def _instructor_cell(item: Item, cell_id: str) -> dict:
     }
 
 
-def split_notebook(nb: dict, stem: str, rel_dir: str, repo: str) -> tuple[dict, dict, dict]:
+def split_notebook(nb: dict, stem: str, rel_dir: str, repo: str,
+                   branch: str = NOTEBOOKS_BRANCH) -> tuple[dict, dict, dict]:
     """
     Build the student and instructor versions of a jupytext-generated notebook.
 
@@ -333,7 +334,7 @@ def split_notebook(nb: dict, stem: str, rel_dir: str, repo: str) -> tuple[dict, 
                 fragment = _markdown(prose, f"{base}-m{k}")
                 student.append(fragment)
                 instructor.append(fragment)
-            url = solution_url(repo, rel_dir, item.filename)
+            url = solution_url(repo, rel_dir, item.filename, branch)
             student.append(_student_cell(item, url, f"{base}-s{k}"))
             instructor.append(_instructor_cell(item, f"{base}-i{k}"))
             files[item.filename] = item.content

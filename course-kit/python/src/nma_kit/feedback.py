@@ -25,9 +25,10 @@ One source becomes:
   - notebooks: the standard NMA "Submit your feedback" cells, plus one
     "Import feedback gadget" cell that pip-installs vibecheck
 
-js/src/feedback/plugin.mjs reads the same `nma:` block with a small line-based reader.
-read_nma_block() below is the Python copy of it, and config_errors() rejects
-any `nma:` block the two readers would see differently. Keep them in sync.
+The `nma:` block is read with a YAML parser on both sides (read_nma_block in
+nma_kit.config, readNmaConfig in js/src/shared/config.mjs). config_errors()
+still requires plain `section: {key: "string"}` entries, so the plugin never
+sees numbers, lists or nested mappings.
 """
 
 import re
@@ -35,6 +36,7 @@ from dataclasses import dataclass
 
 import yaml
 
+from nma_kit.config import read_nma_block  # noqa: F401  (re-exported)
 from nma_kit.solutions import find_blocks
 
 KIND = "nma-feedback"
@@ -53,56 +55,18 @@ class FeedbackConfig:
     user_key: str
 
 
-NMA_START_RE = re.compile(r"^nma:\s*(#.*)?$")
-ENTRY_RE = re.compile(r"^( +)([A-Za-z_][\w-]*):(?:\s+(.*?))?\s*$")
-
-
-def _scalar(raw: str) -> str | None:
-    """The value of a `key: value` line, or None if there is no value."""
-    raw = raw.strip()
-    if not raw or raw.startswith("#"):
-        return None
-    if raw[0] in "'\"":
-        end = raw.find(raw[0], 1)
-        return raw[1:end] if end != -1 else raw
-    return re.sub(r"\s+#.*$", "", raw)
-
-
-def read_nma_block(text: str) -> dict:
-    """
-    Read the top-level `nma:` block of myst.yml as {section: {key: value}}.
-
-    Only plain `key: value` lines are understood. This mirrors
-    readNmaConfig() in js/src/shared/config.mjs, which has no YAML library.
-    """
-    out, section, section_indent, inside = {}, None, None, False
-    for line in text.splitlines():
-        if not inside:
-            inside = bool(NMA_START_RE.match(line))
-            continue
-        stripped = line.strip()
-        if not stripped or stripped.startswith("#"):
-            continue
-        if not line[0].isspace():
-            break
-        match = ENTRY_RE.match(line)
-        if not match:
-            continue
-        indent, key, value = len(match.group(1)), match.group(2), _scalar(match.group(3) or "")
-        if value is None:
-            if section_indent is None or indent <= section_indent:
-                section, section_indent = key, indent
-                out[key] = {}
-        elif section is not None and indent > section_indent:
-            out[section][key] = value
-    return out
-
-
 FORMAT_ERROR = (
-    "myst.yml: the `nma:` block must use plain `key: value` lines with string values "
-    "(no flow style {...}, lists, anchors, numbers or multi-line strings), "
-    "so the course kit's MyST plugin can read it. Quote values that look like numbers."
+    "myst.yml: the `nma:` block must be `section:` mappings of `key: value` with string values "
+    "(no numbers, booleans, lists or deeper nesting). Quote values that look like numbers."
 )
+
+
+def _plain_block(raw) -> bool:
+    """True if `raw` is {section: {key: str}} (sections may not be empty)."""
+    return isinstance(raw, dict) and all(
+        isinstance(section, dict) and section
+        and all(isinstance(k, str) and isinstance(v, str) for k, v in section.items())
+        for section in raw.values())
 
 
 def config_errors(text: str) -> list[str]:
@@ -114,7 +78,7 @@ def config_errors(text: str) -> list[str]:
     raw = data.get("nma") if isinstance(data, dict) else None
     if raw is None:
         return []
-    if read_nma_block(text) != raw:
+    if not _plain_block(raw):
         return [FORMAT_ERROR]
     feedback = raw.get("feedback")
     if feedback is None:

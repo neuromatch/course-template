@@ -63,16 +63,28 @@ from pathlib import Path
 import yaml
 
 from nma_kit import cells as nma_cells
+from nma_kit.config import (
+    DEFAULT_NOTEBOOKS_BRANCH,
+    MYST_CONFIG,
+    Settings,
+    load_settings,
+    page_location,
+    read_settings,
+)
 from nma_kit import feedback as nma_feedback
 from nma_kit import scrolly as nma_scrolly
 from nma_kit import solutions as nma_solutions
 from nma_kit.media import expand_notebook, find_directives, validate_directive
 
 
-TUTORIALS_DIR = Path("tutorials")
 NOTEBOOKS_DIR = Path("notebooks")
-MYST_CONFIG = Path("myst.yml")
-NOTEBOOKS_BRANCH = "notebooks-branch"
+
+
+def require_github_repo(settings: Settings) -> str:
+    """'org/repo' from project.github, or ValueError if it is missing."""
+    if not settings.github_repo:
+        raise ValueError("project.github is not set to a github.com URL in myst.yml")
+    return settings.github_repo
 
 
 def load_github_repo(myst_config: Path) -> str:
@@ -81,19 +93,7 @@ def load_github_repo(myst_config: Path) -> str:
 
     Example: 'https://github.com/neuromatch/course-template' -> 'neuromatch/course-template'
     """
-    with myst_config.open() as fh:
-        config = yaml.safe_load(fh)
-
-    github_url = config.get("project", {}).get("github", "")
-    if not github_url:
-        raise ValueError("project.github is not set in myst.yml")
-
-    github_url = github_url.rstrip("/")
-    match = re.search(r"github\.com/(.+)", github_url)
-    if not match:
-        raise ValueError(f"Cannot parse GitHub repo from: {github_url}")
-
-    return match.group(1)  # e.g. 'neuromatch/course-template'
+    return require_github_repo(read_settings(myst_config))
 
 
 def has_kernelspec(md_file: Path) -> bool:
@@ -172,17 +172,18 @@ def validate_content(check_injected: bool = True) -> list[str]:
     """
     errors = []
     config_text = MYST_CONFIG.read_text(encoding="utf-8") if MYST_CONFIG.exists() else ""
+    tutorials_dir = Path(load_settings(config_text).tutorials_dir)
     config_problems = nma_feedback.config_errors(config_text)
     errors += config_problems
     has_config = not config_problems and nma_feedback.load_config(config_text) is not None
-    for path in sorted(TUTORIALS_DIR.rglob("*.ipynb")):
+    for path in sorted(tutorials_dir.rglob("*.ipynb")):
         if ".ipynb_checkpoints" in path.parts:
             continue
         errors.append(
-            f"{path}: .ipynb files are not allowed in tutorials/. Convert it with "
+            f"{path}: .ipynb files are not allowed in {tutorials_dir.as_posix()}/. Convert it with "
             f"`jupytext --to md:myst` and commit only the .md."
         )
-    for path in sorted(TUTORIALS_DIR.rglob("*.md")):
+    for path in sorted(tutorials_dir.rglob("*.md")):
         if has_code_cells(path) and not has_kernelspec(path):
             errors.append(
                 f"{path}: contains {{code-cell}} blocks but no `kernelspec` in its "
@@ -211,21 +212,23 @@ def validate_content(check_injected: bool = True) -> list[str]:
     return errors
 
 
-def make_badge_html(notebook_rel_path: str, github_repo: str) -> str:
+def make_badge_html(notebook_rel_path: str, github_repo: str,
+                    branch: str = DEFAULT_NOTEBOOKS_BRANCH) -> str:
     """
     Return raw HTML string containing Colab and Kaggle badge links.
 
     notebook_rel_path: path relative to repo root, e.g.
         'notebooks/W1D2_InteractiveContent/W1D2_Tutorial1.ipynb'
     github_repo: 'org/repo' string, e.g. 'neuromatch/course-template'
+    branch: the branch the notebooks are published to (nma.notebooks.branch)
     """
     colab_url = (
         f"https://colab.research.google.com/github/{github_repo}"
-        f"/blob/{NOTEBOOKS_BRANCH}/{notebook_rel_path}"
+        f"/blob/{branch}/{notebook_rel_path}"
     )
     kaggle_url = (
         f"https://kaggle.com/kernels/welcome?src="
-        f"https://raw.githubusercontent.com/{github_repo}/{NOTEBOOKS_BRANCH}/{notebook_rel_path}"
+        f"https://raw.githubusercontent.com/{github_repo}/{branch}/{notebook_rel_path}"
     )
 
     return (
@@ -251,7 +254,8 @@ FALLBACK_BLOCK_RE = re.compile(
 
 
 def prepare_site_md(
-    md_file: Path, notebook_rel_path: str, github_repo: str, dry_run: bool
+    md_file: Path, notebook_rel_path: str, github_repo: str, dry_run: bool,
+    branch: str = DEFAULT_NOTEBOOKS_BRANCH,
 ) -> None:
     """
     Insert badges (and, for browser pages with exercises, the run-all fallback cell)
@@ -280,7 +284,7 @@ def prepare_site_md(
     body = BADGE_LINE_RE.sub("", body)
     body = FALLBACK_BLOCK_RE.sub("", body)
 
-    header = [make_badge_html(notebook_rel_path, github_repo)]
+    header = [make_badge_html(notebook_rel_path, github_repo, branch)]
     # Scrolly pages don't run in JupyterLite (their runtime substitutes
     # solutions itself, js/src/scrolly/assets/runnable.mjs), and `runtime: colab`
     # pages never run on the site, so neither needs the fallback cell.
@@ -296,7 +300,8 @@ def prepare_site_md(
     md_file.write_text(new_content, encoding="utf-8")
 
 
-def make_badge_cell(notebook_rel_path: str, github_repo: str) -> dict:
+def make_badge_cell(notebook_rel_path: str, github_repo: str,
+                    branch: str = DEFAULT_NOTEBOOKS_BRANCH) -> dict:
     """
     Return a Jupyter markdown cell containing Colab and Kaggle badge links.
 
@@ -308,7 +313,7 @@ def make_badge_cell(notebook_rel_path: str, github_repo: str) -> dict:
         "cell_type": "markdown",
         "id": "badges",
         "metadata": {},
-        "source": [make_badge_html(notebook_rel_path, github_repo)],
+        "source": [make_badge_html(notebook_rel_path, github_repo, branch)],
     }
 
 
@@ -350,10 +355,11 @@ def convert_md_to_notebook(md_file: Path, out_path: Path, dry_run: bool) -> None
         sys.exit(1)
 
 
-def add_badge_cell(nb: dict, notebook_rel_path: str, github_repo: str) -> dict:
+def add_badge_cell(nb: dict, notebook_rel_path: str, github_repo: str,
+                   branch: str = DEFAULT_NOTEBOOKS_BRANCH) -> dict:
     """Return nb with a Colab/Kaggle badge cell at position 0. Idempotent."""
     cells = [c for c in nb["cells"] if "colab-badge.svg" not in "".join(c.get("source", []))]
-    return {**nb, "cells": [make_badge_cell(notebook_rel_path, github_repo)] + cells}
+    return {**nb, "cells": [make_badge_cell(notebook_rel_path, github_repo, branch)] + cells}
 
 
 def write_notebook(nb: dict, path: Path) -> None:
@@ -363,14 +369,16 @@ def write_notebook(nb: dict, path: Path) -> None:
 
 
 def build_notebooks(source_file: Path, out_path: Path, github_repo: str, dry_run: bool,
-                    feedback_config: "nma_feedback.FeedbackConfig | None" = None) -> None:
+                    feedback_config: "nma_feedback.FeedbackConfig | None" = None,
+                    settings: Settings | None = None) -> None:
     """
     Post-process the jupytext output at out_path: expand media directives,
     split solutions into student/instructor notebooks, write solution files
     and add badges.
     """
-    rel = source_file.relative_to(TUTORIALS_DIR)
-    rel_dir = rel.parent.as_posix() if rel.parent != Path(".") else ""
+    settings = settings or Settings(github_repo)
+    rel_dir, _ = page_location(settings, source_file)
+    branch = settings.notebooks_branch
     instructor_path = out_path.parent / "instructor" / out_path.name
     solutions_dir = out_path.parent / "solutions"
     if dry_run:
@@ -396,7 +404,7 @@ def build_notebooks(source_file: Path, out_path: Path, github_repo: str, dry_run
             print(f"  Expanded {count} feedback directive(s) (prefix {prefix})")
 
     student, instructor, files = nma_solutions.split_notebook(
-        nb, source_file.stem, rel_dir, github_repo)
+        nb, source_file.stem, rel_dir, github_repo, branch)
     for name, content in files.items():
         solutions_dir.mkdir(parents=True, exist_ok=True)
         (solutions_dir / name).write_text(content, encoding="utf-8")
@@ -405,28 +413,31 @@ def build_notebooks(source_file: Path, out_path: Path, github_repo: str, dry_run
 
     for nb_out, path in ((student, out_path), (instructor, instructor_path)):
         notebook_rel = path.as_posix()
-        write_notebook(add_badge_cell(nb_out, notebook_rel, github_repo), path)
+        write_notebook(add_badge_cell(nb_out, notebook_rel, github_repo, branch), path)
         print(f"  Wrote notebook with badges: {path}")
 
 
-def process_tutorials(github_repo: str, dry_run: bool, prepare_site: bool) -> int:
-    """Walk tutorials/ and process all executable .md pages. Returns count processed."""
+def process_tutorials(settings: Settings, dry_run: bool, prepare_site: bool) -> int:
+    """Walk the tutorials dir and process all executable .md pages. Returns count processed."""
     count = 0
+    github_repo = require_github_repo(settings)
     feedback_config = nma_feedback.load_config(MYST_CONFIG.read_text(encoding="utf-8"))
+    tutorials_dir = Path(settings.tutorials_dir)
 
-    for source_file in sorted(TUTORIALS_DIR.rglob("*.md")):
+    for source_file in sorted(tutorials_dir.rglob("*.md")):
         if not has_kernelspec(source_file):
             continue  # static page — skip
 
         # Determine output path under notebooks/
-        relative_to_tutorials = source_file.relative_to(TUTORIALS_DIR)
+        relative_to_tutorials = source_file.relative_to(tutorials_dir)
         out_path = NOTEBOOKS_DIR / relative_to_tutorials.with_suffix(".ipynb")
 
         if prepare_site:
-            prepare_site_md(source_file, out_path.as_posix(), github_repo, dry_run)
+            prepare_site_md(source_file, out_path.as_posix(), github_repo, dry_run,
+                            settings.notebooks_branch)
         else:
             convert_md_to_notebook(source_file, out_path, dry_run)
-            build_notebooks(source_file, out_path, github_repo, dry_run, feedback_config)
+            build_notebooks(source_file, out_path, github_repo, dry_run, feedback_config, settings)
 
         count += 1
 
@@ -465,10 +476,10 @@ def main() -> None:
     if args.dry_run:
         print("DRY RUN — no files will be written\n")
 
-    github_repo = load_github_repo(MYST_CONFIG)
-    print(f"GitHub repo: {github_repo}\n")
+    settings = read_settings()
+    print(f"GitHub repo: {require_github_repo(settings)}\n")
 
-    count = process_tutorials(github_repo, args.dry_run, args.prepare_site)
+    count = process_tutorials(settings, args.dry_run, args.prepare_site)
     print(f"\nDone. Processed {count} file(s).")
 
 
