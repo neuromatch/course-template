@@ -1,14 +1,9 @@
-mystmd==1.11.0
-jupytext>=1.16
+# Packages the tutorials import (nma-kit render-scrolly executes scrolly pages
+# with them). The tooling itself comes from the course kit.
 altair>=5
 vega_datasets
 matplotlib
 numpy
 pandas
 ipywidgets
-ipykernel
-pytest
-nbclient
-nbformat
 scipy
-playwright

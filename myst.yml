@@ -11,10 +11,12 @@ project:
     content: CC-BY-4.0
   jupyter:
     lite: true
+  # Course kit MyST plugin. Phase 1: the in-repo kit's dev bundle (build it
+  # with `cd course-kit/js && npm ci && npm run build:dev`). After the kit is
+  # published this becomes, at the top of the file:
+  #   extend: https://cdn.jsdelivr.net/npm/@neuromatch/course-kit@0.1.0/dist/nma.yml
   plugins:
-    - plugins/nma.mjs
-    - plugins/scrolly/scrolly.mjs
-    - plugins/cells/cells.mjs
+    - course-kit/js/dist/nma.mjs
   toc:
     - file: tutorials/intro.md
     - file: tutorials/W1D1_GettingStarted/chapter_intro.md
@@ -60,9 +62,9 @@ site:
     logo_text: Neuromatch Course Template
     favicon: _static/nma-favicon.png
 
-# Neuromatch settings. Read by plugins/nma.mjs and scripts/, not by MyST
+# Neuromatch settings. Read by the course kit (plugin and nma-kit CLI), not by MyST
 # (MyST logs "extra key ignored: nma", which is expected).
-# Use plain `key: value` lines only; CI rejects anything else.
+# Use `key: value` entries with string values; `nma-kit check` rejects numbers, lists and deeper nesting.
 nma:
   # {nma-feedback} widgets post here (datatops). user_key is a write-only key
   # that is published in every notebook, so it is not a secret.
