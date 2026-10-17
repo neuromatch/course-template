@@ -5,6 +5,8 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { assetUrl } from '../../js/src/shared/assets.mjs';
+
 import {
   NO_FALLBACK_MARKER, isExercise, withNoFallback, modeOf, runtimeOf, thebeId, thebeScriptUrls, statusText,
 } from '../../js/src/cells/src/model.mjs';
@@ -315,10 +317,10 @@ test('buildBrowserPage: manifest, panels, hidden cells without a panel', () => {
   assert.deepEqual(runtime.model.cells.map((c) => c.index), [0, 1, 2, 3]);
   const panels = widgets(tree, 'nma-cell');
   assert.deepEqual(panels.map((w) => w.id), ['nma-cell-1', 'nma-cell-2', 'nma-cell-3']);
-  assert.equal(panels[0].esm, '/course-kit/js/src/cells/dist/panel.mjs');
-  assert.equal(panels[0].css, '/course-kit/js/src/cells/assets/cells.css');
-  assert.equal(runtime.esm, '/course-kit/js/src/cells/dist/runtime-widget.mjs');
-  assert.equal(runtime.css, '/course-kit/js/src/cells/assets/page.css');
+  assert.equal(panels[0].esm, assetUrl('cells/panel.mjs'));
+  assert.equal(panels[0].css, assetUrl('cells/cells.css'));
+  assert.equal(runtime.esm, assetUrl('cells/runtime-widget.mjs'));
+  assert.equal(runtime.css, assetUrl('cells/page.css'));
   assert.ok(!JSON.stringify(tree).includes('notebook-code'));
   assert.ok(JSON.stringify(tree).includes('intro'));
 });

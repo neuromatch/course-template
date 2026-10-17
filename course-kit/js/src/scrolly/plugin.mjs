@@ -21,17 +21,18 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 
-import { readNmaConfig } from '../shared/config.mjs';
+import { assetUrl } from '../shared/assets.mjs';
+import { courseSettings, pageLocation } from '../shared/paths.mjs';
 import { isScrolly } from '../shared/frontmatter.mjs';
 
 export { isScrolly };
 
 export const DEFAULT_PYODIDE_URL = 'https://cdn.jsdelivr.net/pyodide/v314.0.7/full/';
-const ENGINE_ESM = '/course-kit/js/src/scrolly/assets/engine.mjs';
-const RUNNABLE_ESM = '/course-kit/js/src/scrolly/assets/runnable.mjs';
-const RUNNABLE_CSS = '/course-kit/js/src/scrolly/assets/runnable.css';
+const ENGINE_ESM = assetUrl('scrolly/engine.mjs');
+const RUNNABLE_ESM = assetUrl('scrolly/runnable.mjs');
+const RUNNABLE_CSS = assetUrl('scrolly/runnable.css');
 // Page layout. engine.mjs copies it from its shadow root into <head>.
-const LAYOUT_CSS = '/course-kit/js/src/scrolly/assets/scrolly.css';
+const LAYOUT_CSS = assetUrl('scrolly/scrolly.css');
 const STEP = 'scrollyStep';
 const STAGE = 'scrollyStage';
 
@@ -415,25 +416,18 @@ function unwrapNested(tree) {
 
 // ---------------------------------------------------------------- MyST hooks
 
-let cachedConfig;
 function scrollyConfig() {
-  if (cachedConfig === undefined) {
-    let config = '';
-    try {
-      config = readFileSync(join(process.cwd(), 'myst.yml'), 'utf8');
-    } catch {
-      // defaults
-    }
-    cachedConfig = { pyodideUrl: readNmaConfig(config).scrolly?.pyodide_url || DEFAULT_PYODIDE_URL };
-  }
-  return cachedConfig;
+  return { pyodideUrl: courseSettings().nma.scrolly?.pyodide_url || DEFAULT_PYODIDE_URL };
 }
 
 // tutorials/W2D1_Examples/W2D1_Tutorial2.md -> _build/scrolly/W2D1_Examples/W2D1_Tutorial2.json
+// (same as render_path in nma_kit.scrolly; the tutorials dir comes from myst.yml)
 function renderFile(filePath) {
-  const rel = relative(process.cwd(), filePath).split(sep).join('/');
-  const parts = rel.replace(/^tutorials\//, '').split('/');
-  const stem = parts.pop().replace(/\.[^.]+$/, '');
+  const location = pageLocation(filePath);
+  const parts = location
+    ? [...(location.relDir ? location.relDir.split('/') : []), location.stem]
+    : relative(process.cwd(), filePath).split(sep).join('/').replace(/\.[^.]+$/, '').split('/');
+  const stem = parts.pop();
   return join(process.cwd(), '_build', 'scrolly', ...parts, `${stem}.json`);
 }
 

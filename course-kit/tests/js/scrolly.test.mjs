@@ -5,6 +5,8 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { assetUrl } from '../../js/src/shared/assets.mjs';
+
 import { cellKey, canonicalCode, parseParams, isScrolly, exercisePairs, buildScrolly } from '../../js/src/scrolly/plugin.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -116,7 +118,7 @@ function sampleTree() {
           step(undefined, { section: 'S2' }),
           { type: 'div', class: 'nma-video', children: [] },
           { type: 'image', url: 'fig.png' },
-          { type: 'anywidget', esm: '/course-kit/js/src/feedback/assets/widget.mjs', model: {}, class: 'nma-feedback' },
+          { type: 'anywidget', esm: assetUrl('feedback/widget.mjs'), model: {}, class: 'nma-feedback' },
         ],
       },
       code('plt.plot()', ['remove-input']),
@@ -154,8 +156,8 @@ test('buildScrolly engine model', () => {
   const { tree } = build();
   const [engine] = byClass(tree, 'scrolly-engine');
   assert.equal(engine.type, 'anywidget');
-  assert.equal(engine.esm, '/course-kit/js/src/scrolly/assets/engine.mjs');
-  assert.equal(engine.css, '/course-kit/js/src/scrolly/assets/scrolly.css');
+  assert.equal(engine.esm, assetUrl('scrolly/engine.mjs'));
+  assert.equal(engine.css, assetUrl('scrolly/scrolly.css'));
   const m = engine.model;
   assert.equal(m.n, 4);
   assert.deepEqual(m.hero, [true, false, false, false]);
@@ -177,7 +179,7 @@ test('buildScrolly splits stage and card', () => {
   assert.equal(byClass(views[0], 'scrolly-kicker').length, 1);
   assert.ok(views[1].class.includes('is-list'));
   // step 2's view: the stage list plus two runnables
-  const runnables = (v) => find(v, (n) => n.type === 'anywidget' && n.esm === '/course-kit/js/src/scrolly/assets/runnable.mjs');
+  const runnables = (v) => find(v, (n) => n.type === 'anywidget' && n.esm === assetUrl('scrolly/runnable.mjs'));
   assert.equal(runnables(views[1]).length, 2);
   assert.equal(find(views[1], (n) => n.type === 'list').length, 1);
   // step 4's view: video, image and the remove-input cell
@@ -199,7 +201,7 @@ test('buildScrolly splits stage and card', () => {
 
 test('buildScrolly runnable models', () => {
   const { tree } = build();
-  const widgets = find(tree, (n) => n.esm === '/course-kit/js/src/scrolly/assets/runnable.mjs');
+  const widgets = find(tree, (n) => n.esm === assetUrl('scrolly/runnable.mjs'));
   assert.equal(widgets.length, 3); // remove-cell has no widget
   const [demo, exercise, out] = widgets.map((w) => w.model);
   assert.equal(demo.mode, 'collapsed');
@@ -209,7 +211,7 @@ test('buildScrolly runnable models', () => {
   assert.equal(exercise.fallback, 'def f():\n    return 1');
   assert.equal(exercise.initial, null);
   assert.deepEqual(out.initial.images, ['iVBOR']);
-  assert.equal(widgets[0].css, '/course-kit/js/src/scrolly/assets/runnable.css');
+  assert.equal(widgets[0].css, assetUrl('scrolly/runnable.css'));
 });
 
 test('buildScrolly reports bad params and leaves the cell without controls', () => {
@@ -217,7 +219,7 @@ test('buildScrolly reports bad params and leaves the cell without controls', () 
   const messages = buildScrolly(tree, { renders: {}, solutions: {}, config: {} });
   assert.equal(messages.length, 1);
   assert.match(messages[0], /# @param/);
-  const [w] = find(tree, (n) => n.esm === '/course-kit/js/src/scrolly/assets/runnable.mjs');
+  const [w] = find(tree, (n) => n.esm === assetUrl('scrolly/runnable.mjs'));
   assert.deepEqual(w.model.params, []);
 });
 

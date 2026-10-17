@@ -14,29 +14,20 @@
 // block (nma_kit.feedback.config_errors).
 
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 
-import { readNmaConfig, scalar } from '../shared/config.mjs';
+import { assetUrl } from '../shared/assets.mjs';
+import { scalar } from '../shared/config.mjs';
+import { courseSettings } from '../shared/paths.mjs';
 import { findPlaceholders, replaceNode } from '../shared/tree.mjs';
 
 const FEEDBACK_PLACEHOLDER = 'nmaFeedbackRef';
-const FEEDBACK_ESM = '/course-kit/js/src/feedback/assets/widget.mjs';
+const FEEDBACK_ESM = assetUrl('feedback/widget.mjs');
 const NAME_RE = /^[A-Za-z0-9_]+$/;
 const FEEDBACK_KEYS = ['url', 'project', 'user_key'];
 
-let cachedFeedbackConfig;
 function feedbackConfig() {
-  if (cachedFeedbackConfig === undefined) {
-    let text = '';
-    try {
-      text = readFileSync(join(process.cwd(), 'myst.yml'), 'utf8');
-    } catch {
-      // handled by the caller
-    }
-    const config = readNmaConfig(text).feedback ?? {};
-    cachedFeedbackConfig = FEEDBACK_KEYS.every((k) => config[k]) ? config : null;
-  }
-  return cachedFeedbackConfig;
+  const config = courseSettings().nma.feedback ?? {};
+  return FEEDBACK_KEYS.every((k) => config[k]) ? config : null;
 }
 
 /** W2D1_Tutorial1 -> W2D1_T1; anything else is used as is. */
