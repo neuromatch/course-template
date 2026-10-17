@@ -408,3 +408,38 @@ account; the user's account owns the packages.
   `/gh/neuromatch/course-kit@<sha>/…` with dist built into a `dist` branch,
   or GitHub Pages of the kit repo).
 - Wording of the updated tutorials and READMEs.
+
+## Spike results (2026-10-16, mystmd 1.11.0)
+
+Throwaway build in `/tmp/kit-spike`: the three current plugins bundled with
+esbuild into one `nma.mjs` (31.8 kB), served from `http://localhost:8790`
+next to an `nma.yml` and the browser assets; a copy of the template used
+`extend: http://localhost:8790/nma.yml` and no local `plugins:`.
+
+1. **Plugin URL inside a remote `extend:` file: pass.** MyST logged
+   `🔌 spike bundle (_build/cache/config-item-….mjs) loaded: 7 directives,
+   0 roles, 4 transforms`. No fallback needed.
+2. **Remote anywidget `esm` and `css`: pass.** Every asset was fetched at
+   build time and written to `_build/html/build/<md5>.{mjs,css}`; page JSON
+   references `/<md5>.mjs`. Readers' browsers never hit the asset host.
+3. **Editable cells find thebe: pass.** The hashed bundles land in the same
+   `build/` folder as before, so `../thebe-core.min.js` from
+   `import.meta.url` still resolves. Browser smoke test: 9/9 (same as the
+   local-plugin baseline). One earlier cold run had 3 timeouts that did not
+   reproduce on two reruns; treat the e2e suite as timing-sensitive on cold
+   caches.
+4. **Page-level CSS from hashed names: pass.** On the scrolly page the
+   layout stylesheet is copied into `<head>` (`link[data-nma-scrolly]` →
+   `/build/<md5>.css`) and `.scrolly-col` gets `container-type:
+   inline-size`; the cells `page.css` is linked in `<head>` too.
+5. **Dev path outside the project root: pass.** A course listing
+   `plugins: [../remote/nma-dev.mjs]` whose assets are
+   `/../remote/assets/...` builds, and the assets are copied into `build/`.
+   So `example-course/` can use the kit's `js/dist` directly, no symlink.
+6. **CNAME:** not testable here; the user verifies the custom domain in
+   the template repo's Settings → Pages before removing the `CNAME` file.
+
+Sandbox notes (not design issues): `api.mystmd.org` is blocked, so local
+builds reuse a cached book-theme (`_build/templates`); `cdnjs` is blocked,
+so e2e runs need `NMA_E2E_REQUIREJS`; Colab/Kaggle badge images can't be
+fetched, which logs `⛔ Error saving image` during `--prepare-site` builds.
