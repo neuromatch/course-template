@@ -1,3 +1,4 @@
+import os
 import re
 from pathlib import Path
 
@@ -6,10 +7,13 @@ import pytest
 pytest.importorskip("playwright")
 from playwright.sync_api import expect  # noqa: E402
 
-import nma_solutions  # noqa: E402
-from nma_solutions import FALLBACK_NOTE  # noqa: E402
+from nma_kit import solutions as nma_solutions  # noqa: E402
+from nma_kit.solutions import FALLBACK_NOTE  # noqa: E402
 
-ROOT = Path(__file__).resolve().parents[2]
+# The course whose built site is under test (its .md sources are read to
+# count cells). Default: the kit's example course. The template sets
+# NMA_E2E_COURSE to its own root.
+ROOT = Path(os.environ.get("NMA_E2E_COURSE") or Path(__file__).resolve().parents[2] / "example-course")
 TUTORIAL1 = "/tutorials/w2d1-examples/w2d1-tutorial1/"
 TUTORIAL1_MD = (ROOT / "tutorials/W2D1_Examples/W2D1_Tutorial1.md").read_text()
 DONE = re.compile(r"^\[\s*\d*\] (✓|✗)")

@@ -1,6 +1,7 @@
 """Browser smoke tests for editable cells.
 
-Run against a built site:  NMA_E2E_URL=http://localhost:8765 uv run pytest -q tests/e2e
+Run against a built site:  NMA_E2E_URL=http://localhost:8765 pytest -q tests/e2e
+(from course-kit/; NMA_E2E_COURSE=<course root> when testing another course)
 Skipped unless NMA_E2E_URL is set.
 
 NMA_E2E_REQUIREJS (optional): path to a local require.js. thebe's widget manager
