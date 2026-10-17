@@ -19,7 +19,7 @@ dependencies = [
 
 [project.optional-dependencies]
 # matplotlib, numpy, ipywidgets: the render tests execute plotting cells.
-test = ["pytest", "playwright", "matplotlib", "numpy", "ipywidgets"]
+test = ["pytest", "pytest-rerunfailures", "playwright", "matplotlib", "numpy", "ipywidgets"]
 
 [project.scripts]
 nma-kit = "nma_kit.cli:main"
