@@ -90,3 +90,15 @@ def test_notebooks_writes_student_and_instructor(tmp_path, monkeypatch):
 def test_render_scrolly_without_scrolly_pages(tmp_path, monkeypatch):
     monkeypatch.chdir(course(tmp_path))
     assert main(["render-scrolly"]) == 0
+
+
+def test_publish_notebooks_reports_git_errors_without_traceback(tmp_path, monkeypatch, capsys):
+    import subprocess
+
+    monkeypatch.chdir(course(tmp_path))
+    subprocess.run(["git", "init", "-q"], check=True)
+    (tmp_path / "notebooks").mkdir()
+    assert main(["publish-notebooks"]) == 1
+    err = capsys.readouterr().err
+    assert "Traceback" not in err
+    assert "git ls-remote" in err and "origin" in err  # the failing command and git's own message

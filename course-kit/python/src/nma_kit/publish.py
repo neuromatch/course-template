@@ -15,8 +15,16 @@ BOT = ["-c", "user.name=github-actions[bot]",
        "-c", "user.email=github-actions[bot]@users.noreply.github.com"]
 
 
+class PublishError(Exception):
+    """A git command failed; the message holds the command and git's output."""
+
+
 def _git(*args: str, cwd: Path | None = None, check: bool = True) -> subprocess.CompletedProcess:
-    return subprocess.run(["git", *args], cwd=cwd, check=check, capture_output=True, text=True)
+    result = subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True)
+    if check and result.returncode != 0:
+        output = (result.stderr or result.stdout).strip()
+        raise PublishError(f"`git {' '.join(args)}` failed (exit {result.returncode}): {output}")
+    return result
 
 
 def _remote_has_branch(remote: str, branch: str) -> bool:

@@ -19,7 +19,7 @@ from nma_kit import __version__
 from nma_kit import convert, scrolly
 from nma_kit.config import MYST_CONFIG, MissingConfig, read_settings
 from nma_kit.pin import pin_kit_url
-from nma_kit.publish import publish_notebooks
+from nma_kit.publish import PublishError, publish_notebooks
 
 
 class UsageError(Exception):
@@ -129,6 +129,9 @@ def main(argv: list[str] | None = None) -> int:
     except (MissingConfig, UsageError) as exc:
         print(f"nma-kit: {exc}", file=sys.stderr)
         return 2
+    except PublishError as exc:
+        print(f"nma-kit: {exc}", file=sys.stderr)
+        return 1
 
 
 if __name__ == "__main__":
