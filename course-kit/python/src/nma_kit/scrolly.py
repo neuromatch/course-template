@@ -488,21 +488,3 @@ def render_all(root: str = TUTORIALS_DIR) -> int:
         out.write_text(json.dumps(data), encoding="utf-8")
         print(f"  Wrote {out} ({len(data)} cell(s))")
     return 1 if failed else 0
-
-
-def main() -> None:
-    import argparse
-
-    parser = argparse.ArgumentParser(description="Scrollytelling page tools")
-    parser.add_argument("--render", action="store_true",
-                        help=f"run scrolly pages headless and write their outputs to {RENDER_DIR}/")
-    args = parser.parse_args()
-    if not args.render:
-        parser.error("nothing to do (use --render)")
-    from nma_kit.config import read_settings
-
-    sys.exit(render_all(read_settings().tutorials_dir))
-
-
-if __name__ == "__main__":
-    main()

@@ -5,7 +5,7 @@ Usage:
     nma-kit notebooks [--dry-run]
     nma-kit prepare-site [--dry-run]
 
-Default mode (used by generate-notebooks.yml). For each .md file in tutorials/
+`nma-kit notebooks` (CI: course-publish workflow). For each .md file in the tutorials dir
 that has a kernelspec frontmatter:
   1. Convert to .ipynb via jupytext. Scrolly pages (`layout: scrolly`) are
      flattened first: {step} markers removed, {stage} blocks unwrapped, and
@@ -22,8 +22,7 @@ that has a kernelspec frontmatter:
      notebooks/<day>/instructor/<tutorial>.ipynb and notebooks/<day>/solutions/*
   The .md sources are never modified in this mode.
 
---prepare-site mode (used by publish-book.yml right before `myst build`;
---inject-md-badges is an alias): edit each kernelspec .md file in place,
+`nma-kit prepare-site` (CI, right before `myst build`): edit each kernelspec .md file in place,
 inserting after the frontmatter:
   - the Colab + Kaggle badge HTML
   - for pages with exercises, a hidden setup cell that runs the reference
@@ -52,7 +51,6 @@ automatically when the template is forked.
 Both modes are idempotent — safe to re-run.
 """
 
-import argparse
 import json
 import re
 import subprocess
@@ -159,7 +157,7 @@ def injected_content_errors(text: str) -> list[str]:
            for b in nma_solutions.find_blocks(body)):
         errors.append("contains the generated run-all fallback cell, which CI adds at build time")
     return [
-        f"{e}. Remove it (this usually means --prepare-site output was committed; "
+        f"{e}. Remove it (this usually means `nma-kit prepare-site` output was committed; "
         f"revert with `git checkout -- tutorials/`)" for e in errors
     ]
 
@@ -442,46 +440,3 @@ def process_tutorials(settings: Settings, dry_run: bool, prepare_site: bool) -> 
         count += 1
 
     return count
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Convert MyST tutorials to Jupyter notebooks with Colab/Kaggle badges"
-    )
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Print what would be done without writing any files",
-    )
-    parser.add_argument(
-        "--prepare-site",
-        "--inject-md-badges",
-        dest="prepare_site",
-        action="store_true",
-        help=(
-            "Edit the .md sources in place for the site build: add Colab/Kaggle "
-            "badges and the run-all fallback cell. Intended for CI right before "
-            "`myst build`; do not commit the result."
-        ),
-    )
-    args = parser.parse_args()
-
-    errors = validate_content(check_injected=not args.prepare_site)
-    if errors:
-        print("Content rule violations:", file=sys.stderr)
-        for error in errors:
-            print(f"  - {error}", file=sys.stderr)
-        sys.exit(1)
-
-    if args.dry_run:
-        print("DRY RUN — no files will be written\n")
-
-    settings = read_settings()
-    print(f"GitHub repo: {require_github_repo(settings)}\n")
-
-    count = process_tutorials(settings, args.dry_run, args.prepare_site)
-    print(f"\nDone. Processed {count} file(s).")
-
-
-if __name__ == "__main__":
-    main()
