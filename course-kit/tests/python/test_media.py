@@ -1,6 +1,6 @@
 import re
 
-from nma_media import find_directives
+from nma_kit.media import find_directives
 
 VIDEO_MD = """Intro text
 
@@ -50,7 +50,7 @@ def test_body_lines_are_captured():
     assert d.body == ["stray text"]
 
 
-from nma_media import validate_directive
+from nma_kit.media import validate_directive
 
 
 def _errors(text):
@@ -97,7 +97,7 @@ def test_body_is_error():
     assert "takes no body" in err
 
 
-from nma_media import slides_cell_source, video_cell_source
+from nma_kit.media import slides_cell_source, video_cell_source
 
 
 def test_video_cell_source():
@@ -127,7 +127,7 @@ def test_slides_cell_source_custom_title():
     assert slides_cell_source(d).startswith("# @title Day 3 slides\n")
 
 
-from nma_media import expand_notebook
+from nma_kit.media import expand_notebook
 
 CELL_ID_RE = re.compile(r"^[a-zA-Z0-9_-]{1,64}$")
 

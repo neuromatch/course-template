@@ -1,4 +1,4 @@
-from nma_solutions import find_blocks
+from nma_kit.solutions import find_blocks
 
 EXERCISE = '''```{code-cell} python
 def f(x):
@@ -99,7 +99,7 @@ def test_code_cell_inside_code_cell_body_is_not_a_block():
 
 # --- Task 2: validation -----------------------------------------------------
 
-from nma_solutions import validate
+from nma_kit.solutions import validate
 
 
 def test_valid_page_has_no_errors():
@@ -175,9 +175,9 @@ def test_exercise_without_solution_is_error():
 
 # --- Task 3: naming, urls, extraction ---------------------------------------
 
-from nma_solutions import EXPLANATION as EXPL_KIND
-from nma_solutions import SOLUTION as SOL_KIND
-from nma_solutions import exercise_pairs, extract, solution_filename, solution_url
+from nma_kit.solutions import EXPLANATION as EXPL_KIND
+from nma_kit.solutions import SOLUTION as SOL_KIND
+from nma_kit.solutions import exercise_pairs, extract, solution_filename, solution_url
 
 
 def test_solution_filename():
@@ -219,7 +219,7 @@ def test_exercise_pairs_strip_cell_options():
 
 # --- Task 4: notebook splitting ---------------------------------------------
 
-from nma_solutions import split_notebook
+from nma_kit.solutions import split_notebook
 
 
 def md(source, cell_id="m"):
@@ -311,7 +311,7 @@ def test_input_notebook_is_not_mutated():
 import pytest
 from IPython.core.interactiveshell import InteractiveShell
 
-from nma_solutions import FALLBACK_NOTE, NO_FALLBACK_MARKER, fallback_cell_source, fallback_md_block
+from nma_kit.solutions import FALLBACK_NOTE, NO_FALLBACK_MARKER, fallback_cell_source, fallback_md_block
 
 EX_SRC = 'def f(x):\n  raise NotImplementedError("Student exercise: implement f")\n  return ...\n\nresult = f(3)'
 SOL_SRC = "def f(x):\n  return 2 * x\n\nresult = f(3)"

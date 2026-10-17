@@ -4,8 +4,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-import nma_feedback
-from nma_feedback import (
+from nma_kit import feedback as nma_feedback
+from nma_kit.feedback import (
     FeedbackConfig,
     config_errors,
     expand_notebook,
@@ -17,8 +17,8 @@ from nma_feedback import (
     validate,
 )
 
-FIXTURES = Path(__file__).parent / "fixtures" / "nma_config"
-REPO = Path(__file__).resolve().parent.parent
+FIXTURES = Path(__file__).resolve().parents[2] / "fixtures" / "nma_config"
+EXAMPLE_COURSE = Path(__file__).resolve().parents[2] / "example-course"
 CONFIG = FeedbackConfig("https://example.org/klab", "neuromatch_cn", "y1x3mpx5")
 
 PAGE = """---
@@ -47,7 +47,7 @@ def test_simple_reader_matches_yaml_and_expected(fixture):
 
 
 def test_real_myst_yml_has_feedback_config():
-    text = (REPO / "myst.yml").read_text()
+    text = (EXAMPLE_COURSE / "myst.yml").read_text()
     assert config_errors(text) == []
     config = load_config(text)
     assert config is not None and config.url.startswith("https://")
@@ -200,4 +200,4 @@ def test_expand_notebook_without_directives_is_noop():
 
 
 def test_module_documents_sync_with_plugin():
-    assert "plugins/nma.mjs" in nma_feedback.__doc__
+    assert "js/src/feedback/plugin.mjs" in nma_feedback.__doc__

@@ -1,12 +1,12 @@
 """Editable cells: the `runtime:` frontmatter key (Python side).
 
-`runtime_of` has a JavaScript twin, `runtimeOf` in plugins/cells/src/model.mjs.
-Both are tested against tests/fixtures/cells/runtime.json.
+`runtime_of` has a JavaScript twin, `runtimeOf` in js/src/cells/src/model.mjs.
+Both are tested against fixtures/cells/runtime.json.
 """
 
 import re
 
-import nma_scrolly
+from nma_kit import scrolly as nma_scrolly
 
 RUNTIMES = ("browser", "colab")
 RUNTIME_RE = re.compile(r"""^runtime:\s*(['"]?)([A-Za-z]+)\1\s*(#.*)?$""", re.M)

@@ -1,5 +1,5 @@
-from convert_to_notebooks import add_badge_cell, prepare_site_md
-from nma_solutions import FALLBACK_SENTINEL
+from nma_kit.convert import add_badge_cell, prepare_site_md
+from nma_kit.solutions import FALLBACK_SENTINEL
 
 PAGE = """---
 title: T
@@ -65,7 +65,7 @@ def test_add_badge_cell_is_idempotent():
     assert len(nb["cells"]) == 1
 
 
-from convert_to_notebooks import injected_content_errors
+from nma_kit.convert import injected_content_errors
 
 
 def test_clean_source_has_no_injected_content_errors():
@@ -107,8 +107,8 @@ x = 1
 def test_build_notebooks_expands_feedback(tmp_path, monkeypatch):
     import json
 
-    import nma_feedback
-    from convert_to_notebooks import build_notebooks, convert_md_to_notebook
+    from nma_kit import feedback as nma_feedback
+    from nma_kit.convert import build_notebooks, convert_md_to_notebook
 
     monkeypatch.chdir(tmp_path)
     page = tmp_path / "tutorials" / "D" / "T.md"
@@ -174,7 +174,7 @@ def f():
 def test_build_notebooks_flattens_scrolly_pages(tmp_path, monkeypatch):
     import json
 
-    from convert_to_notebooks import build_notebooks, convert_md_to_notebook
+    from nma_kit.convert import build_notebooks, convert_md_to_notebook
 
     monkeypatch.chdir(tmp_path)
     page = tmp_path / "tutorials" / "D" / "T.md"
@@ -206,7 +206,7 @@ def test_prepare_site_skips_fallback_on_scrolly_pages(tmp_path):
 
 
 def test_validate_content_reports_scrolly_errors(tmp_path, monkeypatch):
-    from convert_to_notebooks import validate_content
+    from nma_kit.convert import validate_content
 
     monkeypatch.chdir(tmp_path)
     (tmp_path / "tutorials").mkdir()
@@ -224,7 +224,7 @@ def test_prepare_site_skips_fallback_on_colab_pages(tmp_path):
 
 
 def test_validate_content_reports_runtime_errors(tmp_path, monkeypatch):
-    from convert_to_notebooks import validate_content
+    from nma_kit.convert import validate_content
 
     monkeypatch.chdir(tmp_path)
     (tmp_path / "tutorials").mkdir()

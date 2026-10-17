@@ -2,7 +2,7 @@
 Parse {nma-video} / {nma-slides} directives in MyST Markdown and expand them
 into NMA-style code cells for generated notebooks.
 
-The website renders the same directives with plugins/nma.mjs. The URL
+The website renders the same directives with js/src/media/plugin.mjs. The URL
 templates here and in that file must stay in sync.
 
 Syntax (top level of a page only, not nested inside other directives/fences):

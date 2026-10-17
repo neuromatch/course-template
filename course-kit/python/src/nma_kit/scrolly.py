@@ -26,10 +26,10 @@ Interactive demos use Colab form syntax, one assignment per line:
     a = -0.5   # @param {type:"slider", min:-2.5, max:1.5, step:0.25}
     option = 1 # @param [1, 2, 3, 4]
 
-The website side is plugins/scrolly/scrolly.mjs. These rules must match it:
+The website side is js/src/scrolly/plugin.mjs. These rules must match it:
   - is_scrolly()     <-> isScrolly()
-  - cell_key()       <-> cellKey()       (fixture tests/fixtures/scrolly/cell_keys.json)
-  - parse_params()   <-> parseParams()   (fixture tests/fixtures/scrolly/params.json)
+  - cell_key()       <-> cellKey()       (fixture fixtures/scrolly/cell_keys.json)
+  - parse_params()   <-> parseParams()   (fixture fixtures/scrolly/params.json)
   - render file path _build/scrolly/<relDir>/<stem>.json
 """
 
@@ -37,7 +37,7 @@ import hashlib
 import re
 import sys
 
-from nma_solutions import Block, find_blocks
+from nma_kit.solutions import Block, find_blocks
 
 STEP = "step"
 STAGE = "stage"
@@ -362,10 +362,10 @@ def rewrite_notebook_params(nb: dict) -> int:
 
 # --- pre-render (CI) ----------------------------------------------------------------
 #
-# `python scripts/nma_scrolly.py --render` runs every scrolly page with a
+# `nma-kit render-scrolly` runs every scrolly page with a
 # kernelspec headless and writes its outputs to
 # _build/scrolly/<relDir>/<stem>.json = {cell_key: {stdout, images, error}}.
-# plugins/scrolly/scrolly.mjs embeds them so readers see real figures before
+# js/src/scrolly/plugin.mjs embeds them so readers see real figures before
 # starting Python.
 
 TUTORIALS_DIR = "tutorials"
@@ -410,8 +410,8 @@ def execution_notebook(page, rel_dir: str, repo: str = "org/repo") -> dict:
     import tempfile
     from pathlib import Path
 
-    import convert_to_notebooks
-    import nma_solutions
+    from nma_kit import convert as convert_to_notebooks
+    from nma_kit import solutions as nma_solutions
 
     with tempfile.TemporaryDirectory() as tmp:
         out = Path(tmp) / "nb.ipynb"
@@ -468,7 +468,7 @@ def render_all(root: str = TUTORIALS_DIR) -> int:
     import json
     from pathlib import Path
 
-    import convert_to_notebooks
+    from nma_kit import convert as convert_to_notebooks
 
     failed = False
     for page in sorted(Path(root).rglob("*.md")):

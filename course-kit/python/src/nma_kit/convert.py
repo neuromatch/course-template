@@ -2,19 +2,19 @@
 Convert MyST Markdown tutorials to Jupyter notebooks and inject Colab/Kaggle badges.
 
 Usage:
-    python scripts/convert_to_notebooks.py [--dry-run]
-    python scripts/convert_to_notebooks.py --prepare-site [--dry-run]
+    nma-kit notebooks [--dry-run]
+    nma-kit prepare-site [--dry-run]
 
 Default mode (used by generate-notebooks.yml). For each .md file in tutorials/
 that has a kernelspec frontmatter:
   1. Convert to .ipynb via jupytext. Scrolly pages (`layout: scrolly`) are
      flattened first: {step} markers removed, {stage} blocks unwrapped, and
-     `# @param` cells become widgets.interact demos (scripts/nma_scrolly.py)
+     `# @param` cells become widgets.interact demos (nma_kit.scrolly)
   2. Replace {nma-video}/{nma-slides} directives with NMA code cells
-     (scripts/nma_media.py)
+     (nma_kit.media)
   3. Replace {nma-feedback} directives with "Submit your feedback" cells and
-     add the "Import feedback gadget" cell (scripts/nma_feedback.py)
-  4. Split {nma-solution}/{nma-explanation} directives (scripts/nma_solutions.py)
+     add the "Import feedback gadget" cell (nma_kit.feedback)
+  4. Split {nma-solution}/{nma-explanation} directives (nma_kit.solutions)
      into a student notebook (link cells) and an instructor notebook (solution
      code cells, explanation markdown), and write the solution files
   5. Inject a Colab + Kaggle badge markdown cell at position 0 of each notebook
@@ -44,7 +44,7 @@ Both modes first validate the content rules and exit non-zero on any violation:
     nma.feedback if any page uses them, and no hand-written vibecheck
     feedback cells may be left
   - {step}/{stage} markers and `# @param` lines must be valid
-    (scripts/nma_scrolly.py)
+    (nma_kit.scrolly)
 
 The GitHub repo URL is read from myst.yml (project.github) so badge URLs update
 automatically when the template is forked.
@@ -62,11 +62,11 @@ from pathlib import Path
 
 import yaml
 
-import nma_cells
-import nma_feedback
-import nma_scrolly
-import nma_solutions
-from nma_media import expand_notebook, find_directives, validate_directive
+from nma_kit import cells as nma_cells
+from nma_kit import feedback as nma_feedback
+from nma_kit import scrolly as nma_scrolly
+from nma_kit import solutions as nma_solutions
+from nma_kit.media import expand_notebook, find_directives, validate_directive
 
 
 TUTORIALS_DIR = Path("tutorials")
@@ -282,7 +282,7 @@ def prepare_site_md(
 
     header = [make_badge_html(notebook_rel_path, github_repo)]
     # Scrolly pages don't run in JupyterLite (their runtime substitutes
-    # solutions itself, plugins/scrolly/runnable.mjs), and `runtime: colab`
+    # solutions itself, js/src/scrolly/assets/runnable.mjs), and `runtime: colab`
     # pages never run on the site, so neither needs the fallback cell.
     skip = nma_scrolly.is_scrolly(content) or nma_cells.runtime_of(content) == "colab"
     pairs = [] if skip else nma_solutions.exercise_pairs(body)

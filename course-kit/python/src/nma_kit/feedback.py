@@ -20,12 +20,12 @@ live in myst.yml:
         user_key: ...
 
 One source becomes:
-  - site: a pure-JS widget (plugins/nma.mjs + plugins/nma-feedback.mjs) that
+  - site: a pure-JS widget (js/src/feedback/plugin.mjs + js/src/feedback/assets/widget.mjs) that
     posts to datatops from the browser, with no kernel
   - notebooks: the standard NMA "Submit your feedback" cells, plus one
     "Import feedback gadget" cell that pip-installs vibecheck
 
-plugins/nma.mjs reads the same `nma:` block with a small line-based reader.
+js/src/feedback/plugin.mjs reads the same `nma:` block with a small line-based reader.
 read_nma_block() below is the Python copy of it, and config_errors() rejects
 any `nma:` block the two readers would see differently. Keep them in sync.
 """
@@ -35,7 +35,7 @@ from dataclasses import dataclass
 
 import yaml
 
-from nma_solutions import find_blocks
+from nma_kit.solutions import find_blocks
 
 KIND = "nma-feedback"
 NAME_RE = re.compile(r"^[A-Za-z0-9_]+$")
@@ -73,7 +73,7 @@ def read_nma_block(text: str) -> dict:
     Read the top-level `nma:` block of myst.yml as {section: {key: value}}.
 
     Only plain `key: value` lines are understood. This mirrors
-    readNmaConfig() in plugins/nma.mjs, which has no YAML library.
+    readNmaConfig() in js/src/shared/config.mjs, which has no YAML library.
     """
     out, section, section_indent, inside = {}, None, None, False
     for line in text.splitlines():
@@ -101,7 +101,7 @@ def read_nma_block(text: str) -> dict:
 FORMAT_ERROR = (
     "myst.yml: the `nma:` block must use plain `key: value` lines with string values "
     "(no flow style {...}, lists, anchors, numbers or multi-line strings), "
-    "so plugins/nma.mjs can read it. Quote values that look like numbers."
+    "so the course kit's MyST plugin can read it. Quote values that look like numbers."
 )
 
 

@@ -3,9 +3,9 @@ from pathlib import Path
 
 import pytest
 
-from nma_cells import runtime_of, validate
+from nma_kit.cells import runtime_of, validate
 
-FIXTURES = Path(__file__).parent / "fixtures" / "cells"
+FIXTURES = Path(__file__).resolve().parents[2] / "fixtures" / "cells"
 
 
 @pytest.mark.parametrize(

@@ -28,7 +28,7 @@ One source becomes:
   - a hidden setup cell for the site that runs the reference solution when
     an unfinished exercise is executed, so "Run all" doesn't stop
 
-The website renders the directives with plugins/nma.mjs. The file naming and
+The website renders the directives with js/src/solutions/plugin.mjs. The file naming and
 URL rules here and in that file must stay in sync.
 """
 
@@ -221,7 +221,7 @@ def validate(text: str) -> list[str]:
     return errors
 
 
-# File naming. Keep in sync with plugins/nma.mjs.
+# File naming. Keep in sync with js/src/solutions/plugin.mjs.
 FILE_PATTERNS = {SOLUTION: "{stem}_Solution_{n}.py", EXPLANATION: "{stem}_Explanation_{n}.md"}
 NOTEBOOKS_BRANCH = "notebooks-branch"
 
@@ -403,7 +403,7 @@ del _nma_install_fallback'''
 FUZZY_THRESHOLD = 0.6
 # A cell containing this marker is never replaced by the fallback: the editable
 # panels append it to the cell the student explicitly runs.
-NO_FALLBACK_MARKER = "nma-no-fallback"  # keep in sync with plugins/cells/src/model.mjs
+NO_FALLBACK_MARKER = "nma-no-fallback"  # keep in sync with js/src/cells/src/model.mjs
 
 
 def fallback_cell_source(pairs: list[tuple[str, str]]) -> str:
