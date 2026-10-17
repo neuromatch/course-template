@@ -1,24 +1,24 @@
 // Editable cells (MyST plugin, document stage).
 //
 // Browser pages (kernelspec, not scrolly, not `runtime: colab`): every code cell
-// becomes an anywidget panel (plugins/cells/dist/panel.mjs) and one hidden
+// becomes an anywidget panel (dist/panel.mjs) and one hidden
 // runtime widget carries the manifest of all cells. Colab pages keep MyST's
 // static code and get a banner. Scrolly pages and pages without kernelspec are
 // left alone.
 //
-// The /plugins/... paths below are MyST source paths (MyST copies the files),
-// not browser URLs. Same convention as plugins/scrolly/scrolly.mjs.
+// The /course-kit/... paths below are MyST source paths (MyST copies the
+// files), not browser URLs. Same convention as scrolly/plugin.mjs.
 
 import { readFileSync } from 'node:fs';
 
-import { isScrolly } from '../scrolly/scrolly.mjs';
-import { notebookUrls } from '../nma.mjs';
+import { isScrolly } from '../shared/frontmatter.mjs';
+import { notebookUrls } from '../shared/paths.mjs';
 import { runtimeOf, modeOf, isExercise, frontmatterOf } from './src/model.mjs';
 
-const PANEL_ESM = '/plugins/cells/dist/panel.mjs';
-const RUNTIME_ESM = '/plugins/cells/dist/runtime-widget.mjs';
-const PANEL_CSS = '/plugins/cells/cells.css';
-const PAGE_CSS = '/plugins/cells/page.css';
+const PANEL_ESM = '/course-kit/js/src/cells/dist/panel.mjs';
+const RUNTIME_ESM = '/course-kit/js/src/cells/dist/runtime-widget.mjs';
+const PANEL_CSS = '/course-kit/js/src/cells/assets/cells.css';
+const PAGE_CSS = '/course-kit/js/src/cells/assets/page.css';
 
 const isCodeBlock = (n) => n.type === 'block' && n.kind === 'notebook-code';
 const codeOf = (b) => (b.children ?? []).find((c) => c.type === 'code')?.value ?? '';

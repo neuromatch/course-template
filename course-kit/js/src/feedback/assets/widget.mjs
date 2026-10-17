@@ -1,5 +1,5 @@
 // Feedback widget for {nma-feedback} (anywidget ESM, loaded by the MyST theme
-// in the browser, no kernel needed). plugins/nma.mjs fills the model:
+// in the browser, no kernel needed). feedback/plugin.mjs fills the model:
 //   section_id, url, project, user_key
 //
 // It does what vibecheck's DatatopsContentReviewContainer does in notebooks:

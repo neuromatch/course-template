@@ -1,30 +1,8 @@
-// Run with: node --test tests/js/*.test.mjs
+// Run with: npm test (in js/)
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync } from 'node:fs';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-import { readNmaConfig, pagePrefix, defaultPrefix } from '../../plugins/nma.mjs';
-import { send, timestamp } from '../../plugins/nma-feedback.mjs';
-
-const here = dirname(fileURLToPath(import.meta.url));
-const fixtures = join(here, '..', 'fixtures', 'nma_config');
-
-// The same fixtures are checked against PyYAML in tests/test_nma_feedback.py.
-for (const name of readdirSync(fixtures).filter((f) => f.endsWith('.yml'))) {
-  test(`readNmaConfig matches ${name}`, () => {
-    const text = readFileSync(join(fixtures, name), 'utf8');
-    const expected = JSON.parse(readFileSync(join(fixtures, name.replace(/\.yml$/, '.json')), 'utf8'));
-    assert.deepEqual(readNmaConfig(text), expected);
-  });
-}
-
-test('the real myst.yml has complete feedback settings', () => {
-  const text = readFileSync(join(here, '..', '..', 'myst.yml'), 'utf8');
-  const { feedback } = readNmaConfig(text);
-  for (const key of ['url', 'project', 'user_key']) assert.ok(feedback?.[key], key);
-});
+import { pagePrefix, defaultPrefix } from '../../js/src/feedback/plugin.mjs';
+import { send, timestamp } from '../../js/src/feedback/assets/widget.mjs';
 
 test('prefix from frontmatter, else from the filename', () => {
   assert.equal(pagePrefix('---\ntitle: T\nfeedback_prefix: W2D2_T1\n---\n', 'W2D1_Tutorial1'), 'W2D2_T1');

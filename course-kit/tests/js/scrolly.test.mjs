@@ -5,10 +5,10 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { cellKey, canonicalCode, parseParams, isScrolly, exercisePairs, buildScrolly } from '../../plugins/scrolly/scrolly.mjs';
+import { cellKey, canonicalCode, parseParams, isScrolly, exercisePairs, buildScrolly } from '../../js/src/scrolly/plugin.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const fixtures = join(here, '..', 'fixtures', 'scrolly');
+const fixtures = join(here, '..', '..', 'fixtures', 'scrolly');
 const load = (name) => JSON.parse(readFileSync(join(fixtures, name), 'utf8'));
 
 // The same fixtures are checked in tests/test_nma_scrolly.py.
@@ -116,7 +116,7 @@ function sampleTree() {
           step(undefined, { section: 'S2' }),
           { type: 'div', class: 'nma-video', children: [] },
           { type: 'image', url: 'fig.png' },
-          { type: 'anywidget', esm: '/plugins/nma-feedback.mjs', model: {}, class: 'nma-feedback' },
+          { type: 'anywidget', esm: '/course-kit/js/src/feedback/assets/widget.mjs', model: {}, class: 'nma-feedback' },
         ],
       },
       code('plt.plot()', ['remove-input']),
@@ -154,8 +154,8 @@ test('buildScrolly engine model', () => {
   const { tree } = build();
   const [engine] = byClass(tree, 'scrolly-engine');
   assert.equal(engine.type, 'anywidget');
-  assert.equal(engine.esm, '/plugins/scrolly/engine.mjs');
-  assert.equal(engine.css, '/plugins/scrolly/scrolly.css');
+  assert.equal(engine.esm, '/course-kit/js/src/scrolly/assets/engine.mjs');
+  assert.equal(engine.css, '/course-kit/js/src/scrolly/assets/scrolly.css');
   const m = engine.model;
   assert.equal(m.n, 4);
   assert.deepEqual(m.hero, [true, false, false, false]);
@@ -177,7 +177,7 @@ test('buildScrolly splits stage and card', () => {
   assert.equal(byClass(views[0], 'scrolly-kicker').length, 1);
   assert.ok(views[1].class.includes('is-list'));
   // step 2's view: the stage list plus two runnables
-  const runnables = (v) => find(v, (n) => n.type === 'anywidget' && n.esm === '/plugins/scrolly/runnable.mjs');
+  const runnables = (v) => find(v, (n) => n.type === 'anywidget' && n.esm === '/course-kit/js/src/scrolly/assets/runnable.mjs');
   assert.equal(runnables(views[1]).length, 2);
   assert.equal(find(views[1], (n) => n.type === 'list').length, 1);
   // step 4's view: video, image and the remove-input cell
@@ -199,7 +199,7 @@ test('buildScrolly splits stage and card', () => {
 
 test('buildScrolly runnable models', () => {
   const { tree } = build();
-  const widgets = find(tree, (n) => n.esm === '/plugins/scrolly/runnable.mjs');
+  const widgets = find(tree, (n) => n.esm === '/course-kit/js/src/scrolly/assets/runnable.mjs');
   assert.equal(widgets.length, 3); // remove-cell has no widget
   const [demo, exercise, out] = widgets.map((w) => w.model);
   assert.equal(demo.mode, 'collapsed');
@@ -209,7 +209,7 @@ test('buildScrolly runnable models', () => {
   assert.equal(exercise.fallback, 'def f():\n    return 1');
   assert.equal(exercise.initial, null);
   assert.deepEqual(out.initial.images, ['iVBOR']);
-  assert.equal(widgets[0].css, '/plugins/scrolly/runnable.css');
+  assert.equal(widgets[0].css, '/course-kit/js/src/scrolly/assets/runnable.css');
 });
 
 test('buildScrolly reports bad params and leaves the cell without controls', () => {
@@ -217,7 +217,7 @@ test('buildScrolly reports bad params and leaves the cell without controls', () 
   const messages = buildScrolly(tree, { renders: {}, solutions: {}, config: {} });
   assert.equal(messages.length, 1);
   assert.match(messages[0], /# @param/);
-  const [w] = find(tree, (n) => n.esm === '/plugins/scrolly/runnable.mjs');
+  const [w] = find(tree, (n) => n.esm === '/course-kit/js/src/scrolly/assets/runnable.mjs');
   assert.deepEqual(w.model.params, []);
 });
 
@@ -231,8 +231,8 @@ test('fenced example markers are text, not nodes', () => {
 
 // --- runnable.mjs pure helpers -------------------------------------------------
 
-import { highlight, applyParams, pyLiteral, codeForEarlierCell, formatValue } from '../../plugins/scrolly/runnable.mjs';
-import { readNmaConfig } from '../../plugins/nma.mjs';
+import { highlight, applyParams, pyLiteral, codeForEarlierCell, formatValue } from '../../js/src/scrolly/assets/runnable.mjs';
+import { readNmaConfig } from '../../js/src/shared/config.mjs';
 
 test('highlight escapes HTML and marks tokens', () => {
   const html = highlight('def f(x):  # a < b\n    return "<s>" + 1');
@@ -271,13 +271,13 @@ test('earlier unfinished exercises run their solution', () => {
   assert.deepEqual(codeForEarlierCell({ index: 0, code: 'raise NotImplementedError', fallback: null }, {}).fallback, false);
 });
 
-test('the real myst.yml sets nma.scrolly.pyodide_url', () => {
-  const text = readFileSync(join(here, '..', '..', 'myst.yml'), 'utf8');
+test("the example course's myst.yml sets nma.scrolly.pyodide_url", () => {
+  const text = readFileSync(join(here, '..', '..', 'example-course', 'myst.yml'), 'utf8');
   assert.match(readNmaConfig(text).scrolly?.pyodide_url ?? '', /^https:\/\/.+\/$/);
 });
 
 test('the how-to page: only its real exercise is paired, examples are ignored', () => {
-  const text = readFileSync(join(here, '..', '..', 'tutorials', 'W1D2_InteractiveContent', 'W1D2_Tutorial6.md'), 'utf8');
+  const text = readFileSync(join(here, '..', '..', 'fixtures', 'scrolly', 'doc_page.md'), 'utf8');
   assert.ok(isScrolly(text));
   const pairs = exercisePairs(text);
   assert.equal(pairs.length, 1);
@@ -289,7 +289,7 @@ test('the how-to page: only its real exercise is paired, examples are ignored', 
 // Innermost `selector { decls }` rules; @media/@container wrappers are skipped.
 const cssRules = (css) =>
   [...css.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ sel: m[1].trim(), body: m[2] }));
-const scrollyCss = readFileSync(join(here, '..', '..', 'plugins', 'scrolly', 'scrolly.css'), 'utf8');
+const scrollyCss = readFileSync(join(here, '..', '..', 'js', 'src', 'scrolly', 'assets', 'scrolly.css'), 'utf8');
 
 test('the pinned stage and HUD stop at the end of the section (no negative margins)', () => {
   // A sticky element with margin-bottom: -height has a 0px margin box, so it

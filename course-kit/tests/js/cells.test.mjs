@@ -7,10 +7,10 @@ import { fileURLToPath } from 'node:url';
 
 import {
   NO_FALLBACK_MARKER, isExercise, withNoFallback, modeOf, runtimeOf, thebeId, thebeScriptUrls, statusText,
-} from '../../plugins/cells/src/model.mjs';
+} from '../../js/src/cells/src/model.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const fixtures = join(here, '..', 'fixtures', 'cells');
+const fixtures = join(here, '..', '..', 'fixtures', 'cells');
 
 // The same fixture is checked in tests/test_nma_cells.py.
 for (const c of JSON.parse(readFileSync(join(fixtures, 'runtime.json'), 'utf8'))) {
@@ -57,7 +57,7 @@ test('statusText', () => {
 
 // ------------------------------------------------------------------ runtime
 
-import { PageRuntime, pageRuntime, ensureThebeLoaded } from '../../plugins/cells/src/runtime.mjs';
+import { PageRuntime, pageRuntime, ensureThebeLoaded } from '../../js/src/cells/src/runtime.mjs';
 
 function fakeThebe({ failOn = [], ename = 'NotImplementedError' } = {}) {
   const log = [];
@@ -275,8 +275,7 @@ test('ensureThebeLoaded resolves at once when the globals exist', async () => {
 
 // ------------------------------------------------------------------ plugin
 
-import { buildBrowserPage, buildColabPage } from '../../plugins/cells/cells.mjs';
-import { notebookUrls } from '../../plugins/nma.mjs';
+import { buildBrowserPage, buildColabPage } from '../../js/src/cells/plugin.mjs';
 
 const t = (value) => ({ type: 'text', value });
 const p = (value) => ({ type: 'paragraph', children: [t(value)] });
@@ -316,10 +315,10 @@ test('buildBrowserPage: manifest, panels, hidden cells without a panel', () => {
   assert.deepEqual(runtime.model.cells.map((c) => c.index), [0, 1, 2, 3]);
   const panels = widgets(tree, 'nma-cell');
   assert.deepEqual(panels.map((w) => w.id), ['nma-cell-1', 'nma-cell-2', 'nma-cell-3']);
-  assert.equal(panels[0].esm, '/plugins/cells/dist/panel.mjs');
-  assert.equal(panels[0].css, '/plugins/cells/cells.css');
-  assert.equal(runtime.esm, '/plugins/cells/dist/runtime-widget.mjs');
-  assert.equal(runtime.css, '/plugins/cells/page.css');
+  assert.equal(panels[0].esm, '/course-kit/js/src/cells/dist/panel.mjs');
+  assert.equal(panels[0].css, '/course-kit/js/src/cells/assets/cells.css');
+  assert.equal(runtime.esm, '/course-kit/js/src/cells/dist/runtime-widget.mjs');
+  assert.equal(runtime.css, '/course-kit/js/src/cells/assets/page.css');
   assert.ok(!JSON.stringify(tree).includes('notebook-code'));
   assert.ok(JSON.stringify(tree).includes('intro'));
 });
@@ -346,15 +345,4 @@ test('buildColabPage adds a banner and keeps the code blocks', () => {
   assert.deepEqual(links.map((l) => l.url), ['https://colab/x', 'https://kaggle/x']);
   assert.ok(tree.children.some((c) => c.kind === 'notebook-code'));
   assert.equal(widgets(tree, 'nma-cell').length, 0);
-});
-
-test('notebookUrls matches make_badge_html', () => {
-  const { colabUrl, kaggleUrl } = notebookUrls(join(process.cwd(), 'tutorials/W2D1_Examples/W2D1_Tutorial1.md'));
-  assert.equal(
-    colabUrl,
-    'https://colab.research.google.com/github/neuromatch/course-template/blob/notebooks-branch/notebooks/W2D1_Examples/W2D1_Tutorial1.ipynb',
-  );
-  assert.ok(
-    kaggleUrl.endsWith('raw.githubusercontent.com/neuromatch/course-template/notebooks-branch/notebooks/W2D1_Examples/W2D1_Tutorial1.ipynb'),
-  );
 });

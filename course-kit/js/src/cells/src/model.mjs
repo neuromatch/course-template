@@ -1,8 +1,8 @@
 // Pure helpers for editable cells (no imports: used by Node tests, the MyST
 // plugin and the browser bundles).
 
-export const NO_FALLBACK_MARKER = 'nma-no-fallback'; // sync: scripts/nma_solutions.py
-export const UNFINISHED_RE = /^[ \t]*raise NotImplementedError/m; // sync: scripts/nma_solutions.py
+export const NO_FALLBACK_MARKER = 'nma-no-fallback'; // sync: nma_kit.solutions
+export const UNFINISHED_RE = /^[ \t]*raise NotImplementedError/m; // sync: nma_kit.solutions
 
 export const isExercise = (code) => UNFINISHED_RE.test(code);
 
@@ -25,7 +25,7 @@ export function frontmatterOf(text) {
   return end === -1 ? '' : text.slice(3, end);
 }
 
-const RUNTIME_RE = /^runtime:\s*(['"]?)([A-Za-z]+)\1\s*(#.*)?$/m; // sync: scripts/nma_cells.py
+const RUNTIME_RE = /^runtime:\s*(['"]?)([A-Za-z]+)\1\s*(#.*)?$/m; // sync: nma_kit.cells
 
 /** 'browser' (default) or 'colab' (or the raw invalid value). */
 export function runtimeOf(text) {

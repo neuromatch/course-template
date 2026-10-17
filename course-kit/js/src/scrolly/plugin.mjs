@@ -11,36 +11,31 @@
 // and turns every code cell into a runnable widget (runnable.mjs) that runs
 // Python in the reader's browser (Pyodide). Starting outputs come from
 // _build/scrolly/<relDir>/<stem>.json, written in CI by
-// `scripts/nma_scrolly.py --render`.
+// `nma-kit render-scrolly`.
 //
-// scripts/nma_scrolly.py is the Python side. These must stay in sync:
+// nma_kit.scrolly is the Python side. These must stay in sync:
 //   isScrolly <-> is_scrolly, cellKey <-> cell_key, parseParams <-> parse_params
-// (shared fixtures in tests/fixtures/scrolly/).
+// (shared fixtures in fixtures/scrolly/).
 
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 
-import { readNmaConfig } from '../nma.mjs';
+import { readNmaConfig } from '../shared/config.mjs';
+import { isScrolly } from '../shared/frontmatter.mjs';
+
+export { isScrolly };
 
 export const DEFAULT_PYODIDE_URL = 'https://cdn.jsdelivr.net/pyodide/v314.0.7/full/';
-const ENGINE_ESM = '/plugins/scrolly/engine.mjs';
-const RUNNABLE_ESM = '/plugins/scrolly/runnable.mjs';
-const RUNNABLE_CSS = '/plugins/scrolly/runnable.css';
+const ENGINE_ESM = '/course-kit/js/src/scrolly/assets/engine.mjs';
+const RUNNABLE_ESM = '/course-kit/js/src/scrolly/assets/runnable.mjs';
+const RUNNABLE_CSS = '/course-kit/js/src/scrolly/assets/runnable.css';
 // Page layout. engine.mjs copies it from its shadow root into <head>.
-const LAYOUT_CSS = '/plugins/scrolly/scrolly.css';
+const LAYOUT_CSS = '/course-kit/js/src/scrolly/assets/scrolly.css';
 const STEP = 'scrollyStep';
 const STAGE = 'scrollyStage';
 
 // ---------------------------------------------------------------- shared rules
-
-/** True if the frontmatter has a plain top-level `layout: scrolly` line. */
-export function isScrolly(text) {
-  if (!text.startsWith('---')) return false;
-  const end = text.indexOf('\n---', 3);
-  if (end === -1) return false;
-  return /^layout:\s*(['"]?)scrolly\1\s*(#.*)?$/m.test(text.slice(3, end));
-}
 
 /** CRLF -> LF, trailing spaces/tabs removed per line, outer blank lines removed. */
 export function canonicalCode(code) {
@@ -497,7 +492,7 @@ const scrollyTransform = {
     } catch {
       vfile.message(
         `no pre-rendered outputs (${relative(process.cwd(), file)}); panels show "Run to see output". ` +
-          'Run `uv run python scripts/nma_scrolly.py --render` to create them.',
+          'Run `nma-kit render-scrolly` to create them.',
         null,
         'nma-scrolly',
       );
