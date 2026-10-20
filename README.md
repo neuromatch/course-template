@@ -13,33 +13,38 @@ scrolling text), see W1D2 Tutorial 6, "Scrollytelling Pages".
 
 ## After forking
 
-Update these three things before adding content:
+Update these things before adding content:
 
 1. In `myst.yml`: change `project.title`, `project.authors`, and `project.github`
 2. In `README.md`: change the **Live book** URL to match your GitHub Pages URL
 3. In GitHub: go to **Settings → Pages** and set Source to **GitHub Actions**
+   (set your custom domain there too, if you have one)
+
+The first push to `main` publishes the site and creates `notebooks-branch`
+for the generated notebooks. Pull requests are checked and built, but not
+published.
+
+## The course kit
+
+The MyST plugin, the `nma-kit` command (notebooks, checks, site preparation)
+and the CI workflows come from the published **Neuromatch course kit**
+([neuromatch/course-kit](https://github.com/neuromatch/course-kit)): the npm
+package `@neuromatch/course-kit` (referenced by `extend:` in `myst.yml`) and
+the PyPI package `neuromatch-course-kit` (the `nma-kit` command). This
+template holds no kit code, only content and configuration; kit fixes reach
+your course on its next build (`@v0.1` in `.github/workflows/course.yml`).
 
 ## Local preview
 
 Requires **Node.js >= 20** (use `nvm use` if you have `.nvmrc` support) and Python 3.10+.
 
-Install dependencies (choose one):
-
 ```bash
-# with uv (recommended)
 uv venv
-uv pip install -r requirements.txt
-
-# with pip
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-Then start the local preview server:
-
-```bash
+uv pip install -r requirements.txt neuromatch-course-kit
+uv run nma-kit check                                # content rules, as in CI
+uv run nma-kit sync-assets                          # branding files (_nma/), re-run after kit upgrades
 uv run myst start
 ```
 
-The book will be available at http://localhost:3000.
+The book will be available at http://localhost:3000. For scrollytelling pages,
+run `uv run nma-kit render-scrolly` first so their panels show real outputs.

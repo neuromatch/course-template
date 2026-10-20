@@ -194,7 +194,7 @@ html.dark .hljs-number,
 html.dark .hljs-meta { color: #FF9E9E; }
 html.dark .hljs-comment { color: #9AA7A7; font-style: italic; }
 
-/* Editable cells (plugins/cells) replace JupyterLite's power button site-wide.
+/* Editable cells (course kit) replace JupyterLite's power button site-wide.
    Hide the whole toolbar wrapper, not just the power button — the wrapper/inner
    otherwise leaves a small ghost dot. */
 .myst-jp-nb-toolbar { display: none !important; }

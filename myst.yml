@@ -1,4 +1,8 @@
 version: 1
+# The Neuromatch course kit: adds the MyST plugin ({nma-video}, {nma-solution},
+# editable cells, scrolly pages, ...) and turns on JupyterLite. @0.1 = newest
+# 0.1.x; CI pins it to the exact version of the workflow's kit release.
+extend: https://cdn.jsdelivr.net/npm/@neuromatch/course-kit@0.1/dist/nma.yml
 project:
   title: Neuromatch Course Template
   authors:
@@ -9,12 +13,6 @@ project:
   license:
     code: BSD-3-Clause
     content: CC-BY-4.0
-  jupyter:
-    lite: true
-  plugins:
-    - plugins/nma.mjs
-    - plugins/scrolly/scrolly.mjs
-    - plugins/cells/cells.mjs
   toc:
     - file: tutorials/intro.md
     - file: tutorials/W1D1_GettingStarted/chapter_intro.md
@@ -54,16 +52,23 @@ site:
   template: book-theme
   options:
     folders: true
-    style: _static/custom.css
-    logo: _static/nma-logo.svg
-    logo_dark: _static/nma-logo-dark.svg
-    logo_text: Neuromatch Course Template
-    favicon: _static/nma-favicon.png
+    logo_text: Neuromatch Course Template   # your course's name next to the logo
+    # The kit's branding (stylesheet, Rubik font, logos, favicon), written to
+    # _nma/ by `nma-kit sync-assets` (CI runs it for you; the folder is not committed).
+    style: _nma/site.css
+    logo: _nma/logo.svg
+    logo_dark: _nma/logo-dark.svg
+    favicon: _nma/favicon.png
 
-# Neuromatch settings. Read by plugins/nma.mjs and scripts/, not by MyST
+# Neuromatch settings. Read by the course kit (plugin and nma-kit CLI), not by MyST
 # (MyST logs "extra key ignored: nma", which is expected).
-# Use plain `key: value` lines only; CI rejects anything else.
+# Use `key: value` entries with string values; `nma-kit check` rejects numbers, lists and deeper nesting.
 nma:
+  # Branding (optional). Override the kit's colours and/or append your own CSS:
+  #   brand:
+  #     primary: "#D9480F"
+  #   style:
+  #     extra: _static/extra.css
   # {nma-feedback} widgets post here (datatops). user_key is a write-only key
   # that is published in every notebook, so it is not a secret.
   feedback:

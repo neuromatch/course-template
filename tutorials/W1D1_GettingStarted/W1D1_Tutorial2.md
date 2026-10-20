@@ -36,6 +36,8 @@ them in `myst.yml` under `site.options`:
 
 `logo_text` is the course name shown beside the logo — handy when the logo is an
 icon rather than a full wordmark. Leave it out to show the logo on its own.
+The default logo, colours and favicon come from the course kit (`nma-kit sync-assets`
+writes them to `_nma/`); see W1D3 Tutorial 3 for changing them.
 
 ## Naming convention
 

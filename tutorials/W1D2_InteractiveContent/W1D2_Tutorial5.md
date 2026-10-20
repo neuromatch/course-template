@@ -115,9 +115,8 @@ changing it.
 
 Notes:
 
-- The setup cell is added at build time (`convert_to_notebooks.py
-  --prepare-site` in `publish-book.yml`), so local `myst start` previews don't
-  have it.
+- The setup cell is added at build time (`nma-kit prepare-site` in CI), so
+  local `myst start` previews don't have it.
 - The solutions are hidden, not secret. The setup cell and the page source
   are both downloadable from the site.
 - Colab/Kaggle notebooks don't get the fallback. There the exercise raises,
@@ -125,7 +124,7 @@ Notes:
 
 ## Rules checked by CI
 
-`convert_to_notebooks.py` stops with an error, giving the file and line, if:
+`nma-kit check` stops with an error, giving the file and line, if:
 
 - a code cell still has a `# to_remove solution` / `# to_remove explanation`
   marker (the old convention)

@@ -24,7 +24,7 @@ are derived artifacts, so never edit them by hand.
 
 Badges are added at build time in two places, and never committed to `main`.
 
-**In the generated notebooks** (`generate-notebooks.yml`), `scripts/convert_to_notebooks.py`:
+**In the generated notebooks**, `nma-kit notebooks` (see Tutorial 1):
 
 1. Scans `tutorials/` for `.md` files with a `kernelspec` in their frontmatter
 2. Converts each to `.ipynb` via `jupytext --from md:myst --to notebook`
@@ -33,8 +33,8 @@ Badges are added at build time in two places, and never committed to `main`.
    instructor version to `notebooks/<day_folder>/instructor/<tutorial_name>.ipynb`
    (see Day 2, Tutorial 5)
 
-**On the rendered site** (`publish-book.yml`), CI runs
-`convert_to_notebooks.py --prepare-site` right before `myst build`. This adds
+**On the rendered site**, CI runs `nma-kit prepare-site` right before
+`myst build`. This adds
 the badge HTML to the top of each executable page in CI's temporary checkout only.
 That's why badges don't appear in a local `myst start` preview, and why you should
 never add badge HTML to a `.md` file yourself.
@@ -52,18 +52,18 @@ automatically when you fork the template. No repo paths are hardcoded.
 
     https://kaggle.com/kernels/welcome?src=https://raw.githubusercontent.com/<org>/<repo>/notebooks-branch/notebooks/<path>.ipynb
 
-## Running the conversion script locally
+## Running the conversion locally
 
 ```{code-cell} python
 import subprocess
 
 result = subprocess.run(
-    ["python", "scripts/convert_to_notebooks.py", "--dry-run"],
+    ["nma-kit", "notebooks", "--dry-run"],
     capture_output=True,
     text=True,
     cwd="../..",   # run from repo root
 )
-print(result.stdout or "(no output — run from the repo root)")
+print(result.stdout or "(no output — install the course kit and run from the repo root)")
 print(result.stderr or "")
 ```
 

@@ -33,7 +33,7 @@ Day 3, Tutorial 2 for the details of notebook generation and badges.
 
 ## Rules enforced by CI
 
-`scripts/convert_to_notebooks.py` runs in CI and fails the build if either rule
+`nma-kit check` runs in CI and fails the build if either rule
 is broken:
 
 1. **No `.ipynb` files in `tutorials/`.** Content must be `.md`.

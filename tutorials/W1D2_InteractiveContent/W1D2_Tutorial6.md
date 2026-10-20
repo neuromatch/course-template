@@ -344,10 +344,7 @@ The **Enable Python** pill at the top of the stage (or any Run button) starts [P
 :::{stage}
 ```yaml
 # myst.yml
-project:
-  plugins:
-    - plugins/nma.mjs
-    - plugins/scrolly/scrolly.mjs
+extend: https://cdn.jsdelivr.net/npm/@neuromatch/course-kit@0.1/dist/nma.yml  # the course kit's MyST plugin
 
 nma:
   scrolly:
@@ -360,7 +357,7 @@ nma:
 :::
 ## Real figures before Python starts
 
-In CI, `scripts/nma_scrolly.py --render` runs every scrolly page's **instructor** notebook (solutions filled in, `# @param` at their defaults) and saves the outputs. The plugin puts them in the page, so every figure above appeared without starting Python. Never type outputs by hand.
+In CI, `nma-kit render-scrolly` runs every scrolly page's **instructor** notebook (solutions filled in, `# @param` at their defaults) and saves the outputs. The plugin puts them in the page, so every figure above appeared without starting Python. Never type outputs by hand.
 
 - A cell that raises **fails the build**, naming the file and line.
 - Exercise cells get no starting output.
@@ -369,7 +366,7 @@ In CI, `scripts/nma_scrolly.py --render` runs every scrolly page's **instructor*
 :::{stage}
 ```bash
 # Preview with real outputs locally
-uv run python scripts/nma_scrolly.py --render
+uv run nma-kit render-scrolly
 uv run myst start
 
 # Writes _build/scrolly/<Day>/<Tutorial>.json

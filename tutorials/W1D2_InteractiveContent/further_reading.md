@@ -25,6 +25,6 @@ title: Further Reading
 
 ## Scrollytelling pages
 
-- [MyST plugins guide](https://mystmd.org/guide/plugins) (how `plugins/scrolly/scrolly.mjs` adds directives and transforms)
+- [MyST plugins guide](https://mystmd.org/guide/plugins) (how the course kit's `js/src/scrolly/plugin.mjs` adds directives and transforms)
 - [anywidget](https://anywidget.dev) (the widget format the stage panels use)
 - [Pyodide documentation](https://pyodide.org/en/stable/) (the Python runtime behind the panels)
