@@ -1,4 +1,8 @@
 version: 1
+# The Neuromatch course kit: adds the MyST plugin ({nma-video}, {nma-solution},
+# editable cells, scrolly pages, ...) and turns on JupyterLite. @0.1 = newest
+# 0.1.x; CI pins it to the exact version of the workflow's kit release.
+extend: https://cdn.jsdelivr.net/npm/@neuromatch/course-kit@0.1/dist/nma.yml
 project:
   title: Neuromatch Course Template
   authors:
@@ -9,14 +13,6 @@ project:
   license:
     code: BSD-3-Clause
     content: CC-BY-4.0
-  jupyter:
-    lite: true
-  # Course kit MyST plugin. Phase 1: the in-repo kit's dev bundle (build it
-  # with `cd course-kit/js && npm ci && npm run build:dev`). After the kit is
-  # published this becomes, at the top of the file:
-  #   extend: https://cdn.jsdelivr.net/npm/@neuromatch/course-kit@0.1.0/dist/nma.yml
-  plugins:
-    - course-kit/js/dist/nma.mjs
   toc:
     - file: tutorials/intro.md
     - file: tutorials/W1D1_GettingStarted/chapter_intro.md

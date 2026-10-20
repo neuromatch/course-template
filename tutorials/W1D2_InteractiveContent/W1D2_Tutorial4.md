@@ -102,7 +102,7 @@ installs `vibecheck` and sets `feedback_prefix`.
 
 ## How it works
 
-Both sides live in the course kit (`course-kit/` in this template):
+Both sides live in the course kit ([neuromatch/course-kit](https://github.com/neuromatch/course-kit)):
 
 | Where | Course kit file | Job |
 |---|---|---|

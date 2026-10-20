@@ -1,10 +1,7 @@
-# Phase 1: this template uses the course kit from ./course-kit (same steps as
-# the kit's reusable workflows). After the kit is published as
-# neuromatch/course-kit, replace this file with course-kit/templates/course.yml.
-#
-# Pull requests: check + build. Push to main: notebooks to notebooks-branch
-# (created if missing), then the site to GitHub Pages
-# (Settings -> Pages -> Source: GitHub Actions; custom domain set there too).
+# Copy to .github/workflows/course.yml in your course repo.
+# Pull requests are checked; pushes to main publish the notebooks and the site.
+# @v0.1 = the newest 0.1.x release (compatible updates, applied on every build).
+# Pin an exact version (e.g. @v0.1.3) to freeze a finished course.
 name: Course
 
 on:
@@ -13,81 +10,15 @@ on:
   pull_request:
   workflow_dispatch:
 
-permissions:
-  contents: read
-
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write # push notebooks-branch
-    concurrency:
-      group: course-${{ github.event_name == 'pull_request' && github.ref || 'publish' }}
-      cancel-in-progress: false
-    steps:
-      - uses: actions/checkout@v4
+  check:
+    if: github.event_name == 'pull_request'
+    uses: neuromatch/course-kit/.github/workflows/course-check.yml@v0.1
 
-      - uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-          cache-dependency-glob: "**/requirements*.txt"
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: course-kit/js/package-lock.json
-
-      - name: Install the course kit (in-repo) and the course's packages
-        run: |
-          uv venv --python 3.12
-          uv pip install -r requirements.txt ./course-kit/python
-          (cd course-kit/js && npm ci --no-audit --no-fund && npm run build:dev)
-          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
-
-      - name: Check content
-        run: nma-kit check
-
-      - name: Generate notebooks
-        if: github.event_name != 'pull_request'
-        run: nma-kit notebooks
-
-      - name: Generate notebooks (dry run)
-        if: github.event_name == 'pull_request'
-        run: nma-kit notebooks --dry-run
-
-      - name: Push notebooks to notebooks-branch
-        if: github.event_name != 'pull_request'
-        run: nma-kit publish-notebooks
-
-      - name: Pre-render scrolly pages
-        run: nma-kit render-scrolly
-
-      # Badges, run-all fallback cells, in this throwaway checkout only.
-      - name: Prepare pages
-        run: nma-kit prepare-site
-
-      - name: Build the site
-        run: myst build --html
-
-      - uses: actions/upload-pages-artifact@v3
-        if: github.event_name != 'pull_request'
-        with:
-          path: _build/html
-
-  deploy:
+  publish:
     if: github.event_name != 'pull_request'
-    needs: build
-    runs-on: ubuntu-latest
+    uses: neuromatch/course-kit/.github/workflows/course-publish.yml@v0.1
     permissions:
+      contents: write
       pages: write
       id-token: write
-    concurrency:
-      group: pages
-      cancel-in-progress: false
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4

@@ -41,9 +41,8 @@ Jupyter session, where packages come from `requirements.txt` instead.
 micropip can only install wheels (`.whl`). If a package only publishes a source
 distribution:
 
-1. Build a pure-Python wheel with the course kit's wheels workflow (copy
-   `course-kit/templates/wheels.yml` to `.github/workflows/`, then trigger it
-   manually). It commits the wheel to `_wheels/`.
+1. Build a pure-Python wheel with the course kit's wheels workflow (this template
+   already has `.github/workflows/wheels.yml`; trigger it manually). It commits the wheel to `_wheels/`.
 2. Install it from `raw.githubusercontent.com`, which sends the CORS headers the
    browser needs. GitHub Release URLs do **not**, so they fail in the browser.
 

@@ -6,12 +6,12 @@ Context for AI agents working on this repository.
 
 Neuromatch course template built with MyST (Markedly Structured Text). MyST `.md` files in `tutorials/` are the single source of truth. Jupyter notebooks (`.ipynb`) are generated artifacts, never authored directly. The rendered book deploys to GitHub Pages via CI.
 
-The tooling (MyST plugin, `nma-kit` CLI, CI steps) is the **Neuromatch course kit**, in `course-kit/` for now (phase 1). It is a self-contained, separately versioned project that will move to `neuromatch/course-kit`; this template will then use a published version. This file covers authoring conventions; **for kit internals (plugin code, Python/JS twin rules, bundles, kit tests and CI) read `course-kit/AGENTS.md`.**
+The tooling (MyST plugin, `nma-kit` CLI, CI workflows) is the published **Neuromatch course kit** ([neuromatch/course-kit](https://github.com/neuromatch/course-kit)): npm `@neuromatch/course-kit` and PyPI `neuromatch-course-kit`. **This template contains no kit code.** It holds content, configuration and authoring documentation only; fix kit behaviour in the kit repo, not here. This file covers authoring conventions; for kit internals read the kit's `AGENTS.md`.
 
 ## Architecture
 
 ```
-myst.yml                    # Single config: metadata, TOC, JupyterLite, site theme, nma: settings
+myst.yml                    # Single config: extends the kit's nma.yml, metadata, TOC, nma: settings
 tutorials/
   intro.md                  # Landing page
   W{week}D{day}_{Topic}/    # One directory per day
@@ -20,11 +20,6 @@ tutorials/
     W{w}D{d}_Tutorial2.md
     W{w}D{d}_Bonus.md       # Open-ended bonus
     further_reading.md       # Static links page
-course-kit/                  # The course kit (see course-kit/AGENTS.md); will move to its own repo
-  js/                        # MyST plugin, one folder per feature, bundled to js/dist/nma.mjs (build:dev, gitignored)
-  python/                    # nma-kit CLI (package nma_kit)
-  .github/workflows/         # Reusable course workflows + the kit's CI (inert inside this repo)
-  templates/course.yml       # The workflow courses copy once the kit is published
 _wheels/                     # Pre-built .whl files for Pyodide (CORS-friendly hosting)
 _static/
   custom.css                 # Custom CSS for the book theme (keeps the .myst-jp-nb-toolbar rule the kit needs)
@@ -33,14 +28,15 @@ projects/
 notebooks/                   # Generated files (gitignored, lives on notebooks-branch):
                              #   <Day>/<T>.ipynb, <Day>/instructor/<T>.ipynb, <Day>/solutions/*
 .github/workflows/
-  course.yml                 # Phase 1: PR check; on main: notebooks -> notebooks-branch, site -> Pages
+  course.yml                 # Calls the kit's reusable workflows: PR check; on main: notebooks -> notebooks-branch, site -> Pages
+  wheels.yml                 # Manual: build Pyodide wheels into _wheels/ (kit workflow)
 ```
 
 ### Key files
 
-- **`myst.yml`** -- the only config file. Contains project metadata, hand-authored TOC, JupyterLite settings (`project.jupyter.lite: true`), the course kit plugin (`project.plugins: [course-kit/js/dist/nma.mjs]`; later `extend:` the kit's published `nma.yml`), site theme, and the top-level `nma:` block (settings read by the course kit, not by MyST, which logs `extra key ignored: nma`). There is no `_toc.yml` or `_config.yml`.
+- **`myst.yml`** -- the only config file. Contains project metadata, hand-authored TOC, the kit's config (`extend: https://cdn.jsdelivr.net/npm/@neuromatch/course-kit@0.1/dist/nma.yml`, which adds the plugin and `project.jupyter.lite: true`), site theme, and the top-level `nma:` block (settings read by the course kit, not by MyST, which logs `extra key ignored: nma`). There is no `_toc.yml` or `_config.yml`.
 - **`nma-kit`** -- the course kit CLI, run from the repo root: `check` (content rules below), `notebooks` (student/instructor notebooks and solution files, badges from `project.github`), `render-scrolly`, `prepare-site` (CI only: badges + run-all fallback cell in the `.md` pages), `publish-notebooks`.
-- **`.github/workflows/course.yml`** -- phase 1 CI. Installs `./course-kit/python` and builds the kit's dev bundle, then runs the `nma-kit` steps (see "Build & CI").
+- **`.github/workflows/course.yml`** -- calls the kit's reusable workflows (`@v0.1`), which install the matching `neuromatch-course-kit` and run the `nma-kit` steps (see "Build & CI").
 - **`requirements.txt`** -- the packages the tutorials import (numpy, matplotlib, ...). The tooling (mystmd, pinned by the kit; jupytext; nbclient) comes from the course kit.
 - **`.nvmrc`** -- Node.js version (22). MyST requires Node >= 20.
 
@@ -103,7 +99,7 @@ Every visible code cell on a **browser page** (has `kernelspec`, not `layout: sc
 - **Edits live in memory only**, per page (Reset restores the original). Changing page disposes the kernel and starts a fresh one when you come back. **Restart** starts a new kernel session.
 - **Styling.** CSS variables with light and dark defaults (`html.dark`/`html.light`), overridable from `_static/custom.css`: `--nma-cell-{bg,fg}-{light,dark}`, `--nma-cell-border-{light,dark}`, `--nma-cell-radius`, `--nma-cell-accent-{light,dark}`, `--nma-cell-exercise-accent-{light,dark}`, `--nma-cell-bar-{bg,fg}-{light,dark}`, `--nma-cell-gutter-{bg,fg}-{light,dark}`, `--nma-cell-active-line-{light,dark}`, `--nma-cell-head-{bg,fg}-{light,dark}`, `--nma-cell-bar-bg-{light,dark}`, `--nma-cell-out-bg-{light,dark}`, `--nma-cell-font-family`, `--nma-cell-font-size-value`, `--nma-tok-{keyword,string,number,comment,function,definition}-{light,dark}`. Example: `:root { --nma-cell-accent-light: #2a9d8f; --nma-tok-keyword-light: #b5179e; } html.dark { --nma-tok-keyword-dark: #f72585; }`.
 - **Outside services** (students' browsers must reach them): `cdn.jsdelivr.net` (Pyodide 0.27, widget JS), `cdnjs.cloudflare.com` (`require.js`, MathJax, font-awesome), `pypi.org`/`files.pythonhosted.org` (`micropip`). Scrolly pages load their own, newer Pyodide, so package availability can differ.
-- **Internals** (bundles, asset URLs, browser smoke test): see `course-kit/AGENTS.md`. To run the smoke test against this template's build: `NMA_E2E_COURSE=$PWD NMA_E2E_URL=http://localhost:8765 course-kit/python/.venv/bin/pytest -q course-kit/tests/e2e`.
+- **Internals** (bundles, asset URLs, browser smoke test): see the kit's `AGENTS.md`.
 
 ### Badges
 
@@ -127,7 +123,7 @@ Never write video or slide players as code cells. Use the directives:
 :::
 ```
 
-- On the site, the course kit's plugin (`course-kit/js/src/media/`) renders them as static iframes (tabs for multiple hosts), so they show without starting JupyterLite.
+- On the site, the course kit's plugin (the kit's `js/src/media/`) renders them as static iframes (tabs for multiple hosts), so they show without starting JupyterLite.
 - In generated notebooks, `nma-kit notebooks` (`nma_kit.media`) replaces them with the standard hidden NMA code cells (ipywidgets Tab / OSF IFrame).
 - Options: `nma-video` takes `:youtube:`, `:bilibili:`, `:osf:` (at least one). `nma-slides` takes an optional `:title:` (default "Tutorial slides").
 - Put them at the top level of the page (not nested in other directives), with options only and no body.
@@ -153,7 +149,7 @@ Never write feedback cells (`content_review(...)`, the vibecheck "Import feedbac
       user_key: y1x3mpx5   # write-only, published in every notebook; not a secret
   ```
 
-- **Site:** the course kit's plugin (`course-kit/js/src/feedback/`) turns each directive into MyST's `anywidget` node backed by its browser widget. It renders 🙂/😐/🙁 with no kernel and POSTs `{button_name, feedback, section_id, timestamp_utc}` to `<url>/api/v1/projects/<project>` with header `X-User-Key`, the same request vibecheck makes.
+- **Site:** the course kit's plugin (the kit's `js/src/feedback/`) turns each directive into MyST's `anywidget` node backed by its browser widget. It renders 🙂/😐/🙁 with no kernel and POSTs `{button_name, feedback, section_id, timestamp_utc}` to `<url>/api/v1/projects/<project>` with header `X-User-Key`, the same request vibecheck makes.
 - **Notebooks:** each directive becomes a hidden `# @title Submit your feedback` / `content_review(f"{feedback_prefix}_<name>")` cell, and one hidden "Import feedback gadget" cell (`%pip install vibecheck datatops`, `content_review`, `feedback_prefix`) is added at the top. Notebooks only run on Colab/Kaggle/local Jupyter, so it has no Pyodide branch.
 
 ### Exercises, solutions and explanations
@@ -209,13 +205,13 @@ marker go on the stage; prose, math, solution links and {nma-feedback} on the ca
 ```
 
 - The section is placed between the book theme's TOC sidebar and "On this page" outline (`.scrolly-col` in `scrolly.css`), and its layout uses container queries on its own width: stage beside the cards from 760px (`WIDE` in `engine.mjs`), stacked below that. Scrolly pages should set frontmatter `site: hide_outline: true` to give the section the outline's space, but not `hide_toc`: with it the theme leaves the TOC out of the page entirely (no sidebar, and the small-screen menu opens empty), so readers can't move to another page mid-story.
-- Engine (HUD), stage and steps share one grid cell (`grid-area: 1 / 1`), not negative margins. A sticky element with `margin-bottom: -height` keeps sticking a screen past its parent and covered the footer prev/next links (regression test in `course-kit/tests/js/scrolly.test.mjs`).
+- Engine (HUD), stage and steps share one grid cell (`grid-area: 1 / 1`), not negative margins. A sticky element with `margin-bottom: -height` keeps sticking a screen past its parent and covered the footer prev/next links (regression test in the kit).
 - A step with nothing for the stage keeps the previous stage. A `hero` step has no card. Content before the first `{step}` is a normal page header.
 - Code cells on the stage: untagged = editable panel, `hide-input` = code collapsed, `remove-input` = output only, `remove-cell` = invisible (runs before the first visible cell).
 - Panels share one Pyodide runtime (`nma.scrolly.pyodide_url` in `myst.yml`). Running a cell first runs earlier unrun cells. An earlier unfinished exercise runs its `{nma-solution}` instead. JupyterLite's power button is hidden on these pages.
 - Interactive demos use Colab form syntax, one top-level assignment per line: `a = -0.5  # @param {type:"slider", min:-2.5, max:1.5, step:0.25}` (`step` defaults to 1) or `option = 1  # @param [1, 2, 3, 4]` (the default must be in the list). Never use `@widgets.interact` on scrolly pages. Notebooks get `widgets.interact` automatically.
 - **Never hand-write outputs.** `nma-kit render-scrolly` runs each scrolly page's instructor notebook (exercise cells removed, `# @param` at defaults, cwd = page dir) and writes `_build/scrolly/<relDir>/<stem>.json` = `{cell_key: {stdout, images, error}}`. A raising cell fails CI with `file:line`. Exercise cells get no starting output.
-- The `cell_key`, `# @param` grammar and render-path rules shared by the kit's Python and JS sides are in `course-kit/AGENTS.md`.
+- The `cell_key`, `# @param` grammar and render-path rules shared by the kit's Python and JS sides are in the kit's `AGENTS.md`.
 - Notebooks: markers are removed (a `:kicker:` becomes an italic line), `{stage}` blocks are unwrapped, and `# @param` cells become `widgets.interact`. Avoid "on the right"/"on the stage" in card text, since the notebook shows it too.
 
 ### Code cell tags
@@ -259,8 +255,7 @@ Always test math rendering with `myst build --html`.
 ```bash
 # Requires Node >= 20 (use nvm if needed)
 export NVM_DIR="$HOME/.nvm" && source "$NVM_DIR/nvm.sh" && nvm use 22
-uv venv && uv pip install -r requirements.txt -e ./course-kit/python
-(cd course-kit/js && npm ci && npm run build:dev)   # the kit's MyST plugin (rebuild after kit changes)
+uv venv && uv pip install -r requirements.txt neuromatch-course-kit
 uv run nma-kit check       # content rules, as in CI
 uv run myst start          # Dev server at localhost:3000
 uv run myst build --html   # Full build to _build/html/
@@ -277,18 +272,16 @@ uv run nma-kit notebooks --dry-run   # Preview only
 
 This writes only to `notebooks/` (gitignored) and never modifies `.md` files. `nma-kit prepare-site` edits `.md` files in place and is meant for CI only. If you run it locally, revert with `git checkout -- tutorials/`.
 
-Kit tests (pytest, `node --test`, browser smoke test) run in the kit: see `course-kit/AGENTS.md`.
+Kit tests run in the kit repo; see its `AGENTS.md`.
 
 ### CI
 
-`.github/workflows/course.yml` (phase 1: installs `./course-kit/python`, builds the kit's dev bundle):
+`.github/workflows/course.yml` calls the kit's reusable workflows at `@v0.1` (newest 0.1.x; use an exact tag like `@v0.1.3` to freeze a course). `prepare-site` pins the `extend:` URL in `myst.yml` to the same exact version on CI, so plugin, assets and CLI come from one release.
 
-- **Pull requests**: `nma-kit check`, `nma-kit notebooks --dry-run`, `nma-kit render-scrolly`, `nma-kit prepare-site`, `myst build --html`. Nothing is published.
-- **Push to `main`**: `nma-kit check` -> `nma-kit notebooks` -> `nma-kit publish-notebooks` (to `notebooks-branch`, created if missing) -> `render-scrolly` -> `prepare-site` -> `myst build --html` -> deploy to GitHub Pages. Each step runs only if the previous one passed, and one publish runs at a time.
+- **Pull requests** (`course-check.yml`): `nma-kit check`, `notebooks --dry-run`, `render-scrolly`, `prepare-site`, `myst build --html`. Nothing is published.
+- **Push to `main`** (`course-publish.yml`): `nma-kit check` -> `nma-kit notebooks` -> `nma-kit publish-notebooks` (to `notebooks-branch`, created if missing) -> `render-scrolly` -> `prepare-site` -> `myst build --html` -> deploy to GitHub Pages. Each step runs only if the previous one passed, and one publish runs at a time.
 - GitHub Pages: Settings -> Pages -> Source: GitHub Actions (custom domain set there; no CNAME copy step).
-- Pyodide wheels: copy `course-kit/templates/wheels.yml` once the kit is published (it commits wheels to `_wheels/`).
-
-Phase 2 (after `neuromatch/course-kit` is published): replace `course.yml` with `course-kit/templates/course.yml` (calls the reusable workflows at `@v0.1`), switch `project.plugins` to `extend: https://cdn.jsdelivr.net/npm/@neuromatch/course-kit@0.1/dist/nma.yml`, and delete `course-kit/`.
+- Pyodide wheels: `.github/workflows/wheels.yml` (manual) calls the kit's `course-wheels.yml` and commits wheels to `_wheels/`.
 
 ### Adding a new day
 

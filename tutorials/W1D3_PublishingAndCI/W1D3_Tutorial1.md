@@ -6,9 +6,11 @@ title: "Tutorial 1: GitHub Actions — Build and Publish Pipeline"
 
 The build tooling (the MyST plugin, the `nma-kit` command and the GitHub
 Actions workflows) lives in the **Neuromatch course kit**, a separately
-versioned project. This template uses it from the `course-kit/` folder for now;
-once the kit is published, every course calls the kit's workflows instead of
-carrying its own copy, and picks up kit fixes on its next build.
+versioned project, published as `@neuromatch/course-kit` on npm and
+`neuromatch-course-kit` on PyPI. Every course calls the kit's reusable
+workflows instead of carrying its own copy, and picks up kit fixes on its next
+build. The `@v0.1` in the workflow is the only version knob: the newest 0.1.x
+(compatible updates), or an exact tag such as `@v0.1.3` to freeze a finished course.
 
 This template has one workflow, `.github/workflows/course.yml`, included below
 so this page always shows what actually runs.
@@ -58,8 +60,7 @@ during `myst build`.
 ## Running the same steps locally
 
 ```bash
-uv venv && uv pip install -r requirements.txt ./course-kit/python
-(cd course-kit/js && npm ci && npm run build:dev)
+uv venv && uv pip install -r requirements.txt neuromatch-course-kit
 uv run nma-kit check
 uv run nma-kit notebooks --dry-run
 uv run myst start

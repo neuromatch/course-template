@@ -27,10 +27,12 @@ published.
 ## The course kit
 
 The MyST plugin, the `nma-kit` command (notebooks, checks, site preparation)
-and the CI steps come from the **Neuromatch course kit**, in `course-kit/`
-(see its [README](course-kit/README.md)). It will move to its own repository,
-`neuromatch/course-kit`; courses will then use a published version instead of
-a copy, and get kit fixes on their next build.
+and the CI workflows come from the published **Neuromatch course kit**
+([neuromatch/course-kit](https://github.com/neuromatch/course-kit)): the npm
+package `@neuromatch/course-kit` (referenced by `extend:` in `myst.yml`) and
+the PyPI package `neuromatch-course-kit` (the `nma-kit` command). This
+template holds no kit code, only content and configuration; kit fixes reach
+your course on its next build (`@v0.1` in `.github/workflows/course.yml`).
 
 ## Local preview
 
@@ -38,8 +40,7 @@ Requires **Node.js >= 20** (use `nvm use` if you have `.nvmrc` support) and Pyth
 
 ```bash
 uv venv
-uv pip install -r requirements.txt ./course-kit/python
-(cd course-kit/js && npm ci && npm run build:dev)   # the kit's MyST plugin
+uv pip install -r requirements.txt neuromatch-course-kit
 uv run nma-kit check                                # content rules, as in CI
 uv run myst start
 ```
