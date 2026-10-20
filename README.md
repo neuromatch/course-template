@@ -18,7 +18,7 @@ Update these things before adding content:
 1. In `myst.yml`: change `project.title`, `project.authors`, and `project.github`
 2. In `README.md`: change the **Live book** URL to match your GitHub Pages URL
 3. In GitHub: go to **Settings → Pages** and set Source to **GitHub Actions**
-   (set your custom domain there too, if you have one; delete the `CNAME` file)
+   (set your custom domain there too, if you have one)
 
 The first push to `main` publishes the site and creates `notebooks-branch`
 for the generated notebooks. Pull requests are checked and built, but not
@@ -42,6 +42,7 @@ Requires **Node.js >= 20** (use `nvm use` if you have `.nvmrc` support) and Pyth
 uv venv
 uv pip install -r requirements.txt neuromatch-course-kit
 uv run nma-kit check                                # content rules, as in CI
+uv run nma-kit sync-assets                          # branding files (_nma/), re-run after kit upgrades
 uv run myst start
 ```
 

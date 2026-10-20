@@ -62,6 +62,7 @@ during `myst build`.
 ```bash
 uv venv && uv pip install -r requirements.txt neuromatch-course-kit
 uv run nma-kit check
+uv run nma-kit sync-assets   # branding files, written to _nma/
 uv run nma-kit notebooks --dry-run
 uv run myst start
 ```

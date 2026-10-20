@@ -19,9 +19,41 @@ project:
   github: https://github.com/your-org/your-course-repo
 ```
 
-## Adding a logo
+## Branding
 
-Place your logo file in `_static/` and reference it in `myst.yml`:
+The kit provides the Neuromatch look: colours, the Rubik font, logos, favicon,
+and the styling of its own widgets. `nma-kit sync-assets` writes them to `_nma/`
+(CI does this automatically; run it once locally before `myst start`, and again
+after upgrading the kit). `myst.yml` points at those files:
+
+```yaml
+site:
+  options:
+    logo_text: Your Course Title   # your course's name next to the logo
+    style: _nma/site.css
+    logo: _nma/logo.svg
+    logo_dark: _nma/logo-dark.svg
+    favicon: _nma/favicon.png
+```
+
+## Changing the colours
+
+Set any of these in the `nma:` block of `myst.yml` (all optional, `"#RRGGBB"`):
+
+```yaml
+nma:
+  brand:
+    primary: "#D9480F"       # links, accents, buttons
+    primary_hover: "#A63700" # default: primary, 25% darker
+    primary_light: "#FF8A57" # accent on dark backgrounds
+    secondary: "#45429C"     # header surface, tips
+    accent: "#FA7A7A"        # exercise cells
+```
+
+## Using your own logo
+
+To replace the Neuromatch logo, place your file in `_static/` and point the
+logo options at it instead of `_nma/`:
 
 ```yaml
 site:
@@ -39,15 +71,19 @@ context of the sidebar and table of contents.
 
 ## Custom CSS
 
-Edit `_static/custom.css` — it is already wired into the book via `myst.yml`.
-Use it to override colours, fonts, or spacing:
+Put your own rules in a file such as `_static/extra.css` and list it in `myst.yml`.
+The kit appends it after its own stylesheet (into `_nma/site.css`), so your
+rules win. The brand colours are CSS variables (`--nma-brand-primary`, ...):
+
+```yaml
+nma:
+  style:
+    extra: _static/extra.css
+```
+
+Example contents:
 
 ```css
-/* Change the primary colour */
-:root {
-  --color-primary: #FF6B6B;
-}
-
 /* Style exercise admonitions */
 .admonition.tip {
   border-left-color: #4ECDC4;
