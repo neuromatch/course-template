@@ -27,7 +27,7 @@ Everything standard Markdown supports works in MyST:
 
 - **Bold**, *italic*, `inline code`
 - [Links](https://mystmd.org)
-- Images: `![alt text](path/to/image.png)`
+- Images: `![alt text](images/image.png)` (see Tutorial 3 for where files go)
 
 ## Admonitions
 
