@@ -6,6 +6,16 @@ title: Project Booklet
 
 This section contains the project materials for the course.
 
+## Worked examples
+
+A real Neuromatch project, converted to MyST:
+
+- [Macrocircuits](example_macrocircuits/README.md) (NeuroAI): a single full project
+  notebook, with background, video and slides, a project-template image, setup for
+  Colab/Kaggle/local, sections with exercises, and feedback widgets.
+
+It uses `runtime: colab` because its dependencies (`dm_control`, MuJoCo) can't run in the browser.
+
 ## How to structure your project booklet
 
 Add your project guidance documents to the `projects/` directory and register
