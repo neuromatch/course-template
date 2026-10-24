@@ -22,7 +22,7 @@ rng = np.random.default_rng(2026)
 :::{step} hero
 :kicker: neuromatch course template
 :::
-# Tutorial 6: *Scrollytelling pages*
+# Tutorial 7: *Scrollytelling pages*
 
 A pinned stage of figures, videos and live Python, with text cards that scroll past.
 
