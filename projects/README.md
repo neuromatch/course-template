@@ -10,7 +10,7 @@ This section contains the project materials for the course.
 
 A real Neuromatch project, converted to MyST:
 
-- [Macrocircuits](example_macrocircuits/README.md) (NeuroAI): a single full project
+- [Macrocircuits](example_macrocircuits/Macrocircuits.md) (NeuroAI): a single full project
   notebook, with background, video and slides, a project-template image, setup for
   Colab/Kaggle/local, sections with exercises, and feedback widgets.
 

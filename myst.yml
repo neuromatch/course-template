@@ -48,7 +48,7 @@ project:
         - file: tutorials/W2D1_Examples/further_reading.md
     - file: projects/README.md
       children:
-        - file: projects/example_macrocircuits/README.md
+        - file: projects/example_macrocircuits/Macrocircuits.md
 
 site:
   template: book-theme
