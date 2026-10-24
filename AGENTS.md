@@ -283,7 +283,8 @@ Kit tests run in the kit repo; see its `AGENTS.md`.
 
 `.github/workflows/course.yml` calls the kit's reusable workflows at `@v0.1` (newest 0.1.x; use an exact tag like `@v0.1.3` to freeze a course). `prepare-site` pins the `extend:` URL in `myst.yml` to the same exact version on CI, so plugin, assets and CLI come from one release.
 
-- **Pull requests** (`course-check.yml`): `nma-kit check`, `notebooks --dry-run`, `render-scrolly`, `prepare-site`, `myst build --html`. Nothing is published.
+- **Pull requests** (`course-check.yml`): `nma-kit check`, `notebooks --dry-run`, `render-scrolly`, `prepare-site`, `myst build --html`. Nothing is published to the live site.
+- **Pull request previews** (`course-preview.yml`, the `preview` job in `course.yml`): builds the PR like a publish, pushes its notebooks to `notebooks-pr-<n>` (every badge and link follows that branch), deploys the site to Cloudflare Pages as `https://pr-<n>.<project>.pages.dev` and keeps one comment with the link. Closing the PR deletes the branch and deployments. Same-repository PRs only. Needs secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` and variable `CLOUDFLARE_PROJECT`; without them the deploy is skipped.
 - **Push to `main`** (`course-publish.yml`): `nma-kit check` -> `nma-kit notebooks` -> `nma-kit publish-notebooks` (to `notebooks-branch`, created if missing) -> `render-scrolly` -> `prepare-site` -> `myst build --html` -> deploy to GitHub Pages. Each step runs only if the previous one passed, and one publish runs at a time.
 - GitHub Pages: Settings -> Pages -> Source: GitHub Actions (custom domain set there; no CNAME copy step).
 - Pyodide wheels: `.github/workflows/wheels.yml` (manual) calls the kit's `course-wheels.yml` and commits wheels to `_wheels/`.

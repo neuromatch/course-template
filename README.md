@@ -22,7 +22,12 @@ Update these things before adding content:
 
 The first push to `main` publishes the site and creates `notebooks-branch`
 for the generated notebooks. Pull requests are checked and built, but not
-published.
+published to the live site. Each same-repository pull request also gets a public
+preview on Cloudflare Pages (see "Pull request previews" in the
+[course kit](https://github.com/neuromatch/course-kit) README). It needs the
+secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` and the variable
+`CLOUDFLARE_PROJECT`; without them the preview deploy is skipped and the rest of
+CI still runs. Delete the `preview` job in `course.yml` if you don't want previews.
 
 ## The course kit
 

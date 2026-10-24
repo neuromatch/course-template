@@ -48,7 +48,11 @@ project:
         - file: tutorials/W2D1_Examples/further_reading.md
     - file: projects/README.md
       children:
-        - file: projects/example_macrocircuits/README.md
+        - file: projects/project_guidance.md
+        - file: projects/example_macrocircuits/Macrocircuits.md
+        - file: projects/example_neurons/README.md
+          children:
+            - file: projects/example_neurons/allen_visual_behavior.md
 
 site:
   template: book-theme

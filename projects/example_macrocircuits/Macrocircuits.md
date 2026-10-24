@@ -294,7 +294,8 @@ First, we'll initialize a basic swimmer agent consisting of 6 links. Each agent 
 
 The environment is flexible, allowing for modifications to introduce additional tasks such as "swim only in the x-direction" or "move towards a ball."
 
-```{code-cell} python_SWIM_SPEED = 0.1
+```{code-cell} python
+_SWIM_SPEED = 0.1
 
 @swimmer.SUITE.add()
 def swim(
@@ -354,7 +355,8 @@ class Swim(swimmer.Swimmer):
 
 Let's visualize the environment by executing a sequence of random actions on a swimmer agent. This involves applying random actions over a series of steps and compiling the rendered frames into a video to visualize the agent's behavior.
 
-```{code-cell} python""" Renders the current environment state to an image """
+```{code-cell} python
+""" Renders the current environment state to an image """
 def render(env):
     return env.physics.render(camera_id=0, width=640, height=480)
 
@@ -378,7 +380,8 @@ def test_dm_control(env):
 env = suite.load('swimmer', 'swim', task_kwargs={'random': 1})
 ```
 
-```{code-cell} pythontest_dm_control(env)
+```{code-cell} python
+test_dm_control(env)
 ```
 
 ### 1.3 Swimmer Agent API
@@ -390,21 +393,24 @@ The observation space consists of 25 total dimensions, combining joint positions
 - k - 1: joint positions $q_i \in [-\pi, \pi]$ (`joints`)
 - 3k: link linear velocities $vx_i, vy_i \in \mathbb{R}$ and rotational velocity $wz_i \in \mathbb{R}$ (`body_velocities`)
 
-```{code-cell} pythonenv.observation_spec()
+```{code-cell} python
+env.observation_spec()
 ```
 
 **Action Space**: k - 1 total (k = 6 $\rightarrow$ 5)
 
 - k - 1: joint normalized force $\ddot{q}_i \in [-1, 1]$
 
-```{code-cell} pythonenv.action_spec()
+```{code-cell} python
+env.action_spec()
 ```
 
 ### 1.4 Example of simple modification to the agent
 
 Let's make a new swimmer agent with 12 links instead of 6, introducing complexity. Additionally, we have the flexibility to adjust various other parameters.
 
-```{code-cell} python@swimmer.SUITE.add()
+```{code-cell} python
+@swimmer.SUITE.add()
 def swim_12_links(
   n_links=12,
   desired_speed=_SWIM_SPEED,
@@ -447,7 +453,8 @@ Have a look at the following links to see what kind of assets you will need to m
 *   [swimmer.py](https://github.com/google-deepmind/dm_control/blob/main/dm_control/suite/swimmer.py)
 *   [swimmer.xml](https://github.com/google-deepmind/dm_control/blob/main/dm_control/suite/swimmer.xml)
 
-```{code-cell} python# add your code
+```{code-cell} python
+# add your code
 ```
 
 :::{nma-feedback} exploring_deepmind_swimmer
@@ -485,7 +492,8 @@ First we defined a general training function to train any agent on any given env
 
 * **Trainer**: The trainer instance selected for use. It allows the configuration of the training steps, model saving frequency, and other training-related parameters.
 
-```{code-cell} pythonimport tonic
+```{code-cell} python
+import tonic
 import tonic.torch
 
 def train(
@@ -569,7 +577,8 @@ def train(
 
 Now we are going to define a function for creating an actor-critic model suitable for Proximal Policy Optimization (PPO) using a Multi-Layer Perceptron (MLP) architecture.
 
-```{code-cell} pythonfrom tonic.torch import models, normalizers
+```{code-cell} python
+from tonic.torch import models, normalizers
 import torch
 
 def ppo_mlp_model(
@@ -627,7 +636,8 @@ The model can take some time to train so feel free to skip the training for now.
 
 Uncomment the cell below if you want to perform the training.
 
-```{code-cell} pythontrain('import tonic.torch',
+```{code-cell} python
+train('import tonic.torch',
       'tonic.torch.agents.PPO(model=ppo_mlp_model(actor_sizes=(256, 256), critic_sizes=(256,256)))',
       'tonic.environments.ControlSuite("swimmer-swim")',
       name = 'mlp_256',
@@ -643,7 +653,8 @@ Uncomment the cell below if you want to perform the training.
 *   ***Consider increasing the number of steps in trainer to train the model for longer.***
 *   ***Explore [Tonic library](https://github.com/fabiopardo/tonic) to see what algorithms we can use to train our agents. (D4PG is usually faster than PPO)***
 
-```{code-cell} python# add your code
+```{code-cell} python
+# add your code
 ```
 
 ### Section 2.3 Function to run any model on the environment and generate video
@@ -652,7 +663,8 @@ One of the most fun things about these environments is their visualization. We d
 
 Here we have defined a function that will generate the videos of the agent using the input model. The function requires path to the checkpoint folder and the environment you wanna run the trained model on.
 
-```{code-cell} pythondef play_model(path, checkpoint='last',environment='default',seed=None, header=None):
+```{code-cell} python
+def play_model(path, checkpoint='last',environment='default',seed=None, header=None):
 
   """
     Plays a model within an environment and renders the gameplay to a video.
@@ -769,7 +781,8 @@ Let's visualize the agent with a pretrained MLP model. Once you have your pretra
 
 ⏳
 
-```{code-cell} python# play_model('data/local/experiments/tonic/swimmer-swim/mlp_256')
+```{code-cell} python
+# play_model('data/local/experiments/tonic/swimmer-swim/mlp_256')
 play_model('data/local/experiments/tonic/swimmer-swim/pretrained_mlp_ppo')
 ```
 
@@ -782,7 +795,8 @@ Try testing the model on a modification of the enviroment it was trained on.
 *   ***Can we train on the basic 6 link swimmer and test on a larger 12 link swimmer?***
 * ***Train the model for a bit on the modified environment and see how quickly the model can adapt to the new environment.***
 
-```{code-cell} python# add your code
+```{code-cell} python
+# add your code
 ```
 
 :::{nma-feedback} training_models_on_swim_task
@@ -820,7 +834,8 @@ Now we are going to define ***SwimmerModule*** (NCAP model) and ***SwimmerActor*
 
 #### Section 3.1.1 Defining the constraints
 
-```{code-cell} python# ==================================================================================================
+```{code-cell} python
+# ==================================================================================================
 # Weight constraints.
 
 
@@ -885,7 +900,8 @@ def unsigned_constant(shape=(1,), lower=-1., upper=1., p=0.5):
 
 The ***SwimmerModule*** class represents the neural network module inspired by the C. elegans neural circuitry, designed for controlling a robotic swimmer with specific architectural priors, such as proprioception and oscillatory movement patterns.
 
-```{code-cell} pythonclass SwimmerModule(nn.Module):
+```{code-cell} python
+class SwimmerModule(nn.Module):
     """C.-elegans-inspired neural circuit architectural prior."""
 
     def __init__(
@@ -1108,7 +1124,8 @@ The ***SwimmerModule*** class represents the neural network module inspired by t
 
 The ***SwimmerActor*** class acts as a wrapper around the ***SwimmerModule***, managing high-level control signals and observations coming from the environment and passing them to the ***SwimmerModule*** in a suitable format. This class is basically responsible for making the SwimmerModule compatible with the tonic library. If you wish to use any other library to try a algorithm not present in tonic you have to write a new wrapper to make ***SwimmerModule*** compatible with that library.
 
-```{code-cell} pythonclass SwimmerActor(nn.Module):
+```{code-cell} python
+class SwimmerActor(nn.Module):
     def __init__(
             self,
             swimmer,
@@ -1173,7 +1190,8 @@ The ***SwimmerActor*** class acts as a wrapper around the ***SwimmerModule***, m
 We will now define functions akin to those for MLP we defined in Section 3.2, but tailored for the SwimmerActor model.
   
 
-```{code-cell} pythonfrom tonic.torch import models, normalizers
+```{code-cell} python
+from tonic.torch import models, normalizers
 import torch
 
 
@@ -1218,7 +1236,8 @@ def d4pg_swimmer_model(
 
 ⏳
 
-```{code-cell} pythontrain('import tonic.torch',
+```{code-cell} python
+train('import tonic.torch',
       # 'tonic.torch.agents.D4PG(model=d4pg_swimmer_model(n_joints=5,critic_sizes=(128,128)))',
       'tonic.torch.agents.PPO(model=ppo_swimmer_model(n_joints=5,critic_sizes=(256,256)))',
   'tonic.environments.ControlSuite("swimmer-swim",time_feature=True)',
@@ -1230,7 +1249,8 @@ Let's visualize the trained NCAP agent in the environment.
 
 ⏳
 
-```{code-cell} python# play_model('data/local/experiments/tonic/swimmer-swim/ncap_ppo')
+```{code-cell} python
+# play_model('data/local/experiments/tonic/swimmer-swim/ncap_ppo')
 play_model('data/local/experiments/tonic/swimmer-swim/pretrained_ncap_ppo')
 ```
 
@@ -1245,7 +1265,8 @@ play_model('data/local/experiments/tonic/swimmer-swim/pretrained_ncap_ppo')
 
 Now we are going to visualize performance of our model
 
-```{code-cell} pythondef plot_performance(paths, ax=None,title='Model Performance'):
+```{code-cell} python
+def plot_performance(paths, ax=None,title='Model Performance'):
     """
     Plots the performance of multiple models on the same axes using Seaborn for styling.
 
@@ -1285,7 +1306,8 @@ Now we are going to visualize performance of our model
     ax.set_title(title)
 ```
 
-```{code-cell} pythonfig, ax = plt.subplots()
+```{code-cell} python
+fig, ax = plt.subplots()
 
 #Replace the paths with the path to models you trained to plot their performance.
 paths = [
@@ -1303,7 +1325,8 @@ plt.show()
 * ***Try testing the model on a modification of the environment (e.g., the 12-link swimmer) it was trained on.***
 * ***What happens if we remove certain weight constraints (e.g., sign constraint) from the NCAP model?***
 
-```{code-cell} python# add your code
+```{code-cell} python
+# add your code
 ```
 
 :::{nma-feedback} plot_performance
@@ -1314,7 +1337,8 @@ plt.show()
 
 Given the importance of architectural choices in our project we have provided a function which can visualize the network architecture. This includes the ability to render the NCAP network, representing the C. Elegans connectome.
 
-```{code-cell} pythonimport networkx as nx
+```{code-cell} python
+import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -1445,10 +1469,12 @@ def draw_network(mode='NCAP', N=2, include_speed_control=False, include_turn_con
       nx.draw_networkx_edge_labels(G, pos=custom_node_positions, edge_labels=edge_labels)
 ```
 
-```{code-cell} pythondraw_network('MLP', N=6)
+```{code-cell} python
+draw_network('MLP', N=6)
 ```
 
-```{code-cell} pythondraw_network('NCAP', N=6, include_speed_control=True, include_turn_control=True)
+```{code-cell} python
+draw_network('NCAP', N=6, include_speed_control=True, include_turn_control=True)
 ```
 
 Notice that the NCAP architecture is highly sparse and interpretable as compared to the MLP. Moreover notice that the ncap architecture can be completely embedded within a fully connected MLP of 3 hidden layers and ReLU nonlinearities. This enables us to do a thorough investigation into how specific architectural elements influence both performance and the learning process. By leveraging this capability, we can systematically analyze the impact of the architectural preferences inherent to the model and make better design choices.

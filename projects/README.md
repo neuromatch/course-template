@@ -8,13 +8,23 @@ This section contains the project materials for the course.
 
 ## Worked examples
 
-A real Neuromatch project, converted to MyST:
+Real Neuromatch project material, converted to MyST. Each shows a different kind of
+page a project booklet needs:
 
-- [Macrocircuits](example_macrocircuits/README.md) (NeuroAI): a single full project
-  notebook, with background, video and slides, a project-template image, setup for
-  Colab/Kaggle/local, sections with exercises, and feedback widgets.
+- [Daily guide for projects](project_guidance.md) (CompNeuro): plain-Markdown guidance
+  for students, with a day-by-day plan, timings and submission links. No code, so no
+  `kernelspec`.
+- [Macrocircuits](example_macrocircuits/Macrocircuits.md) (NeuroAI): a full project
+  notebook with background, video and slides, a project-template image, setup for
+  Colab/Kaggle/local, exercises and feedback widgets.
+- [Guide to choosing a Neurons dataset](example_neurons/README.md) (CompNeuro): a
+  dataset chooser with project-template diagrams, linking to starter pages such as
+  [Allen Institute Visual Behavior](example_neurons/allen_visual_behavior.md).
 
-It uses `runtime: colab` because its dependencies (`dm_control`, MuJoCo) can't run in the browser.
+The two code pages use `runtime: colab` because their dependencies (`dm_control`,
+MuJoCo) or data downloads can't be assumed to work in the browser. Images are linked
+from the upstream course repositories instead of being copied here, to keep this
+repository small.
 
 ## How to structure your project booklet
 
@@ -38,13 +48,13 @@ Replace this file with your actual project introduction. Include:
 - Links to datasets
 - Guidance on the modelling workflow
 
-## Typical project booklet structure
+## Layout used by the examples
 
     projects/
-      README.md              ← this file: project introduction
-      project_guidance.md    ← detailed guidance document
-      datasets.md            ← overview of available datasets
-      modelingsteps/
-        intro.md
-        ModelingSteps_1through4.md
-        ModelingSteps_5through10.md
+      README.md                      <- this file: project introduction
+      project_guidance.md            <- daily guidance for students
+      example_macrocircuits/
+        Macrocircuits.md             <- one full project notebook
+      example_neurons/
+        README.md                    <- dataset guide
+        allen_visual_behavior.md     <- starter page for one dataset
