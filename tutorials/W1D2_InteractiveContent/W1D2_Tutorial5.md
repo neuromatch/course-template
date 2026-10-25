@@ -9,6 +9,14 @@ kernelspec:
 
 This tutorial demonstrates how to work with data files in your course using the `{nma-data}` directive.
 
+```{code-cell} python
+:tags: [remove-cell]
+import sys
+if sys.platform == "emscripten":  # only true in JupyterLite/Pyodide
+    import micropip
+    await micropip.install(["ipywidgets"])
+```
+
 ## Declaring Data Files
 
 The `{nma-data}` directive tells the course kit which files your tutorial needs:
