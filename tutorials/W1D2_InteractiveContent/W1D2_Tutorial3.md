@@ -4,7 +4,7 @@ title: "Tutorial 3: Markdown Is the Only Source"
 
 # Tutorial 3: Markdown Is the Only Source
 
-All course content in this template is written in MyST Markdown (`.md`).
+All course content in a kit course is written in MyST Markdown (`.md`).
 Jupyter notebooks are still produced for Colab and Kaggle, but CI generates them.
 They are never written or edited by hand, and never committed to `main`.
 

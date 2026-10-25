@@ -13,7 +13,7 @@ structured scientific content.
 
 ## Why MyST instead of notebooks?
 
-MyST `.md` files are the **source of truth** for this template. Jupyter notebooks
+MyST `.md` files are the **source of truth** for a course built with the kit. Jupyter notebooks
 (`.ipynb`) are generated automatically by CI — you never edit them by hand.
 
 Benefits:

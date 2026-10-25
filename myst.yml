@@ -4,7 +4,7 @@ version: 1
 # 0.1.x; CI pins it to the exact version of the workflow's kit release.
 extend: https://cdn.jsdelivr.net/npm/@neuromatch/course-kit@0.1/dist/nma.yml
 project:
-  title: Neuromatch Course Template
+  title: Neuromatch Course Guide
   authors:
     - name:
         literal: Neuromatch
@@ -15,6 +15,7 @@ project:
     content: CC-BY-4.0
   toc:
     - file: tutorials/intro.md
+    - file: tutorials/new_course.md
     - file: tutorials/W1D1_GettingStarted/chapter_intro.md
       children:
         - file: tutorials/W1D1_GettingStarted/W1D1_Tutorial1.md
@@ -59,7 +60,7 @@ site:
   template: book-theme
   options:
     folders: true
-    logo_text: Neuromatch Course Template   # your course's name next to the logo
+    logo_text: Neuromatch Course Guide   # a course puts its own name here
     # The kit's branding (stylesheet, Rubik font, logos, favicon), written to
     # _nma/ by `nma-kit sync-assets` (CI runs it for you; the folder is not committed).
     style: _nma/site.css
@@ -76,8 +77,9 @@ nma:
   #     primary: "#D9480F"
   #   style:
   #     extra: _static/extra.css
-  # {nma-feedback} widgets post here (datatops). user_key is a write-only key
-  # that is published in every notebook, so it is not a secret.
+  # {nma-feedback} widgets post here (datatops). This is the guide's own
+  # project: a course must use its own, never this one. user_key is a
+  # write-only key that is published in every notebook, so it is not a secret.
   feedback:
     url: https://pmyvdlilci.execute-api.us-east-1.amazonaws.com/klab
     project: neuromatch_cn

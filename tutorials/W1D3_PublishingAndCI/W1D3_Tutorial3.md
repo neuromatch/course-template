@@ -66,7 +66,7 @@ site:
 SVG and PNG both work. The logo appears in the top-left of the sidebar.
 `logo_dark` swaps in a light version of the logo when the reader is in dark mode,
 and `logo_text` puts the course title beside the logo — handy when the logo is an
-icon rather than a full wordmark. See Tutorial 2 for the same options in the
+icon rather than a full wordmark. See Tutorial 2 of Week 1 Day 1 for the same options in the
 context of the sidebar and table of contents.
 
 ## Custom CSS

@@ -11,7 +11,7 @@ By the end of Day 3 you will be able to:
 - Set up GitHub Actions to build and publish your book automatically
 - Understand how Colab and Kaggle badges are injected by CI
 - Customise your book's theme, logo, and CSS
-- Know how to scale the template to multi-week courses
+- Know how to scale a course to multiple weeks
 
 ## Schedule
 

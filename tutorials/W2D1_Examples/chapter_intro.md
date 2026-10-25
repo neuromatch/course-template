@@ -1,12 +1,12 @@
 ---
-title: "Day 4: Real Content Example"
+title: "Week 2 Day 1: Real Content Example"
 ---
 
-# Day 4: Real Content Example
+# Week 2 Day 1: Real Content Example
 
 This day contains a real Neuromatch Academy tutorial converted from its original
 Jupyter notebook format into MyST Markdown. It demonstrates what production
-course content looks like in the new template.
+course content looks like in a course built with the kit.
 
 The tutorial below was originally **W2D3_Tutorial1: Linear Dynamical Systems**
 from the NMA Computational Neuroscience course. All elements -- videos, exercises,

@@ -40,7 +40,7 @@ That's why badges don't appear in a local `myst start` preview, and why you shou
 never add badge HTML to a `.md` file yourself.
 
 The badge URLs are derived from `project.github` in `myst.yml`, so they update
-automatically when you fork the template. No repo paths are hardcoded.
+automatically for whichever repository the course lives in. No repo paths are hardcoded.
 
 ## Badge URL format
 
@@ -54,17 +54,11 @@ automatically when you fork the template. No repo paths are hardcoded.
 
 ## Running the conversion locally
 
-```{code-cell} python
-import subprocess
+From the course root (the folder with `myst.yml`):
 
-result = subprocess.run(
-    ["nma-kit", "notebooks", "--dry-run"],
-    capture_output=True,
-    text=True,
-    cwd="../..",   # run from repo root
-)
-print(result.stdout or "(no output — install the course kit and run from the repo root)")
-print(result.stderr or "")
+```bash
+uv run nma-kit notebooks --dry-run   # check that every page converts
+uv run nma-kit notebooks             # write the notebooks to notebooks/
 ```
 
 ## What the injected badge cell looks like

@@ -56,7 +56,7 @@ runtime: colab
 - `browser` — each cell is an editor with a **▶ Run** button, running Python in the reader's browser (Pyodide). Good for numpy, scipy, matplotlib, pandas and small demos.
 - `colab` — the code is shown read-only and a banner, *Do this tutorial in Colab*, links to the generated notebook on Colab and Kaggle. Use it for PyTorch, GPUs, big datasets or long training runs.
 
-Any other value is an error, and `runtime: colab` can't be combined with `layout: scrolly`. MyST prints `extra key ignored: runtime`, which is expected: the key is read by this template's plugin and scripts, not by MyST. See [Tutorial 3 of Day 4](../W2D1_Examples/W2D1_Tutorial3.md) for a Colab page.
+Any other value is an error, and `runtime: colab` can't be combined with `layout: scrolly`. MyST prints `extra key ignored: runtime`, which is expected: the key is read by the course kit, not by MyST. See [Tutorial 3 of Week 2 Day 1](../W2D1_Examples/W2D1_Tutorial3.md) for a Colab page.
 
 ### `layout: scrolly` and `site` (scrollytelling)
 
