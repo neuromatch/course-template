@@ -31,7 +31,7 @@ Load the data the same way in both environments - normal NumPy works:
 ```{code-cell} python
 import numpy as np
 
-# Load spike data
+# Load spike data (allow_pickle=True needed for ragged arrays stored as object dtype)
 spike_data = np.load('data/spike_times.npz', allow_pickle=True)
 metadata = np.load('data/neuron_metadata.npz', allow_pickle=True)
 
@@ -143,3 +143,5 @@ The kit automatically:
 - Embeds small files for instant browser loading
 - Generates download cells for Colab/Kaggle notebooks
 - Validates that your code references only declared files
+
+**Note:** This tutorial includes a `generate_data.py` script for reproducibility, but you don't need to commit data generation scripts in your own courses - just commit the data files themselves.
