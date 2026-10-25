@@ -1,136 +1,170 @@
 ---
-title: "Tutorial 5: Exercises and Solutions"
+title: "Tutorial 5: Working with Data Files"
 kernelspec:
   name: python3
   display_name: Python 3
 ---
 
-# Tutorial 5: Exercises and Solutions
+# Tutorial 5: Working with Data Files
 
-Exercises are ordinary code cells that `raise NotImplementedError` until the
-student fills them in. Their answers go in two MyST directives:
-
-- `{nma-solution}` for the code that solves an exercise
-- `{nma-explanation}` for the answer to a discussion question or interactive demo
-
-You write each answer once, and the build produces three versions of the page.
-
-| Where | What readers see |
-|---|---|
-| Website | A *Click for solution* / *Click for explanation* link. The answer is not shown on the page. |
-| Student notebook (Colab/Kaggle) | The same link, in its own markdown cell. The `.ipynb` holds no answers. |
-| Instructor notebook | The solution as a code cell (starting `# Solution`) and the explanation as markdown. |
-
-The links point to files that CI writes next to the notebooks on
-`notebooks-branch`:
-
-```text
-notebooks/<Day>/<Tutorial>.ipynb               student notebook
-notebooks/<Day>/instructor/<Tutorial>.ipynb    instructor notebook
-notebooks/<Day>/solutions/<Tutorial>_Solution_<n>.py
-notebooks/<Day>/solutions/<Tutorial>_Explanation_<n>.md
-```
-
-`n` counts each directive type separately, from the top of the page.
-
-## Solutions
-
-Put the exercise in a normal `{code-cell}` with no tags, so students can see and
-edit it. Put the `{nma-solution}` directly after it, with only blank lines in
-between. Its body is a single ```` ```python ```` fence:
-
-`````markdown
-```{code-cell} python
-def double(x):
-  ###################################################################
-  ## Fill out the following then remove
-  raise NotImplementedError("Student exercise: double x")
-  ###################################################################
-  return ...
-
-print(double(21))
-```
-
-::::{nma-solution}
-```python
-def double(x):
-  return 2 * x
-
-print(double(21))
-```
-::::
-`````
-
-The outer fence needs more colons (`::::`) than any fence inside it. That
-example renders as:
+This tutorial demonstrates how to work with data files in your course using the `{nma-data}` directive.
 
 ```{code-cell} python
-def double(x):
-  ###################################################################
-  ## Fill out the following then remove
-  raise NotImplementedError("Student exercise: double x")
-  ###################################################################
-  return ...
-
-print(double(21))
+:tags: [remove-cell]
+import sys
+if sys.platform == "emscripten":  # only true in JupyterLite/Pyodide
+    import micropip
+    await micropip.install(["ipywidgets"])
 ```
 
-::::{nma-solution}
-```python
-def double(x):
-  return 2 * x
+## Declaring Data Files
 
-print(double(21))
+The `{nma-data}` directive tells the course kit which files your tutorial needs:
+
+:::{nma-data}
+data/spike_times.npz
+data/neuron_metadata.npz
+image/experimental_setup.png
+:::
+
+This declaration:
+- **In the browser**: embeds files ≤2MB into the page (they load instantly from memory)
+- **In notebooks**: generates a hidden download cell that fetches them from GitHub
+
+Files must live in `data/` or `image/` inside your day's folder.
+
+## Using Images
+
+Images work the same way as data files - declare them in `{nma-data}` and reference them in your content:
+
+```{figure} image/experimental_setup.png
+:label: fig-setup
+:alt: Experimental setup schematic
+:width: 80%
+
+Our experimental pipeline: stimulus presentation, neural recording, and spike train analysis.
 ```
-::::
 
-## Explanations
+In the browser, the image loads instantly from the embedded data. In generated notebooks, the download cell fetches it from GitHub.
 
-An `{nma-explanation}` stands on its own and takes ordinary Markdown, including
-math:
+## Loading Data
 
-````markdown
-:::{nma-explanation}
-Doubling is linear: $f(a + b) = f(a) + f(b)$.
-:::
-````
+Load the data the same way in both environments - normal NumPy works:
 
-renders as:
+```{code-cell} python
+import numpy as np
 
-:::{nma-explanation}
-Doubling is linear: $f(a + b) = f(a) + f(b)$.
-:::
+# Load spike data (allow_pickle=True needed for ragged arrays stored as object dtype)
+spike_data = np.load('data/spike_times.npz', allow_pickle=True)
+metadata = np.load('data/neuron_metadata.npz', allow_pickle=True)
 
-## "Run all" on the website
+print(f"Loaded {len(spike_data['neuron_ids'])} neurons")
+print(f"Loaded {len(spike_data['trial_ids'])} trials")
+print(f"Loaded {len(spike_data['condition_ids'])} conditions")
+```
 
-Normally "Run all" would stop at the first unfinished exercise, so nothing
-below it would run. To prevent that, the published site adds a hidden setup cell
-to every page that has exercises. When a cell still has an uncommented
-`raise NotImplementedError` line, the setup cell runs the matching reference
-solution instead and prints a note saying so. Once the student deletes or
-comments out that line, their own code runs.
+## Visualizing Spike Trains
 
-Try it: start the kernel on this page and run the exercise above without
-changing it.
+Let's create a raster plot showing spike times for the first neuron across all trials:
 
-Notes:
+```{code-cell} python
+import matplotlib.pyplot as plt
 
-- The setup cell is added at build time (`nma-kit prepare-site` in CI), so
-  local `myst start` previews don't have it.
-- The solutions are hidden, not secret. The setup cell and the page source
-  are both downloadable from the site.
-- Colab/Kaggle notebooks don't get the fallback. There the exercise raises,
-  as in NMA notebooks.
+# Get spikes for neuron 0 across all trials
+n_trials = len(spike_data['trial_ids'])
+neuron_idx = 0
 
-## Rules checked by CI
+fig, ax = plt.subplots(figsize=(10, 6))
 
-`nma-kit check` stops with an error, giving the file and line, if:
+for trial in range(n_trials):
+    spike_idx = neuron_idx * n_trials + trial
+    spikes = spike_data['spikes'][spike_idx]
+    ax.scatter(spikes, [trial] * len(spikes), c='black', s=1, marker='|')
 
-- a code cell still has a `# to_remove solution` / `# to_remove explanation`
-  marker (the old convention)
-- an exercise has no `{nma-solution}` directly after it, or a solution isn't
-  directly after an exercise
-- a solution body isn't a single ```` ```python ```` fence, or an explanation
-  is empty
-- either directive is nested inside another directive, has options, or is
-  never closed
+ax.set_xlabel('Time (s)')
+ax.set_ylabel('Trial')
+ax.set_title(f'{metadata["neuron_labels"][neuron_idx]} - Spike Raster')
+ax.set_ylim(-1, n_trials)
+plt.tight_layout()
+```
+
+## Computing Firing Rates
+
+Calculate mean firing rate by condition:
+
+```{code-cell} python
+n_neurons = len(spike_data['neuron_ids'])
+n_conditions = len(spike_data['condition_ids'])
+
+# Compute firing rates
+firing_rates = np.zeros((n_neurons, n_conditions))
+
+for neuron in range(n_neurons):
+    for trial in range(n_trials):
+        spike_idx = neuron * n_trials + trial
+        condition = metadata['trial_conditions'][trial]
+        n_spikes = len(spike_data['spikes'][spike_idx])
+        firing_rates[neuron, condition] += n_spikes / 1.0  # 1 second trials
+
+# Average across trials
+firing_rates /= (n_trials // n_conditions)
+
+# Plot firing rates
+fig, ax = plt.subplots(figsize=(8, 6))
+im = ax.imshow(firing_rates, aspect='auto', cmap='viridis')
+ax.set_xlabel('Condition')
+ax.set_ylabel('Neuron')
+ax.set_title('Mean Firing Rate by Condition')
+ax.set_xticks(range(n_conditions))
+ax.set_xticklabels(metadata['condition_labels'])
+plt.colorbar(im, ax=ax, label='Firing Rate (Hz)')
+plt.tight_layout()
+```
+
+## Interactive Exploration
+
+Use a widget to explore different neurons and conditions:
+
+```{code-cell} python
+:tags: [hide-input]
+import ipywidgets as widgets
+
+@widgets.interact(
+    neuron=widgets.IntSlider(min=0, max=19, value=0, description='Neuron'),
+    condition=widgets.IntSlider(min=0, max=4, value=0, description='Condition')
+)
+def explore_spikes(neuron, condition):
+    # Get trials for this condition
+    condition_trials = np.where(metadata['trial_conditions'] == condition)[0]
+    
+    fig, ax = plt.subplots(figsize=(10, 4))
+    
+    for i, trial in enumerate(condition_trials):
+        spike_idx = neuron * n_trials + trial
+        spikes = spike_data['spikes'][spike_idx]
+        ax.scatter(spikes, [i] * len(spikes), c='black', s=2, marker='|')
+    
+    ax.set_xlabel('Time (s)')
+    ax.set_ylabel('Trial (within condition)')
+    ax.set_title(f'{metadata["neuron_labels"][neuron]} - {metadata["condition_labels"][condition]}')
+    ax.set_ylim(-1, len(condition_trials))
+    plt.tight_layout()
+    plt.show()
+```
+
+## Summary
+
+When adding data and images to your tutorials:
+
+1. **Create `data/` and/or `image/` folders** in your day's directory
+2. **Keep files small** (<2MB total) so they embed in browser pages
+3. **Declare all files** with `{nma-data}` at the top of the tutorial
+4. **Reference normally** - images with `{figure}`, data with `np.load()` or similar
+5. **Validate** with `nma-kit check` before committing
+
+The kit automatically:
+- Embeds small files for instant browser loading
+- Generates download cells for Colab/Kaggle notebooks
+- Validates that your code references only declared files
+
+**Note:** This tutorial includes generation scripts (`generate_data.py`, `generate_schematic.py`) for reproducibility, but you don't need to commit generation scripts in your own courses - just commit the files themselves.
