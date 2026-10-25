@@ -1,2 +1,4 @@
-def cube(x):
-  return x ** 3
+def double(x):
+  return 2 * x
+
+print(double(21))
