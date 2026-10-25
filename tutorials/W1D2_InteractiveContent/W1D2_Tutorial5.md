@@ -24,13 +24,28 @@ The `{nma-data}` directive tells the course kit which files your tutorial needs:
 :::{nma-data}
 data/spike_times.npz
 data/neuron_metadata.npz
+image/experimental_setup.png
 :::
 
 This declaration:
 - **In the browser**: embeds files ≤2MB into the page (they load instantly from memory)
 - **In notebooks**: generates a hidden download cell that fetches them from GitHub
 
-Files must live in `data/` or `images/` inside your day's folder.
+Files must live in `data/` or `image/` inside your day's folder.
+
+## Using Images
+
+Images work the same way as data files - declare them in `{nma-data}` and reference them in your content:
+
+```{figure} image/experimental_setup.png
+:label: fig-setup
+:alt: Experimental setup schematic
+:width: 80%
+
+Our experimental pipeline: stimulus presentation, neural recording, and spike train analysis.
+```
+
+In the browser, the image loads instantly from the embedded data. In generated notebooks, the download cell fetches it from GitHub.
 
 ## Loading Data
 
@@ -139,12 +154,12 @@ def explore_spikes(neuron, condition):
 
 ## Summary
 
-When adding data to your tutorials:
+When adding data and images to your tutorials:
 
-1. **Create a `data/` folder** in your day's directory
+1. **Create `data/` and/or `image/` folders** in your day's directory
 2. **Keep files small** (<2MB total) so they embed in browser pages
-3. **Declare files** with `{nma-data}` at the top of the tutorial
-4. **Load normally** - the kit handles browser vs notebook differences
+3. **Declare all files** with `{nma-data}` at the top of the tutorial
+4. **Reference normally** - images with `{figure}`, data with `np.load()` or similar
 5. **Validate** with `nma-kit check` before committing
 
 The kit automatically:
@@ -152,4 +167,4 @@ The kit automatically:
 - Generates download cells for Colab/Kaggle notebooks
 - Validates that your code references only declared files
 
-**Note:** This tutorial includes a `generate_data.py` script for reproducibility, but you don't need to commit data generation scripts in your own courses - just commit the data files themselves.
+**Note:** This tutorial includes generation scripts (`generate_data.py`, `generate_schematic.py`) for reproducibility, but you don't need to commit generation scripts in your own courses - just commit the files themselves.
