@@ -4,9 +4,11 @@ Context for AI agents working on this repository.
 
 ## Project Overview
 
-Neuromatch course template built with MyST (Markedly Structured Text). MyST `.md` files in `tutorials/` are the single source of truth. Jupyter notebooks (`.ipynb`) are generated artifacts, never authored directly. The rendered book deploys to GitHub Pages via CI.
+Neuromatch Course Guide: the manual and showcase for building a course with MyST (Markedly Structured Text). MyST `.md` files in `tutorials/` are the single source of truth. Jupyter notebooks (`.ipynb`) are generated artifacts, never authored directly. The rendered book deploys to GitHub Pages via CI.
 
-The tooling (MyST plugin, `nma-kit` CLI, CI workflows) is the published **Neuromatch course kit** ([neuromatch/course-kit](https://github.com/neuromatch/course-kit)): npm `@neuromatch/course-kit` and PyPI `neuromatch-course-kit`. **This template contains no kit code.** It holds content, configuration and authoring documentation only; fix kit behaviour in the kit repo, not here. This file covers authoring conventions; for kit internals read the kit's `AGENTS.md`.
+The tooling (MyST plugin, `nma-kit` CLI, CI workflows) is the published **Neuromatch course kit** ([neuromatch/course-kit](https://github.com/neuromatch/course-kit)): npm `@neuromatch/course-kit` and PyPI `neuromatch-course-kit`. **This repo contains no kit code.** It holds content, configuration and authoring documentation only; fix kit behaviour in the kit repo, not here.
+
+**Courses never fork or copy this repo.** A new course runs `nma-kit init` (kit >= 0.1.9), which writes a minimal starter (`myst.yml`, `.github/workflows/course.yml`, `requirements.txt`, README checklist, one example day, a projects stub) into a fresh repository. Never write "fork this template" in the text; point to `tutorials/new_course.md`. Keep this book's `myst.yml` and `course.yml` close to what `init` generates, so it stays a faithful reference, and don't hardcode this repo's values (feedback project, GitHub URL) in advice to authors. This file covers authoring conventions; for kit internals read the kit's `AGENTS.md`.
 
 ## Architecture
 
@@ -14,6 +16,7 @@ The tooling (MyST plugin, `nma-kit` CLI, CI workflows) is the published **Neurom
 myst.yml                    # Single config: extends the kit's nma.yml, metadata, TOC, nma: settings
 tutorials/
   intro.md                  # Landing page
+  new_course.md             # How to start a course with `nma-kit init`
   W{week}D{day}_{Topic}/    # One directory per day
     chapter_intro.md         # Day overview, learning objectives, schedule table
     W{w}D{d}_Tutorial1.md   # Tutorial pages (kernelspec required if they contain code)

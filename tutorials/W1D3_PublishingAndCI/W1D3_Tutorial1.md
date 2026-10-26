@@ -12,8 +12,8 @@ workflows instead of carrying its own copy, and picks up kit fixes on its next
 build. The `@v0.1` in the workflow is the only version knob: the newest 0.1.x
 (compatible updates), or an exact tag such as `@v0.1.3` to freeze a finished course.
 
-This template has one workflow, `.github/workflows/course.yml`, included below
-so this page always shows what actually runs.
+A new course gets one workflow from `nma-kit init`, `.github/workflows/course.yml`.
+This book's own copy is included below, so the page always shows what actually runs.
 
 ## What runs, and when
 
@@ -39,8 +39,8 @@ the previous one passed:
    `{nma-explanation}` into a student notebook (links) and an instructor
    notebook (answers inline), plus the solution files.
 3. `nma-kit publish-notebooks` pushes `notebooks/` to the separate
-   `notebooks-branch`. The branch is created the first time, so a fresh fork
-   works on its first push.
+   `notebooks-branch`. The branch is created the first time, so a new
+   course works on its first push.
 4. `nma-kit render-scrolly` pre-renders the scrollytelling pages, so readers
    see real figures before they start Python.
 5. `nma-kit prepare-site` adds Colab/Kaggle badges to the executable pages and,

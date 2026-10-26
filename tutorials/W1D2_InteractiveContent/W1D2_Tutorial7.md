@@ -20,7 +20,7 @@ rng = np.random.default_rng(2026)
 ```
 
 :::{step} hero
-:kicker: neuromatch course template
+:kicker: neuromatch course kit
 :::
 # Tutorial 7: *Scrollytelling pages*
 

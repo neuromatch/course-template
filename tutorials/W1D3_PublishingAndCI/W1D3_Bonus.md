@@ -4,7 +4,7 @@ title: "Bonus: Scaling to Multi-Week Courses"
 
 # Bonus: Scaling to Multi-Week Courses
 
-The template ships with one week (W1D1–W1D3). Here is how to extend it.
+`nma-kit init` creates one example day. Here is how to grow it into a full course.
 
 ## Adding more days to Week 1
 
@@ -31,7 +31,9 @@ The template ships with one week (W1D1–W1D3). Here is how to extend it.
 
 ## Adding more weeks
 
-Same pattern — increment the week number:
+Same pattern — increment the week number. (The `W{week}D{day}` names are the
+Neuromatch Academy convention. The kit only needs the pages to be listed in
+`project.toc`, so a course with a different structure can name folders as it likes.)
 
     tutorials/
       W2D1_AdvancedTopic/
@@ -48,12 +50,12 @@ the first section in the TOC before Week 1.
 ## Projects section
 
 The `projects/` directory holds the project booklet. Add markdown files there
-and register them under a "Project Booklet" section in the TOC:
+and register them in the TOC, with the landing page as the parent entry (don't
+wrap it in a `title:` group, which would list it twice in the sidebar):
 
 ```yaml
-- title: Project Booklet
+- file: projects/README.md
   children:
-    - file: projects/README.md
     - file: projects/project_guidance.md
     - file: projects/datasets.md
 ```
